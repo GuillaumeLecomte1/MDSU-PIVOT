@@ -1,6 +1,6 @@
-<div class="flex flex-col md:flex-row justify-between items-center bg-gray-100 p-6 rounded-lg shadow-md">
-    <div class="text-left mb-4 md:mb-0">
-        <h2 class="text-2xl font-bold text-black">Nos <span class="text-red-500">coups de coeur</span></h2>
+<div class="flex flex-col md:flex-row justify-between items-center p-6">
+    <div class="text-left mr-8 mb-4 md:mb-0">
+        <h2 class="text-2xl font-bold text-black">Nos coups de  <span class="text-red-500">coeur</span></h2>
         <p class="text-gray-600 mt-2">Allongez la durée de vie des objets tout en faisant croître de nouvelles interactions !</p>
         <button class="mt-4 bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800">voir le catalogue →</button>
     </div>

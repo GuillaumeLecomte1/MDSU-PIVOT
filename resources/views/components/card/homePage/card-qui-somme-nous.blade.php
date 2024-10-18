@@ -1,4 +1,4 @@
-<div class="flex flex-col md:flex-row bg-[#F5F7F6] shadow-lg rounded-lg overflow-hidden">
+<div class="flex flex-col md:flex-row ">
     <div class="md:w-1/2 relative">
         <img src="{{ asset('images/qui-sommes-nous.png') }}" alt="Image de présentation" class="w-full h-80 object-cover">
         <div class="absolute bottom-4 left-4 flex space-x-4">
@@ -6,8 +6,8 @@
                 <div class="text-4xl font-bold text-orange-500">165</div>
                 <div class="text-gray-600 dark:text-black">ressourceries</div>
             </div>
-            <div class="flex flex-col items-center bg-white bg-opacity-75 p-2 rounded-lg">
-                <div class="text-4xl font-bold text-orange-500">28</div>
+            <div class="flex flex-col items-center p-2 rounded-lg"" style="background-color: #FF916E; opacity: 0.75;" >
+                <div class="text-4xl font-bold text-white-500">28</div>
                 <div class="text-gray-600 dark:text-black">infos</div>
             </div>
         </div>
