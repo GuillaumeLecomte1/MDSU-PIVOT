@@ -62,5 +62,4 @@
                    @include('components.card.homePage.card-newsletters')
             </div>
         </div>
-
 </x-app-layout>

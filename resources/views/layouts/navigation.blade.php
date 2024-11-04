@@ -30,6 +30,11 @@
                         {{ __('Notre Histoire') }}
                     </x-nav-link>
                 </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('stripe')" :active="request()->routeIs('stripe')">
+                        {{ __('Stripe') }}
+                    </x-nav-link>
+                </div>
             </div>
             <!-- Icônes de panier, de favoris et de profil -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
