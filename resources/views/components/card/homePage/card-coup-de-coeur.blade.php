@@ -13,7 +13,7 @@
             name="Chaise"
             price="15 €"
         />
-        <x-products.card-products
+        <x-products.card-products 
             image="images/categories/art-de-la-table/pichet.png"
             alt="Petit pichet à lait"
             ressourcerie="La papoterie (49)"

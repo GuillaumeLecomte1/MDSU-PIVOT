@@ -17,7 +17,7 @@
             name="Chaise"
             price="15 €"
         />
-        <x-products.card-products
+        <x-products.card-products 
             image="images/categories/vetements/jupe.png"
             alt="Jupe plissée"
             ressourcerie="Aigle (49)"
@@ -33,7 +33,7 @@
             name="Petit pichet à lait"
             price="19 €"
         />
-        <x-products.card-products
+        <x-products.card-products 
             image="images/categories/mobilier/chaise.png"
             alt="Chaise"
             ressourcerie="Ressourcerie des biscottes (49)"

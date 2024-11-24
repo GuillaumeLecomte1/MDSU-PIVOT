@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -12,9 +14,11 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/categorie', function () {
-    return view('categorie');
-})->middleware(['auth', 'verified'])->name('categorie');
+// Route::get('/categorie', function () {
+//     return view('categorie');
+// })->middleware(['auth', 'verified'])->name('categorie');
+Route::get('/categorie', [CategorieController::class, 'showCategorie'])->name('categorie');
+
 
 Route::get('/history', function () {
     return view('history');
@@ -24,7 +28,8 @@ Route::get('/ressourcerie', function () {
     return view('ressourcerie');
 })->middleware(['auth', 'verified'])->name('ressourcerie');
 
-
+// Route pour afficher la fiche du produit
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
 // Remplacer les routes Stripe existantes par celles-ci
 Route::middleware(['auth', 'verified'])->group(function () {
