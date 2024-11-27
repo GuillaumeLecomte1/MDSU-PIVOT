@@ -10,9 +10,9 @@ class Category extends Model
     use HasFactory;
     protected $table = 'market__categories';
    
-    // public function products()
-    // {
-    //     return $this->belongsToMany(Product::class);
-    // }
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'market__category_product', 'category_id', 'product_id');
+    }
   
 }

@@ -45,4 +45,28 @@ class CategoryController extends Controller
             'ressourceries' => Ressourcerie::all(),
         ]);
     }
+
+    public function show(string $slug)
+    {
+        // Récupérer la catégorie courante
+        $category = Category::where('slug', $slug)->firstOrFail();
+        
+        // Récupérer toutes les catégories pour le menu de navigation
+        $categories = Category::withCount('products')->get();
+        
+        // Récupérer les produits de la catégorie
+        $products = $category->products()
+            ->with(['ressourcerie', 'categories'])
+            ->paginate(12);
+        
+        // Récupérer les ressourceries pour le filtre
+        $ressourceries = Ressourcerie::all();
+
+        return view('categorie', compact(
+            'category',
+            'categories',
+            'products',
+            'ressourceries'
+        ));
+    }
 } 
