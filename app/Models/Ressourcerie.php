@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Ressourcerie extends Model
 {
     use HasFactory;
-    protected $table = 'ressourceries';
+    protected $table = 'market__ressourceries';
    
 
   

@@ -4,6 +4,7 @@ use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,8 +18,9 @@ Route::get('/dashboard', function () {
 // Route::get('/categorie', function () {
 //     return view('categorie');
 // })->middleware(['auth', 'verified'])->name('categorie');
-Route::get('/categorie', [CategorieController::class, 'showCategorie'])->name('categorie');
-
+// Route::get('/categorie', [CategorieController::class, 'showCategorie'])->name('categorie');
+Route::get('/categorie', [CategoryController::class, 'index'])->name('categorie');
+Route::get('/categorie/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 
 Route::get('/history', function () {
     return view('history');
@@ -52,7 +54,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
 
 
 require __DIR__.'/auth.php';

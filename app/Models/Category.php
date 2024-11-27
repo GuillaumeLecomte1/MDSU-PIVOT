@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Category extends Model
 {
     use HasFactory;
-    protected $table = 'categories';
+    protected $table = 'market__categories';
    
-
+    // public function products()
+    // {
+    //     return $this->belongsToMany(Product::class);
+    // }
   
 }

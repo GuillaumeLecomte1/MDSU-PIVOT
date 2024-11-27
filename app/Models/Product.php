@@ -10,7 +10,7 @@ use App\Models\Ressourcerie;
 class Product extends Model
 {
     use HasFactory;
-    protected $table = 'products';
+    protected $table = 'market__products';
     protected $fillable = [
         'id',
         'name',
@@ -20,7 +20,7 @@ class Product extends Model
         'updated_at'
     ];
 
-    public function category()
+    public function categories()
     {
         return $this->belongsTo(Category::class);
     }
