@@ -8,7 +8,7 @@ class ProductController extends Controller
 {
     public function show(Product $product)
     {
-        $product = Product::with(['category', 'ressourcerie'])->find($product->id);
+        $product = Product::with(['categories', 'ressourcerie'])->find($product->id);
         return view('products.show', compact('product'));
     }
 }

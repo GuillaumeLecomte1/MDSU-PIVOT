@@ -47,11 +47,8 @@
                                 <label class="flex items-center">
 
                                     <input type="checkbox" 
-
                                            name="categories[]" 
-
                                            value="{{ $category->id }}"
-
                                            class="form-checkbox"
 
                                            {{ in_array($category->id, request('categories', [])) ? 'checked' : '' }}>
@@ -174,9 +171,15 @@
 
                             @php
 
-                                $categoryName = $product->categories ? ($product->categories->first() ? $product->categories->first()->name : 'Non catégorisé') : 'Non catégorisé';
+                                $categoryName = $product->categories->first()?->name ?? 'Non catégorisé';
 
                                 $ressourcerieInfo = $product->ressourcerie ? $product->ressourcerie->name . ' (' . $product->ressourcerie->postal_code . ')' : 'Non assigné';
+
+                                $isAvailable = $product->status === 'available' && $product->quantity > 0;
+
+                                $stockLabel = $isAvailable ? 'En stock' : 'Indisponible';
+
+                                $stockClass = $isAvailable ? 'text-green-600' : 'text-red-600';
 
                             @endphp
 
@@ -197,6 +200,10 @@
                                 :price="number_format($product->price ?? 0, 2) . ' €'"
 
                                 :url="route('products.show', $product->id)"
+
+                                :status="$stockLabel"
+
+                                :statusClass="$stockClass"
 
                             />
 

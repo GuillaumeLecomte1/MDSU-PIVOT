@@ -15,7 +15,10 @@
             <p class="text-green-500 font-bold text-sm">{{ strtoupper($product->category->name ?? 'Category'  ) }}</p>
             <div class="flex justify-between items-center">
                 <h3 class="text-black font-bold text-lg">{{ $product->name ?? 'Nom du produit' }}</h3>
-                <p class="text-gray-500 font-bold text-lg">{{ number_format($product->price ?? '0.00', 2 ) }} €</p>
+                <p class="text-gray-500 font-bold text-lg">{{ number_format($product->price ?? '0.00 ', 2 ) }} €</p>
+            </div>
+            <div class="{{ $statusClass ?? 'statusClass'}} text-sm font-medium">
+                {{ $status ?? 'status'}}
             </div>
         </div>
     </div>
