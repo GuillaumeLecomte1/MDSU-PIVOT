@@ -91,29 +91,10 @@
                     </div>
                 @else
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                        @foreach($products as $product)
-                            @php
-                                $categoryName = $product->categories->first()?->name ?? 'Non catégorisé';
-                                $ressourcerieInfo = $product->ressourcerie ? $product->ressourcerie->name . ' (' . $product->ressourcerie->postal_code . ')' : 'Non assigné';
-                                $isAvailable = $product->status === 'available' && $product->quantity > 0;
-                                $stockLabel = $isAvailable ? 'En stock' : 'Indisponible';
-                                $stockClass = $isAvailable ? 'text-green-600' : 'text-red-600';
-                            @endphp
-                            
-                            <x-products.card-products 
-                                :image="$product->images[0] ?? 'images/placeholder.png'"
-                                :alt="$product->name ?? 'Produit sans nom'"
-                                :ressourcerie="$ressourcerieInfo"
-                                :category="$categoryName"
-                                :name="$product->name ?? 'Produit sans nom'"
-                                :price="number_format($product->price ?? 0, 2) . ' €'"
-                                :url="route('products.show', $product->id)"
-                                :status="$stockLabel"
-                                :statusClass="$stockClass"
-                            />
+                        @foreach($products as $product)    
+                            <x-products.card-products :product="$product"/>
                         @endforeach
                     </div>
-
                     <!-- Pagination -->
                     <div class="mt-8">
                         {{ $products->withQueryString()->links() }}
@@ -123,5 +104,3 @@
         </div>
     </div>
 </x-app-layout>
-
-

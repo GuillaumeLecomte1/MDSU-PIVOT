@@ -17,8 +17,8 @@
                 <h3 class="text-black font-bold text-lg">{{ $product->name ?? 'Nom du produit' }}</h3>
                 <p class="text-gray-500 font-bold text-lg">{{ number_format($product->price ?? '0.00 ', 2 ) }} €</p>
             </div>
-            <div class="{{ $statusClass ?? 'statusClass'}} text-sm font-medium">
-                {{ $status ?? 'status'}}
+            <div class="{{ $product->is_available ? 'text-green-500' : 'text-red-500' }} text-sm font-medium">
+                {{ $product->is_available ? 'Disponible' : 'Indisponible' }}
             </div>
         </div>
     </div>

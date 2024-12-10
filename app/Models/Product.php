@@ -12,12 +12,26 @@ class Product extends Model
     use HasFactory;
     protected $table = 'market__products';
     protected $fillable = [
-        'id',
         'name',
+        'slug',
         'description',
         'price',
-        'created_at',
-        'updated_at'
+        'condition',
+        'dimensions',
+        'color',
+        'brand',
+        'stock',
+        'is_available',
+        'images',
+        'category_id',
+        'ressourcerie_id'
+    ];
+
+    protected $casts = [
+        'price' => 'float',
+        'images' => 'array',
+        'stock' => 'integer',
+        'is_available' => 'boolean'
     ];
 
     public function categories()
@@ -26,6 +40,6 @@ class Product extends Model
     }
     public function ressourcerie()
     {
-        return $this->belongsTo(Ressourcerie::class);
+        return $this->belongsTo(Ressourcerie::class, 'ressourcerie_id');
     }
 }
