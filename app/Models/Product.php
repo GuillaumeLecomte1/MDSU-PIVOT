@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Category;
 use App\Models\Ressourcerie;
+use App\Models\User;
 
 class Product extends Model
 {
@@ -23,7 +24,6 @@ class Product extends Model
         'stock',
         'is_available',
         'images',
-        'category_id',
         'ressourcerie_id'
     ];
 
@@ -41,5 +41,10 @@ class Product extends Model
     public function ressourcerie()
     {
         return $this->belongsTo(Ressourcerie::class, 'ressourcerie_id');
+    }
+
+    public function favorites()
+    {
+        return $this->belongsToMany(User::class, 'favorites', 'product_id', 'user_id');
     }
 }

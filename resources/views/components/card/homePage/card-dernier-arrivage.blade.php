@@ -16,6 +16,7 @@
             category="MOBILIER"
             name="Chaise"
             price="15 €"
+            is_available= "Disponible"
         />
         <x-products.card-products 
             image="images/categories/vetements/jupe.png"
@@ -24,6 +25,7 @@
             category="VÊTEMENTS"
             name="Jupe plissée"
             price="7 €"
+            is_available= "Disponible"
         />
         <x-products.card-products
             image="images/categories/art-de-la-table/pichet.png"
@@ -32,6 +34,7 @@
             category="ART DE LA TABLE"
             name="Petit pichet à lait"
             price="19 €"
+            is_available= "Disponible"
         />
         <x-products.card-products 
             image="images/categories/mobilier/chaise.png"
@@ -40,6 +43,7 @@
             category="MOBILIER"
             name="Chaise"
             price="15 €"
+            is_available= "Disponible"
         />
     </div>
     <div class="relative mt-8 md:mt-0 md:ml-8">

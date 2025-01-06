@@ -24,8 +24,7 @@ return new class extends Migration
             $table->integer('stock')->default(1);
             $table->boolean('is_available')->default(true); 
             $table->json('images')->nullable();
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->foreignId('ressourcerie_id')->constrained()->onDelete('cascade');
+            $table->foreignId('ressourcerie_id')->constrained('market__ressourceries')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

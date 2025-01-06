@@ -6,9 +6,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "inertiajs/inertia-laravel": "^1.0",
         "laravel/framework": "^11.9",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
-        "stripe/stripe-php": "^16.1"
+        "stripe/stripe-php": "^16.1",
+        "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -17,7 +20,7 @@
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.1",
-        "pestphp/pest": "^3.3",
+        "pestphp/pest": "^3.5",
         "pestphp/pest-plugin-laravel": "^3.0"
     },
     "autoload": {

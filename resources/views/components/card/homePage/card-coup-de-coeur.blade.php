@@ -12,6 +12,7 @@
             category="MOBILIER"
             name="Chaise"
             price="15 €"
+            is_available= "Disponible"
         />
         <x-products.card-products 
             image="images/categories/art-de-la-table/pichet.png"
@@ -20,6 +21,7 @@
             category="ART DE LA TABLE"
             name="Petit pichet à lait"
             price="19 €"
+            is_available= "Disponible"
         />
         <x-products.card-products
             image="images/categories/art-de-la-table/assiettes.png"
@@ -28,6 +30,8 @@
             category="ART DE LA TABLE"
             name="Lot d'assiettes"
             price="12 €"
+            is_available= "Disponible"
         />
     </div>
 </div>
+

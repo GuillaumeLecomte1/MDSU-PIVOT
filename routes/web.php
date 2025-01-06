@@ -1,60 +1,82 @@
 <?php
 
-use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\RessourcerieController;
+use App\Http\Controllers\FavoriteController;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use App\Models\Product;
+use App\Models\Category;
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    return Inertia::render('Welcome', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+        'latestProducts' => Product::latest()->take(4)->get(),
+        'popularProducts' => Product::withCount('favorites')
+            ->orderByDesc('favorites_count')
+            ->take(4)
+            ->get(),
+        'categories' => Category::withCount('products')->get(),
+    ]);
+})->name('home');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Categories routes (public)
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 
-// Route::get('/categorie', function () {
-//     return view('categorie');
-// })->middleware(['auth', 'verified'])->name('categorie');
-// Route::get('/categorie', [CategorieController::class, 'showCategorie'])->name('categorie');
-Route::get('/categorie', [CategoryController::class, 'index'])->name('categorie');
-Route::get('/categorie/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
-
-Route::get('/history', function () {
-    return view('history');
-})->middleware(['auth', 'verified'])->name('history');
-
-Route::get('/ressourcerie', function () {
-    return view('ressourcerie');
-})->middleware(['auth', 'verified'])->name('ressourcerie');
-
-// Route pour afficher la fiche du produit
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-
-// Remplacer les routes Stripe existantes par celles-ci
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/payment/create-checkout-session', [PaymentController::class, 'createCheckoutSession'])
-        ->name('payment.create-checkout-session');
-        
-    // Route pour afficher la page de paiement
-    Route::get('/stripe', [PaymentController::class, 'showPaymentPage'])
-    ->name('stripe');
-
-    Route::get('/payment/success', [PaymentController::class, 'success'])
-        ->name('payment.success');
-
-    Route::get('/payment/cancel', [PaymentController::class, 'cancel'])
-        ->name('payment.cancel');
-});
+// Products routes (public)
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::middleware('auth')->group(function () {
+    // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Ressourceries routes
+    Route::get('/ressourceries', [RessourcerieController::class, 'index'])->name('ressourceries.index');
+    Route::get('/ressourceries/{ressourcerie}', [RessourcerieController::class, 'show'])->name('ressourceries.show');
+
+    // Favorites routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+        Route::post('/products/{product}/favorite', [FavoriteController::class, 'toggle'])->name('products.favorite');
+    });
 });
 
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Admin/Index');
+    })->name('dashboard');
+    
+    // Routes pour les produits
+    Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/create', [App\Http\Controllers\Admin\ProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [App\Http\Controllers\Admin\ProductController::class, 'store'])->name('products.store');
+    
+    // Routes pour les catégories
+    Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
+    
+    // Routes pour les ressourceries
+    Route::get('/ressourceries', [App\Http\Controllers\Admin\RessourcerieController::class, 'index'])->name('ressourceries.index');
+    Route::get('/ressourceries/create', [App\Http\Controllers\Admin\RessourcerieController::class, 'create'])->name('ressourceries.create');
+    Route::post('/ressourceries', [App\Http\Controllers\Admin\RessourcerieController::class, 'store'])->name('ressourceries.store');
+    
+    // Routes pour les utilisateurs
+    Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
+    
+    // Routes pour les commandes
+    Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+});
 
 require __DIR__.'/auth.php';
-

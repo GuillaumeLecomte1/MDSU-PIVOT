@@ -1,7 +1,2 @@
-@props(['status'])
-
-@if ($status)
-    <div {{ $attributes->merge(['class' => 'font-medium text-sm text-green-600 dark:text-green-400']) }}>
-        {{ $status }}
-    </div>
-@endif
+// This file should be deleted as per the edit plan
+// Blade components are being replaced with React components
