@@ -58,7 +58,7 @@ export default function Show({ product, similarProducts }) {
                     <div className="lg:w-2/3">
                         <div className="relative pb-[100%] bg-gray-100 rounded-lg overflow-hidden">
                             <img
-                                src={images[currentImage] ? `/storage/products/${images[currentImage]}` : '/images/no-image.jpg'}
+                                src={images[currentImage] ? `/storage/products/${images[currentImage].replace('/storage/products/', '')}` : '/images/no-image.jpg'}
                                 alt={product.name}
                                 className="absolute top-0 left-0 w-full h-full object-cover"
                             />
@@ -74,7 +74,7 @@ export default function Show({ product, similarProducts }) {
                                         }`}
                                     >
                                         <img
-                                            src={`/storage/products/${image}`}
+                                            src={`/storage/products/${image.replace('/storage/products/', '')}`}
                                             alt={`${product.name} - Image ${index + 1}`}
                                             className="absolute top-0 left-0 w-full h-full object-cover"
                                         />

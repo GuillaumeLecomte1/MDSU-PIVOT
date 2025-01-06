@@ -11,65 +11,67 @@ export default function Welcome({ latestProducts, popularProducts, categories })
             <Head title="Accueil" />
 
             {/* Hero Section */}
-            <div className="bg-white py-16">
+            <section className="py-8 bg-[#F2F2F2]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                        <div>
-                            <h1 className="text-[64px] leading-tight font-bold mb-6">
-                                La marketplace<br />
-                                des <span className="text-[#FF8D7E]">ressourceries</span><br />
-                                françaises
-                            </h1>
-                            <p className="text-gray-600 mb-8 text-lg">
-                                Donner une seconde vie aux produits dénichés, ça vaut le coût ! Pivot, est
-                                la première plateforme de click-and-collect dédiée aux ressourceries en
-                                France !
-                            </p>
-                            <div className="flex space-x-24 mb-12">
-                                <div>
-                                    <div className="text-4xl font-bold text-[#4ADE80]">1050+</div>
-                                    <div className="text-gray-600">Produits dénichés</div>
-                                </div>
-                                <div>
-                                    <div className="text-4xl font-bold text-[#4ADE80]">100+</div>
-                                    <div className="text-gray-600">Ressourceries</div>
-                                </div>
-                            </div>
-                            <div className="relative flex items-center">
-                                <input
-                                    type="text"
-                                    placeholder="Que recherchez-vous ?"
-                                    className="w-full px-6 py-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#4ADE80] focus:border-transparent text-gray-500 placeholder-gray-400"
-                                />
-                                <div className="absolute right-16 top-1/2 transform -translate-y-1/2 border-r border-gray-300 pr-4">
-                                    <div className="flex items-center text-gray-400">
-                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        Angers
+                    <div className="bg-[#E7E7E7] p-12 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                            <div>
+                                <h1 className="text-[64px] leading-tight font-bold mb-6">
+                                    La marketplace<br />
+                                    des <span className="text-[#FF8D7E]">ressourceries</span><br />
+                                    françaises
+                                </h1>
+                                <p className="text-gray-600 mb-8 text-lg">
+                                    Donner une seconde vie aux produits dénichés, ça vaut le coût ! Pivot, est
+                                    la première plateforme de click-and-collect dédiée aux ressourceries en
+                                    France !
+                                </p>
+                                <div className="flex space-x-24 mb-12">
+                                    <div>
+                                        <div className="text-4xl font-bold text-[#4ADE80]">1050+</div>
+                                        <div className="text-gray-600">Produits dénichés</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-4xl font-bold text-[#4ADE80]">100+</div>
+                                        <div className="text-gray-600">Ressourceries</div>
                                     </div>
                                 </div>
-                                <button className="absolute right-5 top-1/2 transform -translate-y-1/2">
-                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                </button>
+                                <div className="relative flex items-center">
+                                    <input
+                                        type="text"
+                                        placeholder="Que recherchez-vous ?"
+                                        className="w-full px-6 py-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#4ADE80] focus:border-transparent text-gray-500 placeholder-gray-400"
+                                    />
+                                    <div className="absolute right-16 top-1/2 transform -translate-y-1/2 border-r border-gray-300 pr-4">
+                                        <div className="flex items-center text-gray-400">
+                                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            Angers
+                                        </div>
+                                    </div>
+                                    <button className="absolute right-5 top-1/2 transform -translate-y-1/2">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div className="relative">
-                            <img
-                                src="/storage/imagesAccueil/imageAccueil1.png"
-                                alt="Hero"
-                                className="rounded-lg shadow-lg w-full h-[540px] object-cover"
-                            />
+                            <div className="relative">
+                                <img
+                                    src="/storage/imagesAccueil/imageAccueil1.png"
+                                    alt="Hero"
+                                    className="rounded-lg shadow-lg w-full h-[540px] object-cover"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             {/* Ressourceries Section */}
-            <section className="py-12 bg-[#F9FAFB]">
+            <section className="py-8 bg-[#F2F2F2]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center mb-4">
                         <div>
@@ -87,7 +89,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         </Link>
                     </div>
                     <div className="flex flex-wrap justify-between items-center mt-8">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+                        {[1, 2, 3, 4, 5].map((i) => (
                             <div key={i} className="w-32 h-32 flex items-center justify-center">
                                 <div className="text-4xl font-bold text-gray-200">
                                     <img src="/storage/imagesAccueil/Calque_1.svg" alt="Logo" className="w-24 h-24 fill-gray-400" />
@@ -99,7 +101,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
             </section>
 
             {/* Featured Products */}
-            <section className="py-12 bg-white">
+            <section className="py-8 bg-[#F2F2F2]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-12 gap-8">
                         <div className="col-span-3">
@@ -126,26 +128,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         </div>
                         <div className="col-span-9 grid grid-cols-3 gap-6">
                             {popularProducts.slice(0, 3).map((product) => (
-                                <div key={product.id} className="bg-white rounded-lg p-4">
-                                    <div className="relative">
-                                        <img
-                                            src={product.image}
-                                            alt={product.name}
-                                            className="w-full h-64 object-cover rounded-lg mb-4"
-                                        />
-                                        <button className="absolute top-4 right-4 text-gray-400 hover:text-[#FF8D7E]">
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    {/* <div className="text-sm text-gray-400">{product.ressourcerie} ({product.location})</div>
-                                    <div className="text-[#4ADE80] uppercase text-sm font-medium mt-1">{product.category}</div> */}
-                                    <div className="flex justify-between items-center mt-2">
-                                        <h3 className="text-lg font-medium">{product.name}</h3>
-                                        <span className="text-lg">{product.price} €</span>
-                                    </div>
-                                </div>
+                                <ProductCard key={product.id} product={product} />
                             ))}
                         </div>
                     </div>
@@ -153,7 +136,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
             </section>
 
             {/* Categories Grid */}
-            <section className="py-12">
+            <section className="py-8 bg-[#F2F2F2]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <CategoryCard
@@ -209,7 +192,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
             </section>
 
             {/* Latest Products */}
-            <section className="py-12 bg-white">
+            <section className="py-8 bg-[#F2F2F2]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center mb-6">
                         <div>
@@ -231,33 +214,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         {/* Product Grid - 8 columns */}
                         <div className="col-span-6 grid grid-cols-2 gap-6">
                             {latestProducts.slice(0, 4).map((product) => (
-                                <div key={product.id} className="bg-white rounded-lg">
-                                    <div className="relative">
-                                        <img
-                                            src={product.image}
-                                            alt={product.name}
-                                            className="w-full h-[280px] object-cover rounded-lg"
-                                        />
-                                        <button className="absolute top-4 right-4 text-gray-400 hover:text-[#FF8D7E]">
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                            </svg>
-                                        </button>
-                                        {product.reserved && (
-                                            <div className="absolute top-4 left-4 bg-white px-3 py-1 rounded-full text-sm">
-                                                réservé
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="p-4">
-                                        {/* <div className="text-sm text-gray-400">{product.ressourcerie} ({product.location})</div>
-                                        <div className="text-[#4ADE80] uppercase text-sm font-medium mt-1">{product.category}</div> */}
-                                        <div className="flex justify-between items-center mt-2">
-                                            <h3 className="text-lg font-medium">{product.name}</h3>
-                                            <span className="text-lg">{product.price} €</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <ProductCard key={product.id} product={product} />
                             ))}
                         </div>
 
@@ -270,7 +227,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="bg-white rounded-lg p-8 mx-8 w-[80%]">
+                                    <div className="bg-[#F2F2F2] rounded-lg p-8 mx-8 w-[80%]">
                                         <h3 className="text-[32px] font-bold text-gray-900 mb-3">Pluie de couleurs</h3>
                                         <p className="text-[#4ADE80] text-lg mb-6">Découvrez nos produits colorées déchinées</p>
                                         <Link 
@@ -291,7 +248,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
             </section>
 
             {/* About Section */}
-            <section className="py-16 bg-white">
+            <section className="py-12 bg-[#F2F2F2]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-12 gap-24">
                         {/* Left side with image and stats */}
@@ -336,7 +293,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
             </section>
 
             {/* Blog Section */}
-            <section className="py-16 bg-[#F9FAFB]">
+            <section className="py-12 bg-[#F2F2F2]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-start mb-12">
                         <div>
@@ -397,7 +354,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         </div>
 
                         {/* Right column - small articles */}
-                        <div className="space-y-12">
+                        <div className="space-y-12 ">
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <span className="text-gray-500 text-sm">24/08/2024</span>
@@ -440,7 +397,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
             </section>
 
             {/* Newsletter Section */}
-            <section className="py-24 bg-white">
+            <section className="py-16 bg-[#F2F2F2]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-[#F1FBF4] rounded-2xl py-16 px-8">
                         <div className="max-w-3xl mx-auto text-center">

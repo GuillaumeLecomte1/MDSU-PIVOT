@@ -2,9 +2,11 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 
 export default function ProductCard({ product }) {
-    const imageUrl = product.images && product.images[0]
-        ? `/storage/products/${product.images[0]}`
-        : '/storage/products/product-1-1.jpg';
+    // S'assurer que les images sont un tableau
+    const images = Array.isArray(product.images) ? product.images : JSON.parse(product.images || '[]');
+    const imageUrl = images && images.length > 0
+        ? `/storage/products/${images[0]}`
+        : '/images/no-image.jpg';
 
     return (
         <div className="group relative">
