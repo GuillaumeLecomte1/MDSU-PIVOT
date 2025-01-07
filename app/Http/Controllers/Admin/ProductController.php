@@ -76,7 +76,7 @@ class ProductController extends Controller
 
         $product->categories()->attach($request->category_ids);
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('categories.index')
             ->with('success', 'Produit créé avec succès.');
     }
 } 

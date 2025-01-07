@@ -8,6 +8,8 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Ressourcerie;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 
 class CategoryController extends Controller
@@ -16,6 +18,12 @@ class CategoryController extends Controller
     {
         $query = Product::query()
             ->with(['categories', 'ressourcerie'])
+            ->when($request->search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            })
             ->when($request->categories, function ($query, $categories) {
                 return $query->whereHas('categories', function ($q) use ($categories) {
                     $q->whereIn('categories.id', $categories);
@@ -32,24 +40,32 @@ class CategoryController extends Controller
                     $q->where('city', $city);
                 });
             })
+            ->when($request->quantity, function ($query, $quantity) {
+                if ($quantity === 'available') {
+                    return $query->where('quantity', '>', 0);
+                } elseif ($quantity === 'out_of_stock') {
+                    return $query->where('quantity', '=', 0);
+                }
+                return $query; // 'all' case, no filtering
+            })
             ->when($request->sort, function ($query, $sort) {
                 return match($sort) {
                     'price_asc' => $query->orderBy('price', 'asc'),
-                    'price_desc' => $query->orderBy('price', 'desc'), 
-                    'newest' => $query->orderBy('created_at', 'desc'),
+                    'price_desc' => $query->orderBy('price', 'desc'),
+                    'recent' => $query->orderBy('created_at', 'desc'),
                     default => $query->orderBy('created_at', 'desc')
                 };
             });
 
         $products = $query->paginate(12)->withQueryString();
-        $categories = Category::withCount('products')->get();
-        $ressourceries = Ressourcerie::all();
+        $categories = Category::all();
+        $ressourceries = Ressourcerie::select('id', 'name', 'city')->get();
 
         return Inertia::render('Categories/Index', [
-            'products' => $products,
             'categories' => $categories,
+            'products' => $products,
             'ressourceries' => $ressourceries,
-            'filters' => $request->all()
+            'filters' => $request->only(['search', 'categories', 'min_price', 'max_price', 'city', 'quantity', 'sort'])
         ]);
     }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -44,7 +44,12 @@ export default function Create({ categories, ressourceries }) {
             formData.append('images[]', image);
         });
 
-        post(route('admin.products.store'), formData);
+        post(route('admin.products.store'), formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                router.get(route('categories.index'));
+            },
+        });
     };
 
     const handleImageChange = (e) => {
