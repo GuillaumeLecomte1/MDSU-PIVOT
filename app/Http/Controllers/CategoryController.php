@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
@@ -58,13 +59,19 @@ class CategoryController extends Controller
             });
 
         $products = $query->paginate(12)->withQueryString();
-        $categories = Category::all();
-        $ressourceries = Ressourcerie::select('id', 'name', 'city')->get();
+
+        // Ajouter l'état des favoris pour chaque produit
+        foreach ($products as $product) {
+            $images = json_decode($product->images) ?? [];
+            $product->images = $images;
+            $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+            $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
+        }
 
         return Inertia::render('Categories/Index', [
-            'categories' => $categories,
+            'categories' => Category::all(),
             'products' => $products,
-            'ressourceries' => $ressourceries,
+            'ressourceries' => Ressourcerie::select('id', 'name', 'city')->get(),
             'filters' => $request->only(['search', 'categories', 'min_price', 'max_price', 'city', 'quantity', 'sort'])
         ]);
     }
@@ -79,6 +86,14 @@ class CategoryController extends Controller
             })
             ->orderBy('created_at', 'desc')
             ->paginate(12);
+
+        // Ajouter l'état des favoris pour chaque produit
+        foreach ($products as $product) {
+            $images = json_decode($product->images) ?? [];
+            $product->images = $images;
+            $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+            $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
+        }
         
         return Inertia::render('Categories/Show', [
             'products' => $products,

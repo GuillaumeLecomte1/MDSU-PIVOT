@@ -36,15 +36,20 @@ class Product extends Model
 
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'market__category_product', 'product_id', 'category_id');
+        return $this->belongsToMany(Category::class, 'market__category_product');
     }
     public function ressourcerie()
     {
-        return $this->belongsTo(Ressourcerie::class, 'ressourcerie_id');
+        return $this->belongsTo(Ressourcerie::class);
     }
 
     public function favorites()
     {
-        return $this->belongsToMany(User::class, 'favorites', 'product_id', 'user_id');
+        return $this->belongsToMany(User::class, 'favorites');
+    }
+
+    public function isFavoritedBy(User $user)
+    {
+        return $this->favorites()->where('user_id', $user->id)->exists();
     }
 }

@@ -16,7 +16,10 @@ class FavoriteController extends Controller
             ->with(['categories', 'ressourcerie'])
             ->get()
             ->map(function ($product) {
-                $product->is_favorite = true;
+                $images = json_decode($product->images) ?? [];
+                $product->images = $images;
+                $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+                $product->isFavorite = true;
                 return $product;
             });
 

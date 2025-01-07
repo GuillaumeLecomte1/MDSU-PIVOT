@@ -10,18 +10,38 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\Product;
 use App\Models\Category;
+use Illuminate\Support\Facades\Auth;
 
 // Route racine nécessitant une authentification
 Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
+        $latestProducts = Product::with(['categories', 'ressourcerie', 'favorites'])
+            ->latest()
+            ->take(4)
+            ->get();
+
+        $popularProducts = Product::with(['categories', 'ressourcerie', 'favorites'])
+            ->withCount('favorites')
+            ->orderByDesc('favorites_count')
+            ->take(4)
+            ->get();
+
+        // Ajouter l'état des favoris pour chaque produit
+        $processProducts = function($products) {
+            foreach ($products as $product) {
+                $images = json_decode($product->images) ?? [];
+                $product->images = $images;
+                $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+                $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
+            }
+            return $products;
+        };
+
         return Inertia::render('Welcome', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
-            'latestProducts' => Product::latest()->take(4)->get(),
-            'popularProducts' => Product::withCount('favorites')
-                ->orderByDesc('favorites_count')
-                ->take(4)
-                ->get(),
+            'latestProducts' => $processProducts($latestProducts),
+            'popularProducts' => $processProducts($popularProducts),
             'categories' => Category::withCount('products')->get(),
         ]);
     })->name('home');
@@ -56,10 +76,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/ressourceries/{ressourcerie}', [RessourcerieController::class, 'show'])->name('ressourceries.show');
 
     // Favorites routes
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
-        Route::post('/products/{product}/favorite', [FavoriteController::class, 'toggle'])->name('products.favorite');
-    });
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('/products/{product}/favorite', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 });
 
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {

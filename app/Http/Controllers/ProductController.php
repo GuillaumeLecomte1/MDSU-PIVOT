@@ -39,7 +39,7 @@ class ProductController extends Controller
             $images = json_decode($product->images) ?? [];
             $product->images = $images;
             $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
-            $product->isFavorite = Auth::check() ? $product->favorites()->where('user_id', Auth::id())->exists() : false;
+            $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
         }
 
         return Inertia::render('Products/Index', [
@@ -57,7 +57,7 @@ class ProductController extends Controller
             return '/storage/products/' . $image;
         }, $images);
         $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
-        $product->isFavorite = Auth::check() ? $product->favorites()->where('user_id', Auth::id())->exists() : false;
+        $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
 
         $similarProducts = Product::with(['categories', 'ressourcerie'])
             ->where('ressourcerie_id', $product->ressourcerie_id)
@@ -69,6 +69,7 @@ class ProductController extends Controller
             $images = json_decode($similarProduct->images) ?? [];
             $similarProduct->images = $images;
             $similarProduct->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+            $similarProduct->isFavorite = Auth::check() ? $similarProduct->isFavoritedBy(Auth::user()) : false;
         }
 
         return Inertia::render('Products/Show', [

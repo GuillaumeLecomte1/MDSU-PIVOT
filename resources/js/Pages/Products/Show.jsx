@@ -2,23 +2,30 @@ import { useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import ProductCard from '@/Components/Products/ProductCard';
-import ActionButton from '@/Components/ActionButton';
+import axios from 'axios';
 
 export default function Show({ product, similarProducts }) {
     const { auth } = usePage().props;
     const [currentImage, setCurrentImage] = useState(0);
-    const [isFavorite, setIsFavorite] = useState(product.is_favorite);
+    const [isFavorite, setIsFavorite] = useState(product.isFavorite || false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const toggleFavorite = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (!auth.user) {
-            window.location.href = route('login');
-            return;
+    const toggleFavorite = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
+        if (isLoading) return;
 
-        setIsFavorite(!isFavorite);
+        setIsLoading(true);
+        try {
+            const response = await axios.post(`/products/${product.id}/favorite`);
+            setIsFavorite(response.data.isFavorite);
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout aux favoris:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const images = product.images || [];
@@ -94,13 +101,15 @@ export default function Show({ product, similarProducts }) {
                             ))}
                             <div className="flex justify-between items-start mt-2">
                                 <h1 className="text-2xl font-bold">{product.name}</h1>
-                                <ActionButton
-                                    route={route('products.favorite', product.id)}
+                                <button
                                     onClick={toggleFavorite}
-                                    className="text-gray-400 hover:text-red-500"
+                                    disabled={isLoading}
+                                    className={`p-2 rounded-full transition-colors ${
+                                        isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
+                                    }`}
                                 >
                                     <svg 
-                                        className={`w-6 h-6 ${isFavorite ? 'text-red-500 fill-current' : ''}`}
+                                        className={`w-6 h-6 ${isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'}`}
                                         xmlns="http://www.w3.org/2000/svg" 
                                         fill="none" 
                                         viewBox="0 0 24 24" 
@@ -113,7 +122,7 @@ export default function Show({ product, similarProducts }) {
                                             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
                                         />
                                     </svg>
-                                </ActionButton>
+                                </button>
                             </div>
 
                             <div className="mt-4">
