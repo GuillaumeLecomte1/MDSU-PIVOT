@@ -11,18 +11,31 @@ use Inertia\Inertia;
 use App\Models\Product;
 use App\Models\Category;
 
+// Route racine nécessitant une authentification
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Welcome', [
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'latestProducts' => Product::latest()->take(4)->get(),
+            'popularProducts' => Product::withCount('favorites')
+                ->orderByDesc('favorites_count')
+                ->take(4)
+                ->get(),
+            'categories' => Category::withCount('products')->get(),
+        ]);
+    })->name('home');
+});
+
+// Redirection par défaut pour les utilisateurs non connectés
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'latestProducts' => Product::latest()->take(4)->get(),
-        'popularProducts' => Product::withCount('favorites')
-            ->orderByDesc('favorites_count')
-            ->take(4)
-            ->get(),
-        'categories' => Category::withCount('products')->get(),
-    ]);
-})->name('home');
+    return redirect()->route('login');
+})->name('root');
+
+// Dashboard route
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard/Index');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 // Categories routes (public)
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
