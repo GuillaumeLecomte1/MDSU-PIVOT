@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,7 +45,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_admin' => 'boolean',
         ];
     }
 
@@ -55,5 +55,30 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Product::class, 'favorites')
             ->withTimestamps();
+    }
+
+    // Role management methods
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isRessourcerie(): bool
+    {
+        return $this->role === 'ressourcerie';
+    }
+
+    public function isClient(): bool
+    {
+        return $this->role === 'client';
+    }
+
+    public function getRoleLabel(): string
+    {
+        return match($this->role) {
+            'admin' => 'Admin',
+            'ressourcerie' => 'Ressourcerie',
+            default => 'Client',
+        };
     }
 }

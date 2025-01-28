@@ -1,3 +1,53 @@
+## Pour lancer le serveur
+npm run dev
+php artisan serve
+
+## Les commandes utiles
+# Pour hasher les passwords des utilisateurs 
+php artisan users:update-passwords
+
+# Pour les messages commit
+PowerShell -ExecutionPolicy Bypass -File .\scripts\commit.ps1
+
+## Convention de Commit (Gitmoji)
+
+Pour maintenir une convention cohérente et visuelle, nous utilisons les gitmoji pour nos commits.
+Le format est : `<emoji> [CODE] Description`
+
+Exemples :
+- 🚧 [WIP] Travail en cours sur la fonctionnalité X
+- ✨ [FEAT] Ajout de la nouvelle page d'accueil
+- 🐛 [FIX] Correction du bug d'authentification
+
+Types de commits disponibles :
+
+| Emoji | Code | Description |
+|-------|------|-------------|
+| 🚧 | [WIP] | Work in Progress |
+| ⚡ | [PERF] | Performance improvements |
+| ✨ | [FEAT] | New feature |
+| 🐛 | [FIX] | Bug fix |
+| 🎨 | [STYLE] | UI/Style improvements |
+| ♻️ | [REFACTOR] | Code refactoring |
+| 🔧 | [CONFIG] | Configuration changes |
+| 📝 | [DOCS] | Documentation |
+| ✅ | [TEST] | Tests |
+| 🔥 | [REMOVE] | Remove code/files |
+
+### Utilisation
+
+1. Placez-vous dans le répertoire du projet
+2. Exécutez le script de commit :
+   ```powershell
+   PowerShell -ExecutionPolicy Bypass -File .\scripts\commit.ps1
+   ```
+3. Suivez les instructions à l'écran :
+   - Choisissez le type de commit (1-10)
+   - Entrez votre message de commit
+   - Confirmez pour procéder au commit
+
+Le script formatera automatiquement votre message selon la convention : emoji + [CODE] + votre message.
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

@@ -29,7 +29,20 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => fake()->randomElement(['client', 'ressourcerie', 'admin']),
         ];
+    }
+
+    /**
+     * Configure the model factory.
+     */
+    public function configure()
+    {
+        return $this->afterMaking(function ($user) {
+            //
+        })->afterCreating(function ($user) {
+            //
+        });
     }
 
     /**
@@ -39,6 +52,36 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a client.
+     */
+    public function client(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'client',
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a ressourcerie.
+     */
+    public function ressourcerie(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'ressourcerie',
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an admin.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
         ]);
     }
 }

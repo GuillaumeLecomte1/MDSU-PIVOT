@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import ProductCard from '@/Components/Products/ProductCard';
 
-export default function Index({ latestProducts, popularProducts, categories }) {
+export default function Index({ latestProducts = [], popularProducts = [], categories = [] }) {
     console.log('Dashboard component loaded', { latestProducts, popularProducts, categories });
     return (
         <AppLayout>
@@ -24,7 +24,7 @@ export default function Index({ latestProducts, popularProducts, categories }) {
                                 </Link>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {categories.map((category) => (
+                                {categories && categories.map((category) => (
                                     <Link
                                         key={category.id}
                                         href={route('categories.show', category.slug)}
@@ -51,7 +51,7 @@ export default function Index({ latestProducts, popularProducts, categories }) {
                                 </Link>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {latestProducts.map((product) => (
+                                {latestProducts && latestProducts.map((product) => (
                                     <ProductCard key={product.id} product={product} />
                                 ))}
                             </div>
@@ -71,7 +71,7 @@ export default function Index({ latestProducts, popularProducts, categories }) {
                                 </Link>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {popularProducts.map((product) => (
+                                {popularProducts && popularProducts.map((product) => (
                                     <ProductCard key={product.id} product={product} />
                                 ))}
                             </div>

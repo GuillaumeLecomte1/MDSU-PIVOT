@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import { useState } from 'react';
 import Dropdown from '@/Components/Dropdown';
+import RoleBadge from '@/Components/RoleBadge';
 
 export default function Navigation() {
     const { auth } = usePage().props;
@@ -17,7 +18,7 @@ export default function Navigation() {
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <div className="shrink-0 flex items-center">
-                            <Link href={route('home')}>
+                            <Link href="/">
                                 <img src="/storage/imagesAccueil/Calque_1.svg" alt="Logo" className="w-24 h-24" />
                                 {/* <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" /> */}
                             </Link>
@@ -25,7 +26,7 @@ export default function Navigation() {
 
                         <div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <Link
-                                href={route('home')}
+                                href="/"
                                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out ${
                                     isActive('/') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
@@ -85,7 +86,7 @@ export default function Navigation() {
 
                         {auth.user?.is_admin && (
                             <Link
-                            
+                                href="/cart"
                                 className="px-3 py-2 text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out"
                             >
                               Panier
@@ -97,7 +98,12 @@ export default function Navigation() {
                                 <Dropdown.Trigger>
                                     <span className="inline-flex rounded-md">
                                         <button type="button" className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                            {auth.user.name}
+                                            <div className="flex items-center">
+                                                <span>{auth.user.name}</span>
+                                                <span className="ml-2">
+                                                    <RoleBadge role={auth.user.role} />
+                                                </span>
+                                            </div>
                                         </button>
                                     </span>
                                 </Dropdown.Trigger>
