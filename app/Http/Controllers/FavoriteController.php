@@ -18,13 +18,14 @@ class FavoriteController extends Controller
             ->map(function ($product) {
                 $images = json_decode($product->images) ?? [];
                 $product->images = $images;
-                $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+                $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
                 $product->isFavorite = true;
+
                 return $product;
             });
 
         return Inertia::render('Favorites/Index', [
-            'favorites' => $favorites
+            'favorites' => $favorites,
         ]);
     }
 
@@ -35,7 +36,7 @@ class FavoriteController extends Controller
 
         return response()->json([
             'success' => true,
-            'isFavorite' => count($isFavorite['attached']) > 0
+            'isFavorite' => count($isFavorite['attached']) > 0,
         ]);
     }
-} 
+}

@@ -1,17 +1,16 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Auth\RoleController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\RessourcerieController;
 use App\Http\Controllers\FavoriteController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RessourcerieController;
+use App\Models\Category;
+use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Models\Product;
-use App\Models\Category;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Auth\RoleController;
 
 // Route racine pour tous les utilisateurs
 Route::get('/', function () {
@@ -27,13 +26,14 @@ Route::get('/', function () {
         ->get();
 
     // Ajouter l'état des favoris pour chaque produit
-    $processProducts = function($products) {
+    $processProducts = function ($products) {
         foreach ($products as $product) {
             $images = json_decode($product->images) ?? [];
             $product->images = $images;
-            $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
             $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
         }
+
         return $products;
     };
 
@@ -94,27 +94,27 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('/', function () {
         return Inertia::render('Admin/Index');
     })->name('dashboard');
-    
+
     // Routes pour les produits
     Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [App\Http\Controllers\Admin\ProductController::class, 'create'])->name('products.create');
     Route::post('/products', [App\Http\Controllers\Admin\ProductController::class, 'store'])->name('products.store');
-    
+
     // Routes pour les catégories
     Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
     Route::get('/categories/create', [App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('categories.create');
     Route::post('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
-    
+
     // Routes pour les ressourceries
     Route::get('/ressourceries', [App\Http\Controllers\Admin\RessourcerieController::class, 'index'])->name('ressourceries.index');
     Route::get('/ressourceries/create', [App\Http\Controllers\Admin\RessourcerieController::class, 'create'])->name('ressourceries.create');
     Route::post('/ressourceries', [App\Http\Controllers\Admin\RessourcerieController::class, 'store'])->name('ressourceries.store');
-    
+
     // Routes pour les utilisateurs
     Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
     Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
-    
+
     // Routes pour les commandes
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');

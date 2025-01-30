@@ -1,3 +1,112 @@
+# Marketplace
+
+<div align="center">
+
+[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net)
+[![Laravel Version](https://img.shields.io/badge/Laravel-10.x-red.svg)](https://laravel.com)
+[![PHPStan](https://img.shields.io/badge/PHPStan-Level%205-brightgreen.svg)](https://phpstan.org/)
+[![StyleCI](https://github.styleci.io/repos/your-repo-id/shield)](https://github.styleci.io/repos/your-repo-id)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+</div>
+
+## 📋 À propos
+
+Marketplace est une plateforme de commerce en ligne permettant aux ressourceries de vendre leurs produits. Le projet est construit avec Laravel 10 et utilise les dernières pratiques de développement.
+
+## 🚀 Fonctionnalités
+
+- 🛍️ Gestion des produits et catégories
+- 👥 Système d'authentification multi-rôles
+- 🏪 Espace ressourcerie
+- 🛒 Panier d'achat
+- 💳 Système de paiement
+- 📱 Interface responsive
+
+## 🛠️ Technologies
+
+- **Framework:** Laravel 10.x
+- **PHP Version:** 8.1+
+- **Base de données:** MySQL
+- **Front-end:** Blade, TailwindCSS
+- **Authentication:** Laravel Breeze
+- **Qualité de code:**
+  - PHPStan (Analyse statique)
+  - Laravel Pint (Style de code)
+  - Gitmoji (Convention de commits)
+
+## 📦 Installation
+
+1. Cloner le projet
+```bash
+git clone https://github.com/votre-repo/marketplace.git
+cd marketplace
+```
+
+2. Installer les dépendances
+```bash
+composer install
+npm install
+```
+
+3. Configurer l'environnement
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+4. Configurer la base de données dans `.env`
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=marketplace
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+5. Migrer la base de données
+```bash
+php artisan migrate --seed
+```
+
+## 🧪 Tests et Qualité
+
+### Analyse Statique (PHPStan)
+```bash
+./vendor/bin/phpstan analyse
+```
+
+### Style de Code (Laravel Pint)
+```bash
+./vendor/bin/pint
+```
+
+### Tests Unitaires
+```bash
+php artisan test
+```
+
+## 📝 Convention de Commit (Gitmoji)
+
+Pour maintenir une convention cohérente et visuelle, nous utilisons les gitmoji pour nos commits.
+Le format est : `<emoji> [CODE] Description`
+
+Exemples :
+- 🚧 [WIP] Travail en cours sur la fonctionnalité X
+- ✨ [FEAT] Ajout de la nouvelle page d'accueil
+- 🐛 [FIX] Correction du bug d'authentification
+
+[Voir la documentation complète des commits](#convention-de-commit-gitmoji)
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour plus de détails.
+
+## 📄 License
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
 ## Pour lancer le serveur
 npm run dev
 php artisan serve

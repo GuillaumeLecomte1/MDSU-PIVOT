@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
 class UpdatePasswords extends Command
@@ -29,4 +29,4 @@ class UpdatePasswords extends Command
         $this->info('Tous les mots de passe ont été mis à jour avec succès !');
         $this->info('Le mot de passe par défaut est : password');
     }
-} 
+}

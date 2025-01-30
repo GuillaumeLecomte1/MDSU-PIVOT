@@ -8,10 +8,8 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Ressourcerie;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
@@ -22,7 +20,7 @@ class CategoryController extends Controller
             ->when($request->search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             })
             ->when($request->categories, function ($query, $categories) {
@@ -47,10 +45,11 @@ class CategoryController extends Controller
                 } elseif ($quantity === 'out_of_stock') {
                     return $query->where('quantity', '=', 0);
                 }
+
                 return $query; // 'all' case, no filtering
             })
             ->when($request->sort, function ($query, $sort) {
-                return match($sort) {
+                return match ($sort) {
                     'price_asc' => $query->orderBy('price', 'asc'),
                     'price_desc' => $query->orderBy('price', 'desc'),
                     'recent' => $query->orderBy('created_at', 'desc'),
@@ -64,7 +63,7 @@ class CategoryController extends Controller
         foreach ($products as $product) {
             $images = json_decode($product->images) ?? [];
             $product->images = $images;
-            $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
             $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
         }
 
@@ -72,14 +71,14 @@ class CategoryController extends Controller
             'categories' => Category::all(),
             'products' => $products,
             'ressourceries' => Ressourcerie::select('id', 'name', 'city')->get(),
-            'filters' => $request->only(['search', 'categories', 'min_price', 'max_price', 'city', 'quantity', 'sort'])
+            'filters' => $request->only(['search', 'categories', 'min_price', 'max_price', 'city', 'quantity', 'sort']),
         ]);
     }
 
     public function show($slug)
     {
         $category = Category::where('slug', $slug)->firstOrFail();
-        
+
         $products = Product::with(['categories', 'ressourcerie'])
             ->whereHas('categories', function ($query) use ($category) {
                 $query->where('categories.id', $category->id);
@@ -91,15 +90,15 @@ class CategoryController extends Controller
         foreach ($products as $product) {
             $images = json_decode($product->images) ?? [];
             $product->images = $images;
-            $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
             $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
         }
-        
+
         return Inertia::render('Categories/Show', [
             'products' => $products,
             'categories' => Category::withCount('products')->get(),
             'ressourceries' => Ressourcerie::all(),
-            'category' => $category
+            'category' => $category,
         ]);
     }
-} 
+}

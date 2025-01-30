@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Ressourcerie;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use App\Models\Ressourcerie;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Product>
@@ -21,7 +21,7 @@ class ProductFactory extends Factory
         $name = fake()->words(3, true);
         $conditions = ['Neuf', 'Très bon état', 'Bon état', 'État moyen', 'À rénover'];
         $colors = ['Rouge', 'Bleu', 'Vert', 'Jaune', 'Noir', 'Blanc', 'Gris', 'Marron'];
-        
+
         return [
             'name' => ucfirst($name),
             'slug' => Str::slug($name),

@@ -22,14 +22,14 @@ class CategorySeeder extends Seeder
             'Jouets',
             'Électronique',
             'Sports & Loisirs',
-            'Bricolage'
+            'Bricolage',
         ];
 
         foreach ($categories as $categoryName) {
             Category::create([
                 'name' => $categoryName,
                 'slug' => Str::slug($categoryName),
-                'description' => "Collection de $categoryName de seconde main"
+                'description' => "Collection de $categoryName de seconde main",
             ]);
         }
     }

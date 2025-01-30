@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('color')->nullable();
             $table->string('brand')->nullable();
             $table->integer('stock')->default(1);
-            $table->boolean('is_available')->default(true); 
+            $table->boolean('is_available')->default(true);
             $table->json('images')->nullable();
             $table->foreignId('ressourcerie_id')->constrained('market__ressourceries')->onDelete('cascade');
             $table->timestamps();

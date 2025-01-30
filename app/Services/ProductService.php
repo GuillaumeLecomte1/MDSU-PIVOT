@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductService
@@ -11,22 +10,22 @@ class ProductService
     public function getProductsForCategory(string $slug): LengthAwarePaginator
     {
         return Product::with(['categories', 'ressourcerie'])
-            ->whereHas('categories', function($query) use ($slug) {
+            ->whereHas('categories', function ($query) use ($slug) {
                 $query->where('categories.slug', $slug);
             })
-            ->when(request('min_price'), function($query) {
+            ->when(request('min_price'), function ($query) {
                 $query->where('price', '>=', request('min_price'));
             })
-            ->when(request('max_price'), function($query) {
+            ->when(request('max_price'), function ($query) {
                 $query->where('price', '<=', request('max_price'));
             })
-            ->when(request('city'), function($query) {
-                $query->whereHas('ressourcerie', function($q) {
+            ->when(request('city'), function ($query) {
+                $query->whereHas('ressourcerie', function ($q) {
                     $q->where('city', request('city'));
                 });
             })
-            ->when(request('sort'), function($query) {
-                match(request('sort')) {
+            ->when(request('sort'), function ($query) {
+                match (request('sort')) {
                     'price_asc' => $query->orderBy('price', 'asc'),
                     'price_desc' => $query->orderBy('price', 'desc'),
                     'newest' => $query->orderBy('created_at', 'desc'),
@@ -38,27 +37,27 @@ class ProductService
 
     public function getProductDetails(Product $product): array
     {
-        $images = $product->images ? 
-            (is_string($product->images) ? json_decode($product->images) : $product->images) : 
+        $images = $product->images ?
+            (is_string($product->images) ? json_decode($product->images) : $product->images) :
             null;
 
-        $mainImage = $images && is_array($images) && !empty($images) ? 
-            asset('storage/' . $images[0]) : 
+        $mainImage = $images && is_array($images) && ! empty($images) ?
+            asset('storage/'.$images[0]) :
             asset('images/no-image.jpg');
 
         return [
             'id' => $product->id,
             'name' => $product->name,
             'description' => $product->description,
-            'price' => number_format($product->price, 2, ',', ' ') . ' €',
+            'price' => number_format($product->price, 2, ',', ' ').' €',
             'mainImage' => $mainImage,
             'categoryName' => $product->categories->first()?->name ?? 'Non catégorisé',
-            'ressourcerieInfo' => $product->ressourcerie ? 
-                "{$product->ressourcerie->name} ({$product->ressourcerie->city})" : 
+            'ressourcerieInfo' => $product->ressourcerie ?
+                "{$product->ressourcerie->name} ({$product->ressourcerie->city})" :
                 'Non assigné',
             'isAvailable' => $product->is_available && $product->stock > 0,
             'stockLabel' => $product->is_available && $product->stock > 0 ? 'En stock' : 'Indisponible',
             'stockClass' => $product->is_available && $product->stock > 0 ? 'text-green-600' : 'text-red-600',
         ];
     }
-} 
+}

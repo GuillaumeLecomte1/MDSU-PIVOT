@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Models\Product;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -30,13 +29,13 @@ class DashboardController extends Controller
         Log::info('Dashboard data', [
             'categories_count' => $categories->count(),
             'latest_products_count' => $latestProducts->count(),
-            'popular_products_count' => $popularProducts->count()
+            'popular_products_count' => $popularProducts->count(),
         ]);
 
         return Inertia::render('Dashboard/Index', [
             'categories' => $categories,
             'latestProducts' => $latestProducts,
-            'popularProducts' => $popularProducts
+            'popularProducts' => $popularProducts,
         ]);
     }
-} 
+}

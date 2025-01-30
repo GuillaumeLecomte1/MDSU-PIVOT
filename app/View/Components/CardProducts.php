@@ -17,4 +17,4 @@ class CardProducts extends Component
     {
         return view('components.products.card-products');
     }
-} 
+}

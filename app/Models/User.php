@@ -6,7 +6,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Product;
 
 class User extends Authenticatable
 {
@@ -75,7 +74,7 @@ class User extends Authenticatable
 
     public function getRoleLabel(): string
     {
-        return match($this->role) {
+        return match ($this->role) {
             'admin' => 'Admin',
             'ressourcerie' => 'Ressourcerie',
             default => 'Client',

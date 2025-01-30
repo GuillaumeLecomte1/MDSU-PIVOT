@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class OrderController extends Controller
@@ -16,7 +15,7 @@ class OrderController extends Controller
             ->paginate(10);
 
         return Inertia::render('Admin/Orders/Index', [
-            'orders' => $orders
+            'orders' => $orders,
         ]);
     }
 
@@ -25,7 +24,7 @@ class OrderController extends Controller
         $order->load(['user', 'products']);
 
         return Inertia::render('Admin/Orders/Show', [
-            'order' => $order
+            'order' => $order,
         ]);
     }
-} 
+}

@@ -29,4 +29,4 @@ class CreateCategoriesTable extends Migration
     {
         Schema::dropIfExists('market__categories');
     }
-};
+}

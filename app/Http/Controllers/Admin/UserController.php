@@ -16,7 +16,7 @@ class UserController extends Controller
             ->paginate(10);
 
         return Inertia::render('Admin/Users/Index', [
-            'users' => $users
+            'users' => $users,
         ]);
     }
 
@@ -44,4 +44,4 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')
             ->with('success', 'Utilisateur créé avec succès.');
     }
-} 
+}

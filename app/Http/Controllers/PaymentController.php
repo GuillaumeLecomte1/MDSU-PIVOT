@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Stripe\Stripe;
-use Stripe\Charge;
-use Stripe\Checkout\Session;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Models\Product; // Assurez-vous d'avoir un modèle Product
-use App\Models\Order; // Ajoutez cette ligne pour importer le modèle Order
-use Illuminate\Support\Facades\Log; 
-use Illuminate\Support\Facades\Auth; // Ajoutez cette ligne pour importer Auth
-
+use Illuminate\Support\Facades\Auth;
+use Stripe\Charge; // Assurez-vous d'avoir un modèle Product
+use Stripe\Checkout\Session; // Ajoutez cette ligne pour importer le modèle Order
+use Stripe\Stripe; // Ajoutez cette ligne pour importer Auth
 
 class PaymentController extends Controller
 {
@@ -47,7 +45,7 @@ class PaymentController extends Controller
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => route('payment.success') . '?session_id={CHECKOUT_SESSION_ID}',
+            'success_url' => route('payment.success').'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('payment.cancel'),
         ]);
 
@@ -60,7 +58,7 @@ class PaymentController extends Controller
 
         $session = Session::retrieve($request->get('session_id'));
         $customer = $session->customer_details;
-        
+
         // Stocker les détails de la commande en session
         $order = [
             'user_id' => Auth::id(), // Utilisez Auth::id() pour obtenir l'ID de l'utilisateur authentifié
@@ -83,12 +81,14 @@ class PaymentController extends Controller
     public function showPaymentPage()
     {
         $products = Product::all(); // Ou une logique pour obtenir les produits à afficher
+
         return view('stripe', compact('products'));
     }
 
     public function storeOrder(Request $request)
     {
         $order = Order::create($request->all());
+
         return response()->json($order, 201);
     }
 }

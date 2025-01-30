@@ -29,11 +29,11 @@ class RessourcerieSeeder extends Seeder
                     'jeudi' => '9h00-18h00',
                     'vendredi' => '9h00-18h00',
                     'samedi' => '10h00-17h00',
-                    'dimanche' => 'fermé'
+                    'dimanche' => 'fermé',
                 ]),
                 'latitude' => 48.8566,
                 'longitude' => 2.3522,
-                'siret' => '12345678901234'
+                'siret' => '12345678901234',
             ],
             [
                 'name' => 'RecupLyon',
@@ -52,11 +52,11 @@ class RessourcerieSeeder extends Seeder
                     'jeudi' => '9h30-18h30',
                     'vendredi' => '9h30-18h30',
                     'samedi' => '10h00-19h00',
-                    'dimanche' => 'fermé'
+                    'dimanche' => 'fermé',
                 ]),
                 'latitude' => 45.7578,
                 'longitude' => 4.8320,
-                'siret' => '98765432109876'
+                'siret' => '98765432109876',
             ],
             [
                 'name' => 'Recyclerie Marseille',
@@ -74,11 +74,11 @@ class RessourcerieSeeder extends Seeder
                     'jeudi' => '10h00-19h00',
                     'vendredi' => '10h00-19h00',
                     'samedi' => '9h00-20h00',
-                    'dimanche' => '9h00-13h00'
+                    'dimanche' => '9h00-13h00',
                 ]),
                 'latitude' => 43.2965,
                 'longitude' => 5.3698,
-                'siret' => '45678912345678'
+                'siret' => '45678912345678',
             ],
             [
                 'name' => 'Ressourcerie Bordelaise',
@@ -89,7 +89,7 @@ class RessourcerieSeeder extends Seeder
                 'postal_code' => '33000',
                 'phone' => '0556789123',
                 'email' => 'contact@ressourcerie-bordelaise.fr',
-                'siret' => '78912345678912'
+                'siret' => '78912345678912',
             ],
             [
                 'name' => 'EcoSolidaire Lille',
@@ -100,7 +100,7 @@ class RessourcerieSeeder extends Seeder
                 'postal_code' => '59000',
                 'phone' => '0320123456',
                 'email' => 'contact@ecosolidaire-lille.fr',
-                'siret' => '32165498732165'
+                'siret' => '32165498732165',
             ],
             [
                 'name' => 'Récup\'Nantes',
@@ -111,7 +111,7 @@ class RessourcerieSeeder extends Seeder
                 'postal_code' => '44000',
                 'phone' => '0240567891',
                 'email' => 'contact@recup-nantes.fr',
-                'siret' => '65432198765432'
+                'siret' => '65432198765432',
             ],
             [
                 'name' => 'Ressourcerie Toulousaine',
@@ -122,7 +122,7 @@ class RessourcerieSeeder extends Seeder
                 'postal_code' => '31000',
                 'phone' => '0561234567',
                 'email' => 'contact@ressourcerie-toulousaine.fr',
-                'siret' => '95175345678912'
+                'siret' => '95175345678912',
             ],
             [
                 'name' => 'EcoStrasbourg',
@@ -133,7 +133,7 @@ class RessourcerieSeeder extends Seeder
                 'postal_code' => '67000',
                 'phone' => '0388123456',
                 'email' => 'contact@ecostrasbourg.fr',
-                'siret' => '36925814736925'
+                'siret' => '36925814736925',
             ],
             [
                 'name' => 'Ressourcerie Montpelliéraine',
@@ -144,7 +144,7 @@ class RessourcerieSeeder extends Seeder
                 'postal_code' => '34000',
                 'phone' => '0467891234',
                 'email' => 'contact@ressourcerie-montpellier.fr',
-                'siret' => '14725836914725'
+                'siret' => '14725836914725',
             ],
             [
                 'name' => 'Rennes Récup',
@@ -155,12 +155,12 @@ class RessourcerieSeeder extends Seeder
                 'postal_code' => '35000',
                 'phone' => '0299123456',
                 'email' => 'contact@rennes-recup.fr',
-                'siret' => '25836914725836'
-            ]
+                'siret' => '25836914725836',
+            ],
         ];
 
         foreach ($ressourceries as $ressourcerie) {
             Ressourcerie::create($ressourcerie);
         }
     }
-} 
+}

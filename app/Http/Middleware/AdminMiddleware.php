@@ -16,13 +16,14 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !Auth::user()->is_admin) {
+        if (! Auth::check() || ! Auth::user()->is_admin) {
             if ($request->wantsJson()) {
                 return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
             }
+
             return redirect()->route('/')->with('error', 'Accès non autorisé. Vous devez être administrateur.');
         }
 
         return $next($request);
     }
-} 
+}

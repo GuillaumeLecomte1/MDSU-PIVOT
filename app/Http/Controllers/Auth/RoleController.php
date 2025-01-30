@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class RoleController extends Controller
@@ -39,8 +37,8 @@ class RoleController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        
-        return match($user->role) {
+
+        return match ($user->role) {
             'admin' => redirect()->route('admin.dashboard'),
             'ressourcerie' => redirect()->route('ressourcerie.dashboard'),
             default => redirect()->route('client.dashboard'),

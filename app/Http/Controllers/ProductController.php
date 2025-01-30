@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {
@@ -38,7 +37,7 @@ class ProductController extends Controller
         foreach ($products as $product) {
             $images = json_decode($product->images) ?? [];
             $product->images = $images;
-            $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
             $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
         }
 
@@ -51,12 +50,12 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $product->load(['categories', 'ressourcerie']);
-        
+
         $images = json_decode($product->images) ?? [];
-        $product->images = array_map(function($image) {
-            return '/storage/products/' . $image;
+        $product->images = array_map(function ($image) {
+            return '/storage/products/'.$image;
         }, $images);
-        $product->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+        $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
         $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
 
         $similarProducts = Product::with(['categories', 'ressourcerie'])
@@ -68,7 +67,7 @@ class ProductController extends Controller
         foreach ($similarProducts as $similarProduct) {
             $images = json_decode($similarProduct->images) ?? [];
             $similarProduct->images = $images;
-            $similarProduct->main_image = !empty($images) ? '/storage/products/' . $images[0] : null;
+            $similarProduct->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
             $similarProduct->isFavorite = Auth::check() ? $similarProduct->isFavoritedBy(Auth::user()) : false;
         }
 

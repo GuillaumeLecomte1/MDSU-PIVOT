@@ -17,10 +17,10 @@ return new class extends Migration
             // Ajouter des index pour améliorer les performances des requêtes
             $table->index(['product_id', 'category_id']);
             $table->index(['category_id', 'product_id']);
-            
+
             // Clé primaire composite
             $table->primary(['product_id', 'category_id']);
-            
+
             $table->timestamps();
         });
     }
@@ -29,4 +29,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('market__category_product');
     }
-}; 
+};

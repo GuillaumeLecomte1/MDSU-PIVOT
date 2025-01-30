@@ -17,7 +17,7 @@ class RessourcerieController extends Controller
             ->paginate(10);
 
         return Inertia::render('Admin/Ressourceries/Index', [
-            'ressourceries' => $ressourceries
+            'ressourceries' => $ressourceries,
         ]);
     }
 
@@ -52,4 +52,4 @@ class RessourcerieController extends Controller
         return redirect()->route('admin.ressourceries.index')
             ->with('success', 'Ressourcerie créée avec succès.');
     }
-} 
+}

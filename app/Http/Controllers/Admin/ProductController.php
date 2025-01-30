@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\Ressourcerie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -19,7 +19,7 @@ class ProductController extends Controller
             ->paginate(10);
 
         return Inertia::render('Admin/Products/Index', [
-            'products' => $products
+            'products' => $products,
         ]);
     }
 
@@ -30,7 +30,7 @@ class ProductController extends Controller
 
         return Inertia::render('Admin/Products/Create', [
             'categories' => $categories,
-            'ressourceries' => $ressourceries
+            'ressourceries' => $ressourceries,
         ]);
     }
 
@@ -48,13 +48,13 @@ class ProductController extends Controller
             'ressourcerie_id' => 'required|exists:market__ressourceries,id',
             'category_ids' => 'required|array',
             'category_ids.*' => 'exists:market__categories,id',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $images = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $filename = Str::slug($request->name) . '-' . uniqid() . '.' . $image->extension();
+                $filename = Str::slug($request->name).'-'.uniqid().'.'.$image->extension();
                 $image->storeAs('public/products', $filename);
                 $images[] = $filename;
             }
@@ -71,7 +71,7 @@ class ProductController extends Controller
             'brand' => $request->brand,
             'stock' => $request->stock,
             'ressourcerie_id' => $request->ressourcerie_id,
-            'images' => json_encode($images)
+            'images' => json_encode($images),
         ]);
 
         $product->categories()->attach($request->category_ids);
@@ -79,4 +79,4 @@ class ProductController extends Controller
         return redirect()->route('categories.index')
             ->with('success', 'Produit créé avec succès.');
     }
-} 
+}

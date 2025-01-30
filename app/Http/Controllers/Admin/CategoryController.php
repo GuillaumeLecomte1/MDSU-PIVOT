@@ -17,7 +17,7 @@ class CategoryController extends Controller
             ->paginate(10);
 
         return Inertia::render('Admin/Categories/Index', [
-            'categories' => $categories
+            'categories' => $categories,
         ]);
     }
 
@@ -42,4 +42,4 @@ class CategoryController extends Controller
         return redirect()->route('admin.categories.index')
             ->with('success', 'Catégorie créée avec succès.');
     }
-} 
+}

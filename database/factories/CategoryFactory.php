@@ -33,7 +33,7 @@ class CategoryFactory extends Factory
     public function definition(): array
     {
         $availableCategories = array_diff_key(static::$categories, static::$usedCategories);
-        
+
         if (empty($availableCategories)) {
             // Si toutes les catégories ont été utilisées, réinitialiser
             static::$usedCategories = [];
