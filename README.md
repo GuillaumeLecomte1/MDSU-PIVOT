@@ -70,75 +70,48 @@ DB_PASSWORD=
 php artisan migrate --seed
 ```
 
-## 🔍 Commandes de Qualité de Code
+6. Lancer le serveur de développement
+```bash
+npm run dev
+php artisan serve
+```
 
-Nous utilisons des outils de qualité de code pour maintenir des standards élevés dans notre base de code.
+## 🔍 Qualité du Code
 
-### Analyse du Code (PHPStan niveau 5)
+### Analyse Statique (PHPStan niveau 5)
 ```bash
 composer analyse
 ```
-Lance une analyse statique approfondie du code pour détecter les erreurs potentielles et les problèmes de typage.
 
 ### Vérification du Style
 ```bash
 composer style
 ```
-Vérifie si le code respecte les standards de style sans faire de modifications.
 
 ### Correction Automatique du Style
 ```bash
 composer style:fix
 ```
-Corrige automatiquement le style du code selon les standards définis dans la configuration de Laravel Pint.
 
-## 🧪 Tests et Qualité
-
-### Analyse Statique (PHPStan)
-```bash
-./vendor/bin/phpstan analyse
-```
-
-### Style de Code (Laravel Pint)
-```bash
-./vendor/bin/pint
-```
-
-### Tests Unitaires
-```bash
-php artisan test
-```
-
-## 📝 Convention de Commit (Gitmoji)
-
-Pour maintenir une convention cohérente et visuelle, nous utilisons les gitmoji pour nos commits.
-
-# Pour créer un commit avec Gitmoji
+## 📝 Gestion des Commits (Gitmoji)
 
 Nous utilisons Gitmoji pour maintenir une convention de commits cohérente et visuelle.
 
-## Installation
-Vous avez deux options :
+### Installation
 
-### Option 1 : Utilisation locale (sans installation)
-Utilisez simplement depuis la racine du projet :
+#### Option 1 : Utilisation locale (sans installation)
 ```cmd
 .\gitmoji
 ```
 
-### Option 2 : Installation globale (pour utiliser `gitmoji` partout)
+#### Option 2 : Installation globale
 ```powershell
-# Ouvrir PowerShell en tant qu'administrateur et exécuter :
+# Ouvrir PowerShell en tant qu'administrateur
 .\scripts\install-gitmoji.ps1
 ```
-Après l'installation, vous pourrez utiliser :
-```cmd
-gitmoji
-```
+Après l'installation, utilisez simplement `gitmoji` depuis n'importe où dans le projet.
 
-Le format des commits est : `<emoji> [CODE] Description`
-
-Types de commits disponibles :
+### Types de Commits
 
 | Emoji | Code | Description |
 |-------|------|-------------|
@@ -153,6 +126,13 @@ Types de commits disponibles :
 | ✅ | [TEST] | Tests |
 | 🔥 | [REMOVE] | Remove code/files |
 
+## 🛠️ Commandes Utiles
+
+### Mise à jour des mots de passe utilisateurs
+```bash
+php artisan users:update-passwords
+```
+
 ## 🤝 Contribution
 
 Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour plus de détails.
@@ -160,69 +140,3 @@ Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md) 
 ## 📄 License
 
 Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-## Pour lancer le serveur
-npm run dev
-php artisan serve
-
-## Les commandes utiles
-# Pour hasher les passwords des utilisateurs 
-php artisan users:update-passwords
-
-## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
