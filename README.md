@@ -5,7 +5,7 @@
 [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net)
 [![Laravel Version](https://img.shields.io/badge/Laravel-10.x-red.svg)](https://laravel.com)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%205-brightgreen.svg)](https://phpstan.org/)
-[![StyleCI](https://github.styleci.io/repos/your-repo-id/shield)](https://github.styleci.io/repos/your-repo-id)
+[![StyleCI](https://github.styleci.io/repos/your-repo-id/shield)](https://github.styleci.io/repos/872337695)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>
@@ -31,9 +31,14 @@ Pivot est une plateforme de commerce en ligne permettant aux ressourceries de ve
 - **Front-end:** Blade, TailwindCSS
 - **Authentication:** Laravel Breeze
 - **Qualité de code:**
-  - PHPStan (Analyse statique)
-  - Laravel Pint (Style de code)
-  - Gitmoji (Convention de commits)
+  - LaraStan (Analyse statique) ✅
+  - Laravel Pint (Style de code) ✅
+  - Gitmoji (Convention de commits) ✅
+  - Rector (Refactoring) 🚧Incoming🚧
+ **🚧Incoming🚧 :**
+  - CI/CD via Coolify
+  - Tests
+  - Documentation
 
 ## 📦 Installation
 
@@ -60,7 +65,7 @@ php artisan key:generate
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=marketplace
+DB_DATABASE=pivot
 DB_USERNAME=root
 DB_PASSWORD=
 ```
