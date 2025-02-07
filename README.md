@@ -1,4 +1,4 @@
-# Marketplace
+# Pivot
 
 <div align="center">
 
@@ -12,7 +12,7 @@
 
 ## 📋 À propos
 
-Marketplace est une plateforme de commerce en ligne permettant aux ressourceries de vendre leurs produits. Le projet est construit avec Laravel 10 et utilise les dernières pratiques de développement.
+Pivot est une plateforme de commerce en ligne permettant aux ressourceries de vendre leurs produits. Le projet est construit avec Laravel 10 et utilise les dernières pratiques de développement.
 
 ## 🚀 Fonctionnalités
 
@@ -70,6 +70,28 @@ DB_PASSWORD=
 php artisan migrate --seed
 ```
 
+## 🔍 Commandes de Qualité de Code
+
+Nous utilisons des outils de qualité de code pour maintenir des standards élevés dans notre base de code.
+
+### Analyse du Code (PHPStan niveau 5)
+```bash
+composer analyse
+```
+Lance une analyse statique approfondie du code pour détecter les erreurs potentielles et les problèmes de typage.
+
+### Vérification du Style
+```bash
+composer style
+```
+Vérifie si le code respecte les standards de style sans faire de modifications.
+
+### Correction Automatique du Style
+```bash
+composer style:fix
+```
+Corrige automatiquement le style du code selon les standards définis dans la configuration de Laravel Pint.
+
 ## 🧪 Tests et Qualité
 
 ### Analyse Statique (PHPStan)
@@ -115,18 +137,15 @@ php artisan serve
 # Pour hasher les passwords des utilisateurs 
 php artisan users:update-passwords
 
-# Pour les messages commit
-PowerShell -ExecutionPolicy Bypass -File .\scripts\commit.ps1
+# Pour créer un commit avec Gitmoji
+```bash
+composer commit
+```
 
 ## Convention de Commit (Gitmoji)
 
 Pour maintenir une convention cohérente et visuelle, nous utilisons les gitmoji pour nos commits.
 Le format est : `<emoji> [CODE] Description`
-
-Exemples :
-- 🚧 [WIP] Travail en cours sur la fonctionnalité X
-- ✨ [FEAT] Ajout de la nouvelle page d'accueil
-- 🐛 [FIX] Correction du bug d'authentification
 
 Types de commits disponibles :
 
@@ -145,17 +164,14 @@ Types de commits disponibles :
 
 ### Utilisation
 
-1. Placez-vous dans le répertoire du projet
-2. Exécutez le script de commit :
-   ```powershell
-   PowerShell -ExecutionPolicy Bypass -File .\scripts\commit.ps1
+1. Lancez l'assistant de commit :
+   ```bash
+   composer commit
    ```
-3. Suivez les instructions à l'écran :
+2. Suivez les instructions à l'écran :
    - Choisissez le type de commit (1-10)
    - Entrez votre message de commit
    - Confirmez pour procéder au commit
-
-Le script formatera automatiquement votre message selon la convention : emoji + [CODE] + votre message.
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 

@@ -4,10 +4,37 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Order extends Model
 {
-    protected $fillable = ['user_id', 'amount', 'status'];
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'total',
+        'status',
+        'payment_intent_id',
+        'shipping_address',
+        'billing_address',
+    ];
+
+    protected $casts = [
+        'total' => 'decimal:2',
+        'shipping_address' => 'array',
+        'billing_address' => 'array',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class)
+            ->withPivot('quantity', 'price')
+            ->withTimestamps();
+    }
 }

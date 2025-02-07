@@ -15,11 +15,13 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.0",
         "laravel/breeze": "^2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.1",
+        "nunomaduro/larastan": "^3.0",
         "pestphp/pest": "^3.5",
         "pestphp/pest-plugin-laravel": "^3.0"
     },
@@ -50,6 +52,19 @@
             "@php artisan key:generate --ansi",
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
+        ],
+        "analyse": [
+            "@php -r \"echo '=== Analyse du code avec PHPStan niveau 5 ===\\n';\"",
+            "@php vendor/bin/phpstan analyse --level=5 --memory-limit=512M"
+        ],
+        "style": [
+            "@php -r \"echo '=== Verification du style du code ===\\n';\"",
+            "@php vendor/bin/pint --test"
+        ],
+        "style:fix": [
+            "@php -r \"echo '=== Correction automatique du style ===\\n';\"",
+            "@php vendor/bin/pint",
+            "@php -r \"echo '=== Style corrige avec succes ===\\n';\""
         ]
     },
     "extra": {
@@ -64,7 +79,8 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
-        }
+        },
+        "process-timeout": 0
     },
     "minimum-stability": "stable",
     "prefer-stable": true

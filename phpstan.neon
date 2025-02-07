@@ -1,21 +1,33 @@
 includes:
-    - ./vendor/nunomaduro/larastan/extension.neon
+    - ./vendor/larastan/larastan/extension.neon
 
 parameters:
+    level: 5
     paths:
         - app
         - config
         - database
         - routes
-        - tests
 
-    # Level 9 is the highest level
-    level: 5
+    # Exclusions
+    excludePaths:
+        - ./database/migrations
+        - ./database/seeders
+        - ./tests
+        - ./storage
+        - ./resources/views
 
+    # Performance
+    parallel:
+        maximumNumberOfProcesses: 4
+
+    # Cache
+    tmpDir: ./storage/framework/cache/phpstan
+    
+    # Ignorer certaines erreurs
     ignoreErrors:
         - '#PHPDoc tag @var#'
+        - '#Variable \$this might not be defined#'
 
-    excludePaths:
-        - ./*/*/FileToBeExcluded.php
-
-    checkMissingIterableValueType: false 
+    # Laravel specific
+    checkModelProperties: true 
