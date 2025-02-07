@@ -112,40 +112,31 @@ php artisan test
 ## 📝 Convention de Commit (Gitmoji)
 
 Pour maintenir une convention cohérente et visuelle, nous utilisons les gitmoji pour nos commits.
-Le format est : `<emoji> [CODE] Description`
-
-Exemples :
-- 🚧 [WIP] Travail en cours sur la fonctionnalité X
-- ✨ [FEAT] Ajout de la nouvelle page d'accueil
-- 🐛 [FIX] Correction du bug d'authentification
-
-[Voir la documentation complète des commits](#convention-de-commit-gitmoji)
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour plus de détails.
-
-## 📄 License
-
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-## Pour lancer le serveur
-npm run dev
-php artisan serve
-
-## Les commandes utiles
-# Pour hasher les passwords des utilisateurs 
-php artisan users:update-passwords
 
 # Pour créer un commit avec Gitmoji
-```bash
-composer commit
+
+Nous utilisons Gitmoji pour maintenir une convention de commits cohérente et visuelle.
+
+## Installation
+Vous avez deux options :
+
+### Option 1 : Utilisation locale (sans installation)
+Utilisez simplement depuis la racine du projet :
+```cmd
+.\gitmoji
 ```
 
-## Convention de Commit (Gitmoji)
+### Option 2 : Installation globale (pour utiliser `gitmoji` partout)
+```powershell
+# Ouvrir PowerShell en tant qu'administrateur et exécuter :
+.\scripts\install-gitmoji.ps1
+```
+Après l'installation, vous pourrez utiliser :
+```cmd
+gitmoji
+```
 
-Pour maintenir une convention cohérente et visuelle, nous utilisons les gitmoji pour nos commits.
-Le format est : `<emoji> [CODE] Description`
+Le format des commits est : `<emoji> [CODE] Description`
 
 Types de commits disponibles :
 
@@ -162,25 +153,21 @@ Types de commits disponibles :
 | ✅ | [TEST] | Tests |
 | 🔥 | [REMOVE] | Remove code/files |
 
-### Utilisation
+## 🤝 Contribution
 
-1. Lancez l'assistant de commit :
-   ```bash
-   composer commit
-   ```
-2. Suivez les instructions à l'écran :
-   - Choisissez le type de commit (1-10)
-   - Entrez votre message de commit
-   - Confirmez pour procéder au commit
+Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour plus de détails.
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## 📄 License
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## Pour lancer le serveur
+npm run dev
+php artisan serve
+
+## Les commandes utiles
+# Pour hasher les passwords des utilisateurs 
+php artisan users:update-passwords
 
 ## About Laravel
 
