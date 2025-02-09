@@ -67,7 +67,7 @@ class CategoryController extends Controller
         foreach ($products as $product) {
             $images = is_string($product->images) ? json_decode($product->images) : [];
             $product->setAttribute('images', $images);
-            $product->setAttribute('main_image', !empty($images) ? '/storage/products/'.$images[0] : null);
+            $product->setAttribute('main_image', ! empty($images) ? '/storage/products/'.$images[0] : null);
             $product->setAttribute('isFavorite', $user !== null && $product->isFavoritedBy($user));
         }
 
@@ -97,7 +97,7 @@ class CategoryController extends Controller
         foreach ($products as $product) {
             $images = is_string($product->images) ? json_decode($product->images) : [];
             $product->setAttribute('images', $images);
-            $product->setAttribute('main_image', !empty($images) ? '/storage/products/'.$images[0] : null);
+            $product->setAttribute('main_image', ! empty($images) ? '/storage/products/'.$images[0] : null);
             $product->setAttribute('isFavorite', $user !== null && $product->isFavoritedBy($user));
         }
 
@@ -118,14 +118,14 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'parent_id' => 'nullable|exists:categories,id'
+            'parent_id' => 'nullable|exists:categories,id',
         ]);
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $imageName = time().'.'.$image->getClientOriginalExtension();
             $image->move(public_path('images/categories'), $imageName);
-            $validatedData['image'] = 'images/categories/' . $imageName;
+            $validatedData['image'] = 'images/categories/'.$imageName;
         }
 
         $category = Category::create($validatedData);
@@ -142,7 +142,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'parent_id' => 'nullable|exists:categories,id'
+            'parent_id' => 'nullable|exists:categories,id',
         ]);
 
         if ($request->hasFile('image') && $category->getAttribute('image')) {
@@ -152,9 +152,9 @@ class CategoryController extends Controller
             }
 
             $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $imageName = time().'.'.$image->getClientOriginalExtension();
             $image->move(public_path('images/categories'), $imageName);
-            $validatedData['image'] = 'images/categories/' . $imageName;
+            $validatedData['image'] = 'images/categories/'.$imageName;
         }
 
         $category->update($validatedData);

@@ -50,8 +50,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get the user's favorite products.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function favorites(): BelongsToMany
     {

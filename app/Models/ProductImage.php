@@ -12,11 +12,11 @@ class ProductImage extends Model
 
     protected $fillable = [
         'path',
-        'product_id'
+        'product_id',
     ];
 
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
-} 
+}

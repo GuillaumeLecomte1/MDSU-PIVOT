@@ -20,4 +20,4 @@ class CreateProductImagesTable extends Migration
     {
         Schema::dropIfExists('product_images');
     }
-} 
+}

@@ -44,8 +44,8 @@ class ProductService
             $imagesArray = is_string($images) ? json_decode($images, true) : $images;
         }
 
-        $mainImage = !empty($imagesArray) ? 
-            Storage::url('products/' . reset($imagesArray)) : 
+        $mainImage = ! empty($imagesArray) ?
+            Storage::url('products/'.reset($imagesArray)) :
             asset('images/no-image.jpg');
 
         $price = (float) $product->getAttribute('price');
@@ -56,7 +56,7 @@ class ProductService
             'id' => $product->id,
             'name' => $product->getAttribute('name'),
             'description' => $product->getAttribute('description'),
-            'price' => number_format($price, 2, ',', ' ') . ' €',
+            'price' => number_format($price, 2, ',', ' ').' €',
             'mainImage' => $mainImage,
             'categoryName' => $category ? $category->getAttribute('name') : 'Non catégorisé',
             'ressourcerieInfo' => $ressourcerie ? sprintf(

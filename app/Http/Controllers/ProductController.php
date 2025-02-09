@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -39,7 +39,7 @@ class ProductController extends Controller
         foreach ($products as $product) {
             $images = $product->images ? (is_string($product->images) ? json_decode($product->images) : $product->images) : [];
             $product->images = $images;
-            $product->main_image = !empty($images) ? '/storage/products/'.$images[0] : null;
+            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
             $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
         }
 
@@ -58,7 +58,7 @@ class ProductController extends Controller
         $product->setAttribute('images', array_map(function ($image) {
             return '/storage/products/'.$image;
         }, $images));
-        $product->setAttribute('main_image', !empty($images) ? '/storage/products/'.$images[0] : null);
+        $product->setAttribute('main_image', ! empty($images) ? '/storage/products/'.$images[0] : null);
 
         /** @var ?User $user */
         $user = Auth::user();
@@ -74,7 +74,7 @@ class ProductController extends Controller
             $imagesData = is_string($similarProduct->images) ? json_decode($similarProduct->images) : [];
             $images = is_array($imagesData) ? $imagesData : [];
             $similarProduct->setAttribute('images', $images);
-            $similarProduct->setAttribute('main_image', !empty($images) ? '/storage/products/'.$images[0] : null);
+            $similarProduct->setAttribute('main_image', ! empty($images) ? '/storage/products/'.$images[0] : null);
             $similarProduct->setAttribute('isFavorite', $user !== null && $similarProduct->isFavoritedBy($user));
         }
 
@@ -94,17 +94,17 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $product = Product::create($validatedData);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $imageName = time() . '_' . $image->getClientOriginalName();
+                $imageName = time().'_'.$image->getClientOriginalName();
                 $image->move(public_path('images/products'), $imageName);
                 $product->images()->create([
-                    'path' => 'images/products/' . $imageName
+                    'path' => 'images/products/'.$imageName,
                 ]);
             }
         }
@@ -122,7 +122,7 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $product->update($validatedData);
@@ -138,10 +138,10 @@ class ProductController extends Controller
 
             // Ajouter les nouvelles images
             foreach ($request->file('images') as $image) {
-                $imageName = time() . '_' . $image->getClientOriginalName();
+                $imageName = time().'_'.$image->getClientOriginalName();
                 $image->move(public_path('images/products'), $imageName);
                 $product->images()->create([
-                    'path' => 'images/products/' . $imageName
+                    'path' => 'images/products/'.$imageName,
                 ]);
             }
         }

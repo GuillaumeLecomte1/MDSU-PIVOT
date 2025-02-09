@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 
 class Product extends Model
@@ -43,7 +43,7 @@ class Product extends Model
 
     protected $appends = [
         'main_image',
-        'is_favorite'
+        'is_favorite',
     ];
 
     public function categories(): BelongsToMany
@@ -70,22 +70,25 @@ class Product extends Model
     public function getMainImageAttribute(): ?string
     {
         $firstImage = $this->images()->first();
+
         return $firstImage ? $firstImage->getAttribute('path') : null;
     }
 
     public function getIsFavoriteAttribute(): bool
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return false;
         }
+
         return $this->favorites()->where('user_id', Auth::id())->exists();
     }
 
     public function isFavoritedBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
+
         return $this->favorites()->where('user_id', $user->id)->exists();
     }
 }

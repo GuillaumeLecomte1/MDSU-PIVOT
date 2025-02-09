@@ -18,6 +18,7 @@ class RessourcerieFactory extends Factory
     public function definition(): array
     {
         $name = fake()->company();
+
         return [
             'name' => $name,
             'slug' => Str::slug($name),
@@ -36,7 +37,7 @@ class RessourcerieFactory extends Factory
                 'thursday' => '9:00-18:00',
                 'friday' => '9:00-18:00',
                 'saturday' => '10:00-17:00',
-                'sunday' => 'closed'
+                'sunday' => 'closed',
             ]),
             'latitude' => fake()->latitude(),
             'longitude' => fake()->longitude(),

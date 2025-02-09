@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -14,18 +13,18 @@ class FavoriteController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
+
         $favorites = $user->favorites()
             ->with(['categories', 'ressourcerie'])
             ->get()
             ->map(function ($product) {
-                $imagesData = is_string($product->getAttribute('images')) 
-                    ? json_decode($product->getAttribute('images')) 
+                $imagesData = is_string($product->getAttribute('images'))
+                    ? json_decode($product->getAttribute('images'))
                     : [];
                 $images = is_array($imagesData) ? $imagesData : [];
-                
+
                 $product->setAttribute('images', $images);
-                $product->setAttribute('main_image', !empty($images) ? '/storage/products/'.$images[0] : null);
+                $product->setAttribute('main_image', ! empty($images) ? '/storage/products/'.$images[0] : null);
                 $product->setAttribute('isFavorite', true);
 
                 return $product;
@@ -40,9 +39,9 @@ class FavoriteController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        
-        $isFavorite = !$user->hasFavorited($product);
-        
+
+        $isFavorite = ! $user->hasFavorited($product);
+
         if ($isFavorite) {
             $user->favorites()->attach($product->id);
         } else {
@@ -57,8 +56,8 @@ class FavoriteController extends Controller
                 'price' => $product->price,
                 'description' => $product->description,
                 'main_image' => $product->getAttribute('main_image'),
-                'isFavorite' => $isFavorite
-            ]
+                'isFavorite' => $isFavorite,
+            ],
         ]);
     }
 }

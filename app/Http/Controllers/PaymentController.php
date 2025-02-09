@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Constants\ViewNames;
 use App\Models\Order;
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Stripe\Charge; // Assurez-vous d'avoir un modèle Product
-use Stripe\Checkout\Session; // Ajoutez cette ligne pour importer le modèle Order
-use Stripe\Stripe; // Ajoutez cette ligne pour importer Auth
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // Assurez-vous d'avoir un modèle Product
+use Stripe\Charge; // Ajoutez cette ligne pour importer le modèle Order
+use Stripe\Checkout\Session; // Ajoutez cette ligne pour importer Auth
+use Stripe\Stripe;
 
 class PaymentController extends Controller
 {
