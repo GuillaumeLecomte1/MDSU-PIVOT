@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Route racine pour tous les utilisateurs
-Route::get('/', function () {
+Route::get('/', function ()
+{
     $latestProducts = Product::with(['categories', 'ressourcerie', 'favorites'])
         ->latest()
         ->take(4)
@@ -26,7 +27,8 @@ Route::get('/', function () {
         ->get();
 
     // Ajouter l'état des favoris pour chaque produit
-    $processProducts = function ($products) {
+    $processProducts = function ($products)
+    {
         foreach ($products as $product) {
             $images = json_decode($product->images) ?? [];
             $product->images = $images;
@@ -47,7 +49,8 @@ Route::get('/', function () {
 })->name('home');
 
 // Dashboard route pour les utilisateurs authentifiés
-Route::get('/dashboard', function () {
+Route::get('/dashboard', function ()
+{
     return Inertia::render('Dashboard/Index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -60,7 +63,8 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 
 // Routes nécessitant une authentification
-Route::middleware('auth')->group(function () {
+Route::middleware('auth')->group(function ()
+{
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -75,7 +79,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/products/{product}/favorite', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 
     // Cart routes
-    Route::get('/cart', function () {
+    Route::get('/cart', function ()
+    {
         return Inertia::render('Cart/Index');
     })->name('cart.index');
 
@@ -90,8 +95,10 @@ Route::middleware('auth')->group(function () {
 });
 
 // Routes admin
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', function () {
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function ()
+{
+    Route::get('/', function ()
+    {
         return Inertia::render('Admin/Index');
     })->name('dashboard');
 

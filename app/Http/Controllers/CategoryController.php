@@ -18,29 +18,38 @@ class CategoryController extends Controller
     {
         $query = Product::query()
             ->with(['categories', 'ressourcerie'])
-            ->when($request->search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
+            ->when($request->search, function ($query, $search)
+            {
+                return $query->where(function ($q) use ($search)
+                {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%");
                 });
             })
-            ->when($request->categories, function ($query, $categories) {
-                return $query->whereHas('categories', function ($q) use ($categories) {
+            ->when($request->categories, function ($query, $categories)
+            {
+                return $query->whereHas('categories', function ($q) use ($categories)
+                {
                     $q->whereIn('categories.id', $categories);
                 });
             })
-            ->when($request->min_price, function ($query, $min_price) {
+            ->when($request->min_price, function ($query, $min_price)
+            {
                 return $query->where('price', '>=', $min_price);
             })
-            ->when($request->max_price, function ($query, $max_price) {
+            ->when($request->max_price, function ($query, $max_price)
+            {
                 return $query->where('price', '<=', $max_price);
             })
-            ->when($request->city, function ($query, $city) {
-                return $query->whereHas('ressourcerie', function ($q) use ($city) {
+            ->when($request->city, function ($query, $city)
+            {
+                return $query->whereHas('ressourcerie', function ($q) use ($city)
+                {
                     $q->where('city', $city);
                 });
             })
-            ->when($request->quantity, function ($query, $quantity) {
+            ->when($request->quantity, function ($query, $quantity)
+            {
                 if ($quantity === 'available') {
                     return $query->where('quantity', '>', 0);
                 } elseif ($quantity === 'out_of_stock') {
@@ -49,7 +58,8 @@ class CategoryController extends Controller
 
                 return $query; // 'all' case, no filtering
             })
-            ->when($request->sort, function ($query, $sort) {
+            ->when($request->sort, function ($query, $sort)
+            {
                 return match ($sort) {
                     'price_asc' => $query->orderBy('price', 'asc'),
                     'price_desc' => $query->orderBy('price', 'desc'),
@@ -84,7 +94,8 @@ class CategoryController extends Controller
         $category = Category::where('slug', $slug)->firstOrFail();
 
         $products = Product::with(['categories', 'ressourcerie'])
-            ->whereHas('categories', function ($query) use ($category) {
+            ->whereHas('categories', function ($query) use ($category)
+            {
                 $query->where('categories.id', $category->id);
             })
             ->orderBy('created_at', 'desc')

@@ -6,10 +6,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
-        Schema::create('market__category_product', function (Blueprint $table) {
+        Schema::create('market__category_product', function (Blueprint $table)
+        {
             $table->foreignId('product_id')->constrained('market__products')->onDelete('cascade');
             $table->foreignId('category_id')->constrained('market__categories')->onDelete('cascade');
 

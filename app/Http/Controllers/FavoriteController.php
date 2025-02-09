@@ -17,7 +17,8 @@ class FavoriteController extends Controller
         $favorites = $user->favorites()
             ->with(['categories', 'ressourcerie'])
             ->get()
-            ->map(function ($product) {
+            ->map(function ($product)
+            {
                 $imagesData = is_string($product->getAttribute('images'))
                     ? json_decode($product->getAttribute('images'))
                     : [];

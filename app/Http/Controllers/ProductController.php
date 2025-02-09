@@ -15,7 +15,8 @@ class ProductController extends Controller
         $query = Product::with(['categories', 'ressourcerie']);
 
         if (request('category')) {
-            $query->whereHas('categories', function ($q) {
+            $query->whereHas('categories', function ($q)
+            {
                 $q->where('slug', request('category'));
             });
         }
@@ -29,7 +30,8 @@ class ProductController extends Controller
         }
 
         if (request('city')) {
-            $query->whereHas('ressourcerie', function ($q) {
+            $query->whereHas('ressourcerie', function ($q)
+            {
                 $q->where('city', request('city'));
             });
         }
@@ -55,7 +57,8 @@ class ProductController extends Controller
 
         $imagesData = is_string($product->images) ? json_decode($product->images) : [];
         $images = is_array($imagesData) ? $imagesData : [];
-        $product->setAttribute('images', array_map(function ($image) {
+        $product->setAttribute('images', array_map(function ($image)
+        {
             return '/storage/products/'.$image;
         }, $images));
         $product->setAttribute('main_image', ! empty($images) ? '/storage/products/'.$images[0] : null);

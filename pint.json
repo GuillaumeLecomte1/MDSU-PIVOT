@@ -23,7 +23,10 @@
         "phpdoc_var_without_name": true,
         "class_attributes_separation": {
             "elements": {
-                "method": "one"
+                "const": "one",
+                "method": "one",
+                "property": "one",
+                "trait_import": "none"
             }
         },
         "method_argument_space": {
@@ -32,20 +35,19 @@
         },
         "single_trait_insert_per_statement": true,
         "no_empty_comment": true,
-        "braces_position": {
-            "anonymous_classes_opening_brace": "next_line_unless_newline_at_signature_end",
-            "classes_opening_brace": "next_line_unless_newline_at_signature_end",
-            "control_structures_opening_brace": "same_line",
-            "functions_opening_brace": "next_line_unless_newline_at_signature_end",
-            "anonymous_functions_opening_brace": "next_line_unless_newline_at_signature_end"
+        "braces": {
+            "allow_single_line_anonymous_class_with_empty_body": false,
+            "allow_single_line_closure": false,
+            "position_after_functions_and_oop_constructs": "next",
+            "position_after_control_structures": "same",
+            "position_after_anonymous_constructs": "next"
         },
         "class_definition": {
             "multi_line_extends_each_single_line": true,
             "space_before_parenthesis": true,
             "single_line": false,
             "single_item_single_line": true,
-            "inline_constructor_arguments": true,
-            "space_before_parenthesis": true
+            "inline_constructor_arguments": true
         },
         "no_extra_blank_lines": {
             "tokens": [
@@ -62,28 +64,17 @@
                 "switch",
                 "throw",
                 "use",
-                "use_trait",
-                "curly_brace_block",
-                "parenthesis_brace_block",
-                "extra"
+                "use_trait"
             ]
         },
+        "curly_braces_position": {
+            "anonymous_classes_opening_brace": "next_line_unless_newline_at_signature_end",
+            "classes_opening_brace": "next_line_unless_newline_at_signature_end",
+            "control_structures_opening_brace": "same_line",
+            "functions_opening_brace": "next_line_unless_newline_at_signature_end",
+            "anonymous_functions_opening_brace": "next_line_unless_newline_at_signature_end"
+        },
         "single_line_empty_body": false,
-        "braces": {
-            "allow_single_line_anonymous_class_with_empty_body": false,
-            "allow_single_line_closure": false,
-            "position_after_functions_and_oop_constructs": "next",
-            "position_after_control_structures": "same",
-            "position_after_anonymous_constructs": "next"
-        },
-        "class_attributes_separation": {
-            "elements": {
-                "const": "one",
-                "method": "one",
-                "property": "one",
-                "trait_import": "none"
-            }
-        },
         "phpdoc_summary": true,
         "phpdoc_trim_consecutive_blank_line_separation": true,
         "no_trailing_whitespace": true,
