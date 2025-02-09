@@ -1,16 +1,16 @@
 <?php
 
-use Inertia\Inertia;
-use App\Models\Product;
-use App\Models\Category;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\RoleController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
-use App\Http\Controllers\Auth\RoleController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RessourcerieController;
+use App\Models\Category;
+use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // Route racine pour tous les utilisateurs
 Route::get('/', function () {

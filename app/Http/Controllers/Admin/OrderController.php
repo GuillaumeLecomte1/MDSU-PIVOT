@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Inertia\Inertia;
-use App\Models\Order;
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {

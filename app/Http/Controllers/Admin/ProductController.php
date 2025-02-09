@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Inertia\Inertia;
-use App\Models\Product;
+use App\Http\Controllers\Controller;
 use App\Models\Category;
-use Illuminate\Support\Str;
+use App\Models\Product;
 use App\Models\Ressourcerie;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {

@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Product;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 class ProductService
 {

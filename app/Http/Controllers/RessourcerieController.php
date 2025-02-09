@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
 use App\Models\Ressourcerie;
+use Inertia\Inertia;
 
 class RessourcerieController extends Controller
 {

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use Inertia\Inertia;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class FavoriteController extends Controller
 {
