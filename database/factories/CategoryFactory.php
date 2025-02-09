@@ -28,30 +28,19 @@ class CategoryFactory extends Factory
     /**
      * Define the model's default state.
      *
-     * @return array<string, mixed>
+     * @return array<model-property<\App\Models\Category>, mixed>
      */
     public function definition(): array
     {
-        $availableCategories = array_diff_key(static::$categories, static::$usedCategories);
-
-        if (empty($availableCategories)) {
-            // Si toutes les catégories ont été utilisées, réinitialiser
-            static::$usedCategories = [];
-            $availableCategories = static::$categories;
-        }
-
-        $name = array_rand($availableCategories);
-        $icon = static::$categories[$name];
-        static::$usedCategories[$name] = true;
-
+        $name = fake()->unique()->words(2, true);
         return [
             'name' => $name,
             'slug' => Str::slug($name),
-            'description' => fake()->sentence(),
-            'icon' => "icon-{$icon}",
-            'image_url' => fake()->imageUrl(640, 480, $name),
+            'description' => fake()->paragraph(),
+            'icon' => null,
+            'image_url' => null,
             'is_active' => true,
-            'display_order' => fake()->numberBetween(0, 10),
+            'display_order' => fake()->numberBetween(0, 100),
         ];
     }
 

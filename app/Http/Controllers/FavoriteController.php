@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -11,15 +12,21 @@ class FavoriteController extends Controller
 {
     public function index()
     {
-        $favorites = Auth::user()
-            ->favorites()
+        /** @var User $user */
+        $user = Auth::user();
+        
+        $favorites = $user->favorites()
             ->with(['categories', 'ressourcerie'])
             ->get()
             ->map(function ($product) {
-                $images = json_decode($product->images) ?? [];
-                $product->images = $images;
-                $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
-                $product->isFavorite = true;
+                $imagesData = is_string($product->getAttribute('images')) 
+                    ? json_decode($product->getAttribute('images')) 
+                    : [];
+                $images = is_array($imagesData) ? $imagesData : [];
+                
+                $product->setAttribute('images', $images);
+                $product->setAttribute('main_image', !empty($images) ? '/storage/products/'.$images[0] : null);
+                $product->setAttribute('isFavorite', true);
 
                 return $product;
             });
@@ -29,14 +36,29 @@ class FavoriteController extends Controller
         ]);
     }
 
-    public function toggle(Request $request, Product $product)
+    public function toggle(Product $product)
     {
+        /** @var User $user */
         $user = Auth::user();
-        $isFavorite = $user->favorites()->toggle($product->id);
+        
+        $isFavorite = !$user->hasFavorited($product);
+        
+        if ($isFavorite) {
+            $user->favorites()->attach($product->id);
+        } else {
+            $user->favorites()->detach($product->id);
+        }
 
         return response()->json([
-            'success' => true,
-            'isFavorite' => count($isFavorite['attached']) > 0,
+            'isFavorite' => $isFavorite,
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'description' => $product->description,
+                'main_image' => $product->getAttribute('main_image'),
+                'isFavorite' => $isFavorite
+            ]
         ]);
     }
 }

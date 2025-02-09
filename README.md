@@ -5,7 +5,7 @@
 [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net)
 [![Laravel Version](https://img.shields.io/badge/Laravel-10.x-red.svg)](https://laravel.com)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%205-brightgreen.svg)](https://phpstan.org/)
-[![StyleCI](https://github.styleci.io/repos/your-repo-id/shield)](https://github.styleci.io/repos/872337695)
+[![StyleCI](https://github.styleci.io/repos/872337695/shield?branch=main)](https://github.styleci.io/repos/872337695)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>

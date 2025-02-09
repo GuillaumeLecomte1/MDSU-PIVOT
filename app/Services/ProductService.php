@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 class ProductService
 {
@@ -14,10 +15,10 @@ class ProductService
                 $query->where('categories.slug', $slug);
             })
             ->when(request('min_price'), function ($query) {
-                $query->where('price', '>=', request('min_price'));
+                $query->where('price', '>=', (float) request('min_price'));
             })
             ->when(request('max_price'), function ($query) {
-                $query->where('price', '<=', request('max_price'));
+                $query->where('price', '<=', (float) request('max_price'));
             })
             ->when(request('city'), function ($query) {
                 $query->whereHas('ressourcerie', function ($q) {
@@ -25,7 +26,7 @@ class ProductService
                 });
             })
             ->when(request('sort'), function ($query) {
-                match (request('sort')) {
+                return match (request('sort')) {
                     'price_asc' => $query->orderBy('price', 'asc'),
                     'price_desc' => $query->orderBy('price', 'desc'),
                     'newest' => $query->orderBy('created_at', 'desc'),
@@ -37,27 +38,35 @@ class ProductService
 
     public function getProductDetails(Product $product): array
     {
-        $images = $product->images ?
-            (is_string($product->images) ? json_decode($product->images) : $product->images) :
-            null;
+        $imagesArray = [];
+        $images = $product->getAttribute('images');
+        if ($images !== null) {
+            $imagesArray = is_string($images) ? json_decode($images, true) : $images;
+        }
 
-        $mainImage = $images && is_array($images) && ! empty($images) ?
-            asset('storage/'.$images[0]) :
+        $mainImage = !empty($imagesArray) ? 
+            Storage::url('products/' . reset($imagesArray)) : 
             asset('images/no-image.jpg');
+
+        $price = (float) $product->getAttribute('price');
+        $category = $product->categories->first();
+        $ressourcerie = $product->ressourcerie;
 
         return [
             'id' => $product->id,
-            'name' => $product->name,
-            'description' => $product->description,
-            'price' => number_format($product->price, 2, ',', ' ').' €',
+            'name' => $product->getAttribute('name'),
+            'description' => $product->getAttribute('description'),
+            'price' => number_format($price, 2, ',', ' ') . ' €',
             'mainImage' => $mainImage,
-            'categoryName' => $product->categories->first()?->name ?? 'Non catégorisé',
-            'ressourcerieInfo' => $product->ressourcerie ?
-                "{$product->ressourcerie->name} ({$product->ressourcerie->city})" :
-                'Non assigné',
-            'isAvailable' => $product->is_available && $product->stock > 0,
-            'stockLabel' => $product->is_available && $product->stock > 0 ? 'En stock' : 'Indisponible',
-            'stockClass' => $product->is_available && $product->stock > 0 ? 'text-green-600' : 'text-red-600',
+            'categoryName' => $category ? $category->getAttribute('name') : 'Non catégorisé',
+            'ressourcerieInfo' => $ressourcerie ? sprintf(
+                '%s (%s)',
+                $ressourcerie->getAttribute('name'),
+                $ressourcerie->getAttribute('city')
+            ) : 'Non assigné',
+            'isAvailable' => (bool) ($product->getAttribute('is_available') && $product->getAttribute('stock') > 0),
+            'stockLabel' => $product->getAttribute('is_available') && $product->getAttribute('stock') > 0 ? 'En stock' : 'Indisponible',
+            'stockClass' => $product->getAttribute('is_available') && $product->getAttribute('stock') > 0 ? 'text-green-600' : 'text-red-600',
         ];
     }
 }

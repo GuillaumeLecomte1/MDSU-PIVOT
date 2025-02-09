@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Ressourcerie;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -57,14 +58,17 @@ class CategoryController extends Controller
                 };
             });
 
-        $products = $query->paginate(12)->withQueryString();
+        $products = $query->paginate(12)->appends($request->query());
+
+        /** @var ?User $user */
+        $user = Auth::user();
 
         // Ajouter l'état des favoris pour chaque produit
         foreach ($products as $product) {
-            $images = json_decode($product->images) ?? [];
-            $product->images = $images;
-            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
-            $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
+            $images = is_string($product->images) ? json_decode($product->images) : [];
+            $product->setAttribute('images', $images);
+            $product->setAttribute('main_image', !empty($images) ? '/storage/products/'.$images[0] : null);
+            $product->setAttribute('isFavorite', $user !== null && $product->isFavoritedBy($user));
         }
 
         return Inertia::render('Categories/Index', [
@@ -86,12 +90,15 @@ class CategoryController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
+        /** @var ?User $user */
+        $user = Auth::user();
+
         // Ajouter l'état des favoris pour chaque produit
         foreach ($products as $product) {
-            $images = json_decode($product->images) ?? [];
-            $product->images = $images;
-            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
-            $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
+            $images = is_string($product->images) ? json_decode($product->images) : [];
+            $product->setAttribute('images', $images);
+            $product->setAttribute('main_image', !empty($images) ? '/storage/products/'.$images[0] : null);
+            $product->setAttribute('isFavorite', $user !== null && $product->isFavoritedBy($user));
         }
 
         return Inertia::render('Categories/Show', [
@@ -100,5 +107,58 @@ class CategoryController extends Controller
             'ressourceries' => Ressourcerie::all(),
             'category' => $category,
         ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'parent_id' => 'nullable|exists:categories,id'
+        ]);
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/categories'), $imageName);
+            $validatedData['image'] = 'images/categories/' . $imageName;
+        }
+
+        $category = Category::create($validatedData);
+
+        return response()->json($category, 201);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Category $category)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'parent_id' => 'nullable|exists:categories,id'
+        ]);
+
+        if ($request->hasFile('image') && $category->getAttribute('image')) {
+            // Supprimer l'ancienne image si elle existe
+            if (file_exists(public_path($category->getAttribute('image')))) {
+                unlink(public_path($category->getAttribute('image')));
+            }
+
+            $image = $request->file('image');
+            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/categories'), $imageName);
+            $validatedData['image'] = 'images/categories/' . $imageName;
+        }
+
+        $category->update($validatedData);
+
+        return response()->json($category);
     }
 }

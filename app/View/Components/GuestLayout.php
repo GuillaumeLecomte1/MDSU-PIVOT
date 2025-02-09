@@ -2,8 +2,9 @@
 
 namespace App\View\Components;
 
+use App\Constants\ViewNames;
 use Illuminate\View\Component;
-use Illuminate\View\View;
+use Illuminate\Contracts\View\View;
 
 class GuestLayout extends Component
 {
@@ -12,6 +13,6 @@ class GuestLayout extends Component
      */
     public function render(): View
     {
-        return view('layouts.guest');
+        return view(ViewNames::LAYOUTS_GUEST);
     }
 }

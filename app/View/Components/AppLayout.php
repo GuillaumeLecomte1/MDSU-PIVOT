@@ -2,8 +2,9 @@
 
 namespace App\View\Components;
 
+use App\Constants\ViewNames;
 use Illuminate\View\Component;
-use Illuminate\View\View;
+use Illuminate\Contracts\View\View;
 
 class AppLayout extends Component
 {
@@ -12,6 +13,6 @@ class AppLayout extends Component
      */
     public function render(): View
     {
-        return view('layouts.app');
+        return view(ViewNames::LAYOUTS_APP);
     }
 }

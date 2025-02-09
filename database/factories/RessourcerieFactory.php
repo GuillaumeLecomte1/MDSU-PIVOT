@@ -13,34 +13,33 @@ class RessourcerieFactory extends Factory
     /**
      * Define the model's default state.
      *
-     * @return array<string, mixed>
+     * @return array<model-property<\App\Models\Ressourcerie>, mixed>
      */
     public function definition(): array
     {
         $name = fake()->company();
-
         return [
             'name' => $name,
             'slug' => Str::slug($name),
             'description' => fake()->paragraph(),
             'address' => fake()->streetAddress(),
             'city' => fake()->city(),
-            'postal_code' => fake()->numerify('#####'),
-            'phone' => fake()->numerify('0#########'),
-            'email' => fake()->unique()->companyEmail(),
+            'postal_code' => substr(fake()->postcode(), 0, 5),
+            'phone' => fake()->numerify('##-##-##-##-##'),
+            'email' => fake()->unique()->safeEmail(),
             'website_url' => fake()->url(),
             'logo_url' => null,
             'opening_hours' => json_encode([
-                'monday' => ['09:00-12:00', '14:00-18:00'],
-                'tuesday' => ['09:00-12:00', '14:00-18:00'],
-                'wednesday' => ['09:00-12:00', '14:00-18:00'],
-                'thursday' => ['09:00-12:00', '14:00-18:00'],
-                'friday' => ['09:00-12:00', '14:00-18:00'],
-                'saturday' => ['09:00-12:00'],
-                'sunday' => [],
+                'monday' => '9:00-18:00',
+                'tuesday' => '9:00-18:00',
+                'wednesday' => '9:00-18:00',
+                'thursday' => '9:00-18:00',
+                'friday' => '9:00-18:00',
+                'saturday' => '10:00-17:00',
+                'sunday' => 'closed'
             ]),
-            'latitude' => fake()->latitude(41.0, 51.0),
-            'longitude' => fake()->longitude(-5.0, 9.0),
+            'latitude' => fake()->latitude(),
+            'longitude' => fake()->longitude(),
             'is_active' => true,
             'siret' => fake()->numerify('##############'),
         ];

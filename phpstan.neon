@@ -8,6 +8,8 @@ parameters:
         - config
         - database
         - routes
+    
+    treatPhpDocTypesAsCertain: false
 
     # Exclusions
     excludePaths:
@@ -24,10 +26,14 @@ parameters:
     # Cache
     tmpDir: ./storage/framework/cache/phpstan
     
+    # Type definitions
+    typeAliases:
+        view-string: string
+
     # Ignorer certaines erreurs
     ignoreErrors:
-        - '#PHPDoc tag @var#'
-        - '#Variable \$this might not be defined#'
+        - '#Undefined variable: \$this#'
+        - '#Parameter \#1 \$view of function view expects view-string\|null, string given\.#'
 
     # Laravel specific
     checkModelProperties: true 
