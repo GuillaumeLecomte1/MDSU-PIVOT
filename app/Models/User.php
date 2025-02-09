@@ -60,7 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user has favorited a specific product
+     * Check if user has favorited a specific product.
      */
     public function hasFavorited(Product $product): bool
     {

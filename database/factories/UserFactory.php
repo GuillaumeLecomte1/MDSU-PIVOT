@@ -38,11 +38,7 @@ class UserFactory extends Factory
      */
     public function configure()
     {
-        return $this->afterMaking(function ($user) {
-            //
-        })->afterCreating(function ($user) {
-            //
-        });
+        return $this->afterMaking(function ($user) {})->afterCreating(function ($user) {});
     }
 
     /**

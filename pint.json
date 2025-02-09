@@ -30,7 +30,36 @@
             "on_multiline": "ensure_fully_multiline",
             "keep_multiple_spaces_after_comma": true
         },
-        "single_trait_insert_per_statement": true
+        "single_trait_insert_per_statement": true,
+        "no_empty_comment": true,
+        "no_extra_blank_lines": {
+            "tokens": [
+                "attribute",
+                "break",
+                "case",
+                "continue",
+                "curly_brace_block",
+                "default",
+                "extra",
+                "parenthesis_brace_block",
+                "return",
+                "square_brace_block",
+                "switch",
+                "throw",
+                "use"
+            ]
+        },
+        "class_definition": {
+            "multi_line_extends_each_single_line": true,
+            "space_before_parenthesis": true
+        },
+        "curly_braces_position": {
+            "anonymous_classes_opening_brace": "next_line_unless_newline_at_signature_end"
+        },
+        "phpdoc_summary": true,
+        "phpdoc_trim_consecutive_blank_line_separation": true,
+        "no_trailing_whitespace": true,
+        "single_blank_line_at_eof": true
     },
     "exclude": [
         "storage",
