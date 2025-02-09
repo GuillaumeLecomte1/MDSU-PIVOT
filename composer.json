@@ -58,13 +58,20 @@
             "@php vendor/bin/phpstan analyse --level=5 --memory-limit=512M"
         ],
         "style": [
-            "@php -r \"echo '=== Verification du style du code ===\\n';\"",
-            "@php vendor/bin/pint --test"
+            "@php -r \"echo '=== Vérification du style du code ===\\n';\"",
+            "@php vendor/bin/pint --test",
+            "@php -r \"echo '\\n=== Vérification terminée ===\\n';\""
         ],
         "style:fix": [
             "@php -r \"echo '=== Correction automatique du style ===\\n';\"",
             "@php vendor/bin/pint",
-            "@php -r \"echo '=== Style corrige avec succes ===\\n';\""
+            "@php -r \"echo '\\n=== Nettoyage du cache ===\\n';\"",
+            "@php artisan cache:clear",
+            "@php -r \"echo '=== Style corrigé avec succès ===\\n';\""
+        ],
+        "style:ci": [
+            "@php -r \"echo '=== Vérification du style pour CI ===\\n';\"",
+            "@php vendor/bin/pint --test --format=github"
         ]
     },
     "extra": {

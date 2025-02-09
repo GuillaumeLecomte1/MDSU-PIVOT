@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Product;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use App\Models\Product;
+use App\Models\Category;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {

@@ -3,8 +3,8 @@
 namespace App\View\Components;
 
 use App\Constants\ViewNames;
-use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
+use Illuminate\Contracts\View\View;
 
 class AppLayout extends Component
 {
