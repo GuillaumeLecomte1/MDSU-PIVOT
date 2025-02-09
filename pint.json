@@ -32,6 +32,18 @@
         },
         "single_trait_insert_per_statement": true,
         "no_empty_comment": true,
+        "braces_position": {
+            "anonymous_classes_opening_brace": "next_line_unless_newline_at_signature_end",
+            "classes_opening_brace": "next_line_unless_newline_at_signature_end",
+            "control_structures_opening_brace": "same_line",
+            "functions_opening_brace": "next_line_unless_newline_at_signature_end",
+            "anonymous_functions_opening_brace": "same_line"
+        },
+        "class_definition": {
+            "multi_line_extends_each_single_line": true,
+            "space_before_parenthesis": true,
+            "single_line": false
+        },
         "no_extra_blank_lines": {
             "tokens": [
                 "attribute",
@@ -49,13 +61,7 @@
                 "use"
             ]
         },
-        "class_definition": {
-            "multi_line_extends_each_single_line": true,
-            "space_before_parenthesis": true
-        },
-        "curly_braces_position": {
-            "anonymous_classes_opening_brace": "next_line_unless_newline_at_signature_end"
-        },
+        "single_line_empty_body": false,
         "phpdoc_summary": true,
         "phpdoc_trim_consecutive_blank_line_separation": true,
         "no_trailing_whitespace": true,
