@@ -6,6 +6,8 @@ php:
   finder:
     not-name:
       - index.php
+      - "*.blade.php"
+      - "_ide_helper.php"
     exclude:
       - "modules"
       - "node_modules"
@@ -14,7 +16,4 @@ php:
       - "storage"
       - "vendor"
     name:
-      - "*.php"
-    not-name:
-      - "*.blade.php"
-      - "_ide_helper.php" 
+      - "*.php" 
