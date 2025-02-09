@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Auth;
 class Product extends Model
 {
     use HasFactory;
+
     protected $table = 'market__products';
+
     protected $fillable = [
         'name',
         'slug',

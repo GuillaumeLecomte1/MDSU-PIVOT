@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class MakeUserAdmin extends Command
 {
     protected $signature = 'make:admin {email}';
+
     protected $description = 'Make a user admin by email';
 
     public function handle()

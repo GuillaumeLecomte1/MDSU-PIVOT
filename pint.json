@@ -37,12 +37,15 @@
             "classes_opening_brace": "next_line_unless_newline_at_signature_end",
             "control_structures_opening_brace": "same_line",
             "functions_opening_brace": "next_line_unless_newline_at_signature_end",
-            "anonymous_functions_opening_brace": "same_line"
+            "anonymous_functions_opening_brace": "next_line_unless_newline_at_signature_end"
         },
         "class_definition": {
             "multi_line_extends_each_single_line": true,
             "space_before_parenthesis": true,
-            "single_line": false
+            "single_line": false,
+            "single_item_single_line": true,
+            "inline_constructor_arguments": true,
+            "space_before_parenthesis": true
         },
         "no_extra_blank_lines": {
             "tokens": [
@@ -58,14 +61,36 @@
                 "square_brace_block",
                 "switch",
                 "throw",
-                "use"
+                "use",
+                "use_trait",
+                "curly_brace_block",
+                "parenthesis_brace_block",
+                "extra"
             ]
         },
         "single_line_empty_body": false,
+        "braces": {
+            "allow_single_line_anonymous_class_with_empty_body": false,
+            "allow_single_line_closure": false,
+            "position_after_functions_and_oop_constructs": "next",
+            "position_after_control_structures": "same",
+            "position_after_anonymous_constructs": "next"
+        },
+        "class_attributes_separation": {
+            "elements": {
+                "const": "one",
+                "method": "one",
+                "property": "one",
+                "trait_import": "none"
+            }
+        },
         "phpdoc_summary": true,
         "phpdoc_trim_consecutive_blank_line_separation": true,
         "no_trailing_whitespace": true,
-        "single_blank_line_at_eof": true
+        "single_blank_line_at_eof": true,
+        "no_empty_statement": true,
+        "no_useless_return": true,
+        "visibility_required": true
     },
     "exclude": [
         "storage",

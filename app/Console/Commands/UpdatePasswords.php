@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 class UpdatePasswords extends Command
 {
     protected $signature = 'users:update-passwords';
+
     protected $description = 'Update all user passwords to use Bcrypt';
 
     public function handle()
