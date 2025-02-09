@@ -11,27 +11,21 @@ class ProductService
     public function getProductsForCategory(string $slug): LengthAwarePaginator
     {
         return Product::with(['categories', 'ressourcerie'])
-            ->whereHas('categories', function ($query) use ($slug)
-            {
+            ->whereHas('categories', function ($query) use ($slug) {
                 $query->where('categories.slug', $slug);
             })
-            ->when(request('min_price'), function ($query)
-            {
+            ->when(request('min_price'), function ($query) {
                 $query->where('price', '>=', (float) request('min_price'));
             })
-            ->when(request('max_price'), function ($query)
-            {
+            ->when(request('max_price'), function ($query) {
                 $query->where('price', '<=', (float) request('max_price'));
             })
-            ->when(request('city'), function ($query)
-            {
-                $query->whereHas('ressourcerie', function ($q)
-                {
+            ->when(request('city'), function ($query) {
+                $query->whereHas('ressourcerie', function ($q) {
                     $q->where('city', request('city'));
                 });
             })
-            ->when(request('sort'), function ($query)
-            {
+            ->when(request('sort'), function ($query) {
                 return match (request('sort')) {
                     'price_asc' => $query->orderBy('price', 'asc'),
                     'price_desc' => $query->orderBy('price', 'desc'),

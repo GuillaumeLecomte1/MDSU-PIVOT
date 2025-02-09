@@ -25,8 +25,7 @@
             "elements": {
                 "const": "one",
                 "method": "one",
-                "property": "one",
-                "trait_import": "none"
+                "property": "one"
             }
         },
         "method_argument_space": {
@@ -40,39 +39,15 @@
             "allow_single_line_closure": false,
             "position_after_functions_and_oop_constructs": "next",
             "position_after_control_structures": "same",
-            "position_after_anonymous_constructs": "next"
-        },
-        "class_definition": {
-            "multi_line_extends_each_single_line": true,
-            "space_before_parenthesis": true,
-            "single_line": false,
-            "single_item_single_line": true,
-            "inline_constructor_arguments": true
+            "position_after_anonymous_constructs": "same"
         },
         "no_extra_blank_lines": {
             "tokens": [
-                "attribute",
-                "break",
-                "case",
-                "continue",
-                "curly_brace_block",
-                "default",
                 "extra",
-                "parenthesis_brace_block",
-                "return",
-                "square_brace_block",
-                "switch",
                 "throw",
                 "use",
                 "use_trait"
             ]
-        },
-        "curly_braces_position": {
-            "anonymous_classes_opening_brace": "next_line_unless_newline_at_signature_end",
-            "classes_opening_brace": "next_line_unless_newline_at_signature_end",
-            "control_structures_opening_brace": "same_line",
-            "functions_opening_brace": "next_line_unless_newline_at_signature_end",
-            "anonymous_functions_opening_brace": "next_line_unless_newline_at_signature_end"
         },
         "single_line_empty_body": false,
         "phpdoc_summary": true,
@@ -80,7 +55,6 @@
         "no_trailing_whitespace": true,
         "single_blank_line_at_eof": true,
         "no_empty_statement": true,
-        "no_useless_return": true,
         "visibility_required": true
     },
     "exclude": [
