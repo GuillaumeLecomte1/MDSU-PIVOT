@@ -36,6 +36,8 @@
         "storage",
         "vendor",
         "node_modules",
-        "bootstrap/cache"
+        "bootstrap/cache",
+        "build",
+        ".phpstan-cache"
     ]
 } 

@@ -14,5 +14,8 @@ finder:
     - "nova-components"
     - "storage"
     - "vendor"
+    - "build"
+    - ".phpstan-cache"
+    - "bootstrap/cache"
   name:
     - "*.php" 
