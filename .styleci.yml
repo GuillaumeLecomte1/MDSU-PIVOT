@@ -1,0 +1,21 @@
+preset: laravel
+version: 8.2
+disabled:
+  - no_unused_imports
+finder:
+  not-name:
+    - index.php
+    - "*.blade.php"
+    - "_ide_helper.php"
+  exclude:
+    - "modules"
+    - "node_modules"
+    - "nova"
+    - "nova-components"
+    - "storage"
+    - "vendor"
+    - "build"
+    - ".phpstan-cache"
+    - "bootstrap/cache"
+  name:
+    - "*.php" 

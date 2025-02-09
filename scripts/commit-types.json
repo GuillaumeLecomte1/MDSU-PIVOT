@@ -1,0 +1,54 @@
+{
+    "types": [
+        {
+            "emoji": "🚧",
+            "code": "wip",
+            "description": "Work in Progress"
+        },
+        {
+            "emoji": "⚡",
+            "code": "perf",
+            "description": "Performance improvements"
+        },
+        {
+            "emoji": "✨",
+            "code": "feat",
+            "description": "New feature"
+        },
+        {
+            "emoji": "🐛",
+            "code": "fix",
+            "description": "Bug fix"
+        },
+        {
+            "emoji": "🎨",
+            "code": "style",
+            "description": "UI/Style improvements"
+        },
+        {
+            "emoji": "♻️",
+            "code": "refactor",
+            "description": "Code refactoring"
+        },
+        {
+            "emoji": "🔧",
+            "code": "config",
+            "description": "Configuration changes"
+        },
+        {
+            "emoji": "📝",
+            "code": "docs",
+            "description": "Documentation"
+        },
+        {
+            "emoji": "✅",
+            "code": "test",
+            "description": "Tests"
+        },
+        {
+            "emoji": "🔥",
+            "code": "remove",
+            "description": "Remove code/files"
+        }
+    ]
+} 
