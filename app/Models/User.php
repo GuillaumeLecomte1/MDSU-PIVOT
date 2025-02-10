@@ -23,9 +23,12 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
+        'firstname',
         'email',
         'password',
         'role',
+        'company_name',
+        'ape_code',
         'is_admin',
     ];
 
@@ -49,6 +52,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
         'is_admin' => 'boolean',
     ];
+
+    public function ressourcerie()
+    {
+        return $this->hasOne(Ressourcerie::class);
+    }
 
     /**
      * Get the user's favorite products.

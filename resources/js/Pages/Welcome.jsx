@@ -143,49 +143,49 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             title="Art de la table"
                             icon="🍽️"
                             color="bg-pink-100"
-                            href="/categories/art-de-la-table"
+                            href={route('categories.show', 'art-de-la-table')}
                         />
                         <CategoryCard
                             title="Mobilier"
                             icon="🪑"
                             color="bg-green-100"
-                            href="/categories/mobilier"
+                            href={route('categories.show', 'mobilier')}
                         />
                         <CategoryCard
                             title="Librairie"
                             icon="📚"
                             color="bg-yellow-100"
-                            href="/categories/librairie"
+                            href={route('categories.show', 'librairie')}
                         />
                         <CategoryCard
                             title="Vêtements"
                             icon="👕"
                             color="bg-orange-100"
-                            href="/categories/vetements"
+                            href={route('categories.show', 'vetements')}
                         />
                         <CategoryCard
                             title="Technologie"
                             icon="💻"
                             color="bg-gray-100"
-                            href="/categories/technologie"
+                            href={route('categories.show', 'technologie')}
                         />
                         <CategoryCard
                             title="Extérieur"
                             icon="🌳"
                             color="bg-pink-100"
-                            href="/categories/exterieur"
+                            href={route('categories.show', 'exterieur')}
                         />
                         <CategoryCard
                             title="Loisirs"
                             icon="🎨"
                             color="bg-green-100"
-                            href="/categories/loisirs"
+                            href={route('categories.show', 'loisirs')}
                         />
                         <CategoryCard
                             title="Toutes les catégories"
                             icon="➡️"
                             color="bg-purple-100"
-                            href="/categories"
+                            href={route('categories.index')}
                         />
                     </div>
                 </div>

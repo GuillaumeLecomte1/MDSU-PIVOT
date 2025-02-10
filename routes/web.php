@@ -11,8 +11,21 @@ use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Ressourcerie\DashboardController as RessourcerieDashboardController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
-// Route racine pour tous les utilisateurs
+// Routes publiques (login, register)
+Route::middleware('guest')->group(function () {
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+        ->name('login');
+
+    Route::get('register', function () {
+        return Inertia::render('Auth/Register');
+    })->name('register');
+});
+
+// Route racine avec redirection vers login si non connecté
 Route::get('/', function () {
     $latestProducts = Product::with(['categories', 'ressourcerie', 'favorites'])
         ->latest()
@@ -44,23 +57,23 @@ Route::get('/', function () {
         'popularProducts' => $processProducts($popularProducts),
         'categories' => Category::withCount('products')->get(),
     ]);
-})->name('home');
+})->middleware(['auth', 'verified'])->name('home');
 
-// Dashboard route pour les utilisateurs authentifiés
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard/Index');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Toutes les autres routes nécessitent une authentification
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Dashboard route
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard/Index');
+    })->name('dashboard');
 
-// Categories routes (public)
-Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
+    // Categories routes
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 
-// Products routes (public)
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+    // Products routes
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 
-// Routes nécessitant une authentification
-Route::middleware('auth')->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -78,46 +91,39 @@ Route::middleware('auth')->group(function () {
     Route::get('/cart', function () {
         return Inertia::render('Cart/Index');
     })->name('cart.index');
-
-    // Role management routes
-    Route::post('/role/client', [RoleController::class, 'switchToClient'])->name('role.client');
-    Route::post('/role/ressourcerie', [RoleController::class, 'switchToRessourcerie'])
-        ->middleware(['role:admin'])
-        ->name('role.ressourcerie');
-    Route::post('/role/admin', [RoleController::class, 'switchToAdmin'])
-        ->middleware(['role:admin'])
-        ->name('role.admin');
 });
 
-// Routes admin
-Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('Admin/Index');
-    })->name('dashboard');
-
-    // Routes pour les produits
-    Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');
-    Route::get('/products/create', [App\Http\Controllers\Admin\ProductController::class, 'create'])->name('products.create');
-    Route::post('/products', [App\Http\Controllers\Admin\ProductController::class, 'store'])->name('products.store');
-
-    // Routes pour les catégories
-    Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
-    Route::get('/categories/create', [App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('categories.create');
-    Route::post('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
-
+// Routes spécifiques aux rôles
+Route::middleware(['auth', 'verified'])->group(function () {
     // Routes pour les ressourceries
-    Route::get('/ressourceries', [App\Http\Controllers\Admin\RessourcerieController::class, 'index'])->name('ressourceries.index');
-    Route::get('/ressourceries/create', [App\Http\Controllers\Admin\RessourcerieController::class, 'create'])->name('ressourceries.create');
-    Route::post('/ressourceries', [App\Http\Controllers\Admin\RessourcerieController::class, 'store'])->name('ressourceries.store');
+    Route::prefix('ressourcerie')->middleware('can:access-ressourcerie')->group(function () {
+        Route::get('/dashboard', [RessourcerieDashboardController::class, 'index'])->name('ressourcerie.dashboard');
+        Route::resource('products', App\Http\Controllers\Ressourcerie\ProductController::class);
+        Route::get('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'edit'])->name('ressourcerie.profile.edit');
+        Route::patch('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'update'])->name('ressourcerie.profile.update');
+    });
 
-    // Routes pour les utilisateurs
-    Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
-    Route::get('/users/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
-    Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
+    // Routes pour les admins
+    Route::prefix('admin')->middleware('can:access-admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::resource('users', App\Http\Controllers\Admin\UserController::class)->middleware('can:manage-users');
+        Route::resource('products', App\Http\Controllers\Admin\ProductController::class)->middleware('can:manage-products');
+        Route::resource('categories', App\Http\Controllers\Admin\CategoryController::class)->middleware('can:manage-categories');
+        Route::resource('orders', App\Http\Controllers\Admin\OrderController::class)->middleware('can:manage-orders');
+        Route::resource('ressourceries', App\Http\Controllers\Admin\RessourcerieController::class)->middleware('can:manage-users');
+    });
 
-    // Routes pour les commandes
-    Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+    // Routes de gestion des rôles (accessibles uniquement par l'admin)
+    Route::middleware('can:access-admin')->group(function () {
+        Route::post('/role/client', [RoleController::class, 'switchToClient'])->name('role.client');
+        Route::post('/role/ressourcerie', [RoleController::class, 'switchToRessourcerie'])->name('role.ressourcerie');
+        Route::post('/role/admin', [RoleController::class, 'switchToAdmin'])->name('role.admin');
+    });
 });
+
+// Route pour la page d'erreur 403 (Forbidden)
+Route::get('/forbidden', function () {
+    return Inertia::render('Error/Forbidden');
+})->name('forbidden');
 
 require __DIR__.'/auth.php';

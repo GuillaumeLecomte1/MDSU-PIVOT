@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AppLayout from '@/Layouts/AppLayout';
 
-export default function Index() {
+export default function Cart({ auth }) {
     return (
-        <AuthenticatedLayout>
-            <Head title="Panier" />
+        <AppLayout title="Mon Panier">
+            <Head title="Mon Panier" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -18,6 +18,6 @@ export default function Index() {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </AppLayout>
     );
 } 

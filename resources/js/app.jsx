@@ -6,10 +6,6 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import axios from 'axios';
 
-// Configure Axios pour inclure le jeton CSRF
-axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-axios.defaults.withCredentials = true;
-
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
@@ -20,8 +16,15 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.jsx'),
         ),
     setup({ el, App, props }) {
-        const root = createRoot(el);
+        // Configure Axios avec le CSRF token
+        if (props.csrf_token) {
+            axios.defaults.headers.common['X-CSRF-TOKEN'] = props.csrf_token;
+            // Met à jour le meta tag CSRF
+            document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', props.csrf_token);
+        }
+        axios.defaults.withCredentials = true;
 
+        const root = createRoot(el);
         root.render(<App {...props} />);
     },
     progress: {
