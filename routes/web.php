@@ -1,19 +1,19 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RoleController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Ressourcerie\DashboardController as RessourcerieDashboardController;
 use App\Http\Controllers\RessourcerieController;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Ressourcerie\DashboardController as RessourcerieDashboardController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 // Routes publiques (login, register)
 Route::middleware('guest')->group(function () {

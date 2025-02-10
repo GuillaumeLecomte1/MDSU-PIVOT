@@ -43,8 +43,8 @@ class RegisteredUserController extends Controller
         ]);
 
         // Déterminer le rôle en fonction de la présence du nom d'entreprise et du code APE
-        $role = ($request->filled('company_name') && $request->filled('ape_code')) 
-            ? 'ressourcerie' 
+        $role = ($request->filled('company_name') && $request->filled('ape_code'))
+            ? 'ressourcerie'
             : 'client';
 
         $user = User::create([

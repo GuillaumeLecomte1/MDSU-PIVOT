@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Ressourcerie;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -132,4 +132,4 @@ class ProductController extends Controller
         return redirect()->route('ressourcerie.products.index')
             ->with('success', 'Produit supprimé avec succès.');
     }
-} 
+}

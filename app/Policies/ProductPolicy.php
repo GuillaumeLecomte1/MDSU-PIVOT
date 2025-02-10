@@ -36,4 +36,4 @@ class ProductPolicy
     {
         return $user->isRessourcerie() && $product->ressourcerie_id === $user->ressourcerie->id;
     }
-} 
+}
