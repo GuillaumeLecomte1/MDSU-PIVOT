@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import ProductCard from '@/Components/Products/ProductCard';
 
 export default function Index({ favorites }) {
     return (
-        <AppLayout>
+        <MainLayout>
             <Head title="Mes Favoris" />
 
             <div className="py-12">
@@ -24,6 +24,6 @@ export default function Index({ favorites }) {
                     )}
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

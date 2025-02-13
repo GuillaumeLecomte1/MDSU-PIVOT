@@ -1,13 +1,9 @@
-import AppLayout from '@/Layouts/AppLayout';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, usePage } from '@inertiajs/react';
+import MainLayout from '@/Layouts/MainLayout';
+import { Head } from '@inertiajs/react';
 
 export default function About() {
-    const { auth } = usePage().props;
-    const Layout = auth.user ? AppLayout : GuestLayout;
-
     return (
-        <Layout title="Notre Histoire">
+        <MainLayout title="Notre Histoire">
             <Head title="Notre Histoire" />
 
             <div className="py-12">
@@ -51,6 +47,6 @@ export default function About() {
                     </div>
                 </div>
             </div>
-        </Layout>
+        </MainLayout>
     );
 } 

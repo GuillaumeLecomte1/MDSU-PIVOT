@@ -1,4 +1,4 @@
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import { Head, Link } from '@inertiajs/react';
 
 export default function OrderShow({ order }) {
@@ -21,7 +21,7 @@ export default function OrderShow({ order }) {
     };
 
     return (
-        <AppLayout title={`Commande ${order.id}`}>
+        <MainLayout title={`Commande ${order.id}`}>
             <Head title={`Commande ${order.id}`} />
 
             <div className="py-12">
@@ -148,6 +148,6 @@ export default function OrderShow({ order }) {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

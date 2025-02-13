@@ -1,9 +1,9 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 
 export default function Cart({ auth }) {
     return (
-        <AppLayout title="Mon Panier">
+        <MainLayout title="Mon Panier">
             <Head title="Mon Panier" />
 
             <div className="py-12">
@@ -18,6 +18,6 @@ export default function Cart({ auth }) {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

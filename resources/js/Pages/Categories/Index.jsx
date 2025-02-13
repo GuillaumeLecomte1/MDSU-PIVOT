@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import CategoryFilter from '@/Components/Categories/CategoryFilter';
 import ProductCard from '@/Components/Products/ProductCard';
 import SearchBar from '@/Components/SearchBar';
@@ -32,7 +32,7 @@ export default function Index({ categories, products, ressourceries, filters: in
     ];
 
     return (
-        <AppLayout>
+        <MainLayout>
             <Head title="Catégories" />
             
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -91,6 +91,6 @@ export default function Index({ categories, products, ressourceries, filters: in
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

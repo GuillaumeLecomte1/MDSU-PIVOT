@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import ProductCard from '@/Components/Products/ProductCard';
 import axios from 'axios';
 
@@ -31,7 +31,7 @@ export default function Show({ product, similarProducts }) {
     const images = product.images || [];
 
     return (
-        <AppLayout>
+        <MainLayout>
             <Head title={product.name} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -176,6 +176,6 @@ export default function Show({ product, similarProducts }) {
                     </div>
                 )}
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

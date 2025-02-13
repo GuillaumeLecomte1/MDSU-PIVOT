@@ -1,4 +1,4 @@
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import DangerButton from '@/Components/DangerButton';
@@ -25,7 +25,7 @@ export default function Index({ auth, products }) {
     };
 
     return (
-        <AppLayout title="Mes Produits">
+        <MainLayout title="Mes Produits">
             <Head title="Mes Produits" />
 
             <div className="py-12">
@@ -149,6 +149,6 @@ export default function Index({ auth, products }) {
                     </div>
                 </div>
             </Modal>
-        </AppLayout>
+        </MainLayout>
     );
 } 

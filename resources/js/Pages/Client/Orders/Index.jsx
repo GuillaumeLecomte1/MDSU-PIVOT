@@ -1,4 +1,4 @@
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import { Head, Link } from '@inertiajs/react';
 
 export default function OrdersIndex({ orders }) {
@@ -21,7 +21,7 @@ export default function OrdersIndex({ orders }) {
     };
 
     return (
-        <AppLayout title="Mes Commandes">
+        <MainLayout title="Mes Commandes">
             <Head title="Mes Commandes" />
 
             <div className="py-12">
@@ -116,6 +116,6 @@ export default function OrdersIndex({ orders }) {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

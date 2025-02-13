@@ -1,5 +1,5 @@
 import { Link, Head } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import StatisticBox from '@/Components/StatisticBox';
 import CategoryCard from '@/Components/CategoryCard';
 import BlogCard from '@/Components/BlogCard';
@@ -7,7 +7,7 @@ import ProductCard from '@/Components/Products/ProductCard';
 
 export default function Welcome({ latestProducts, popularProducts, categories }) {
     return (
-        <AppLayout>
+        <MainLayout>
             <Head title="Accueil" />
 
             {/* Hero Section */}
@@ -279,7 +279,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                                 Pivot a été créé en 2024 pour permettre à chacun d'acheter les plus belles pièces uniques de seconde main. Chaque jour, marchands professionnels proposent sur Pivot leurs meubles vintage, livres, vêtements, tout articles... Les prix affichés sont fixés par ces vendeurs et Pivot opère en tant qu'intermédiaire et tiers de confiance auprès d'eux et des acheteurs. Ces derniers peuvent ainsi dénicher parmi les références de Pivot la perle rare sans bouger de leur canapé. Les pièces proposées à la vente sont quant à elles quotidiennement sélectionnées à la main par nos équipes.
                             </p>
                             <Link 
-                                href="#" 
+                                href={route('about')} 
                                 className="inline-flex items-center px-6 py-3 bg-[#14141F] text-white rounded-lg hover:bg-gray-800 transition-colors"
                             >
                                 en savoir plus
@@ -420,6 +420,6 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                     </div>
                 </div>
             </section>
-        </AppLayout>
+        </MainLayout>
     );
 }

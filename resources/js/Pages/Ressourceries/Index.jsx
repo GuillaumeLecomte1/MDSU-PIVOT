@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 
 export default function Index({ ressourceries }) {
     return (
-        <AppLayout title="Ressourceries">
+        <MainLayout title="Ressourceries">
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -37,6 +37,6 @@ export default function Index({ ressourceries }) {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

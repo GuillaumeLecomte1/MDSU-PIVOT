@@ -1,9 +1,9 @@
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import { Head } from '@inertiajs/react';
 
 export default function Dashboard({ auth }) {
     return (
-        <AppLayout title="Tableau de bord">
+        <MainLayout title="Tableau de bord">
             <Head title="Tableau de bord" />
 
             <div className="py-12">
@@ -15,6 +15,6 @@ export default function Dashboard({ auth }) {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 }

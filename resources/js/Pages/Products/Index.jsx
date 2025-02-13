@@ -1,12 +1,12 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import ProductCard from '@/Components/Products/ProductCard';
 import SearchBar from '@/Components/SearchBar';
 import Pagination from '@/Components/Pagination';
 
 export default function Index({ products, categories }) {
     return (
-        <AppLayout title="Produits">
+        <MainLayout title="Produits">
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="mb-6">
@@ -32,6 +32,6 @@ export default function Index({ products, categories }) {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

@@ -1,12 +1,12 @@
 import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import ProductCard from '@/Components/Products/ProductCard';
 
 export default function Index({ latestProducts = [], popularProducts = [], categories = [] }) {
     console.log('Dashboard component loaded', { latestProducts, popularProducts, categories });
     return (
-        <AppLayout>
+        <MainLayout>
             <Head title="Accueil" />
             
             <div className="py-12">
@@ -79,6 +79,6 @@ export default function Index({ latestProducts = [], popularProducts = [], categ
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 
