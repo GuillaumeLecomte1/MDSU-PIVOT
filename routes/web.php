@@ -79,6 +79,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Client routes
+    Route::middleware('can:access-client')->prefix('client')->name('client.')->group(function () {
+        Route::get('/orders', [App\Http\Controllers\Client\OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [App\Http\Controllers\Client\OrderController::class, 'show'])->name('orders.show');
+    });
+
     // Ressourceries routes
     Route::get('/ressourceries', [RessourcerieController::class, 'index'])->name('ressourceries.index');
     Route::get('/ressourceries/{ressourcerie}', [RessourcerieController::class, 'show'])->name('ressourceries.show');

@@ -37,6 +37,15 @@ export default function Navigation() {
         </Dropdown.Link>
     );
 
+    // Ajouter les liens de client si l'utilisateur a les permissions
+    if (permissions?.canAccessClient) {
+        menuItems.push(
+            <Dropdown.Link key="client-orders" href={route('client.orders.index')}>
+                Mes Commandes
+            </Dropdown.Link>
+        );
+    }
+
     // Ajouter les liens de ressourcerie si l'utilisateur a les permissions
     if (permissions?.canAccessRessourcerie) {
         menuItems.push(

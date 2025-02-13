@@ -21,3 +21,64 @@ resources/js/Pages/Client/Dashboard.jsx
 resources/js/Pages/Ressourcerie/Dashboard.jsx
 2. Une fois ces composants créés et testés, nous pourrons supprimer les fichiers Blade correspondants.
 Vérifier les routes dans web.php pour s'assurer qu'elles pointent vers les contrôleurs Inertia appropriés.
+
+Ajout en config : 
+❌Crée le docusaurus pour la documentation du projet.
+❌Ajouter la cicd pour le projet. Coolify ? vercel ? 
+
+Features : 
+En tant que client, je peux : 
+# Inscription
+- m'inscrire à la plateforme
+# Connexion
+- me connecter a la plateforme
+- me déconnecter de la plateforme
+# Commandes
+- voir mes commandes
+# Profil
+- voir mes informations personnelles
+- modifier mes informations personnelles
+# Panier
+- Ajouter un produit au panier
+- voir mes produits ajoutés au panier
+- Supprimer un produit du panier
+# Favoris
+- Ajouter un produit à mes favoris
+- voir mes produits ajoutés à mes favoris
+- Supprimer un produit de mes favoris
+# Achat
+- Passer commande
+- voir mes produits achetés
+- Voir l'historique de mes commandes
+# Produits
+- Voir les produits d'une ressourcerie
+- Voir les informations d'une ressourcerie
+- Voir les produits d'une catégorie
+
+
+En tant que Ressourcerie, je peux : 
+- voir mes produits en vente
+- voir mes produits vendus
+- voir mes produits en attente de paiement
+- voir mes produits en attente de livraison
+- voir mes produits en attente de réception
+- Ajouter un produit
+- Modifier un produit
+- Supprimer un produit
+- modifier les informations de la ressourcerie
+
+
+En tant que admin, je peux : 
+- voir toutes les commandes
+- voir tous les produits
+- voir tous les clients
+- voir toutes les ressourceries
+- modifier un produit
+- modifier une ressourcerie
+- modifier un client
+
+
+
+
+
+

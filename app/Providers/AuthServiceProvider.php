@@ -29,15 +29,16 @@ class AuthServiceProvider extends ServiceProvider
         // Permissions spécifiques
         Gate::define('access-admin', fn (User $user) => $user->role === 'admin');
         Gate::define('access-ressourcerie', fn (User $user) => $user->role === 'ressourcerie');
+        Gate::define('access-client', fn (User $user) => $user->role === 'client');
 
         // Permissions de gestion
         Gate::define('manage-users', fn (User $user) => $user->role === 'admin');
         Gate::define('manage-products', fn (User $user) => in_array($user->role, ['admin', 'ressourcerie']));
         Gate::define('manage-categories', fn (User $user) => $user->role === 'admin');
         Gate::define('manage-orders', fn (User $user) => in_array($user->role, ['admin', 'ressourcerie']));
+        Gate::define('view-orders', fn (User $user) => in_array($user->role, ['admin', 'ressourcerie', 'client']));
 
         // Permissions de visualisation
         Gate::define('view-dashboard', fn (User $user) => in_array($user->role, ['admin', 'ressourcerie']));
-        Gate::define('view-orders', fn (User $user) => in_array($user->role, ['admin', 'ressourcerie']));
     }
 }

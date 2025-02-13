@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                     'isClient' => Gate::allows('client'),
                     'canAccessAdmin' => Gate::allows('access-admin'),
                     'canAccessRessourcerie' => Gate::allows('access-ressourcerie'),
+                    'canAccessClient' => Gate::allows('access-client'),
                     'canManageUsers' => Gate::allows('manage-users'),
                     'canManageProducts' => Gate::allows('manage-products'),
                     'canManageCategories' => Gate::allows('manage-categories'),
