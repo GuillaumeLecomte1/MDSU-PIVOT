@@ -25,6 +25,20 @@ Route::middleware('guest')->group(function () {
     })->name('register');
 });
 
+// Routes publiques sans authentification
+Route::get('/notre-histoire', function () {
+    return Inertia::render('About/Index');
+})->name('about');
+
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
+
+Route::get('/ressourceries', [RessourcerieController::class, 'index'])->name('ressourceries.index');
+Route::get('/ressourceries/{ressourcerie}', [RessourcerieController::class, 'show'])->name('ressourceries.show');
+
 // Route racine avec redirection vers login si non connecté
 Route::get('/', function () {
     $latestProducts = Product::with(['categories', 'ressourcerie', 'favorites'])
@@ -66,14 +80,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Dashboard/Index');
     })->name('dashboard');
 
-    // Categories routes
-    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
-
-    // Products routes
-    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-    Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
-
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -84,10 +90,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/orders', [App\Http\Controllers\Client\OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [App\Http\Controllers\Client\OrderController::class, 'show'])->name('orders.show');
     });
-
-    // Ressourceries routes
-    Route::get('/ressourceries', [RessourcerieController::class, 'index'])->name('ressourceries.index');
-    Route::get('/ressourceries/{ressourcerie}', [RessourcerieController::class, 'show'])->name('ressourceries.show');
 
     // Favorites routes
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
@@ -101,12 +103,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Routes spécifiques aux rôles
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Routes pour les ressourceries
-    Route::prefix('ressourcerie')->middleware('can:access-ressourcerie')->group(function () {
-        Route::get('/dashboard', [RessourcerieDashboardController::class, 'index'])->name('ressourcerie.dashboard');
-        Route::resource('products', App\Http\Controllers\Ressourcerie\ProductController::class);
-        Route::get('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'edit'])->name('ressourcerie.profile.edit');
-        Route::patch('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'update'])->name('ressourcerie.profile.update');
+    // Routes pour les ressourceries (gestion des produits)
+    Route::prefix('ressourcerie')->middleware('can:access-ressourcerie')->name('ressourcerie.')->group(function () {
+        Route::get('/dashboard', [RessourcerieDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('products', App\Http\Controllers\Ressourcerie\ProductController::class)->names('products');
+        Route::get('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'update'])->name('profile.update');
     });
 
     // Routes pour les admins

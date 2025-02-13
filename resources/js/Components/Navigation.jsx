@@ -110,6 +110,15 @@ export default function Navigation() {
                             </Link>
 
                             <Link
+                                href={route('categories.index')}
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out ${
+                                    isActive('categories.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                            >
+                                Catégories
+                            </Link>
+
+                            <Link
                                 href={route('ressourceries.index')}
                                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out ${
                                     isActive('ressourceries.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -119,105 +128,85 @@ export default function Navigation() {
                             </Link>
 
                             <Link
-                                href={route('categories.index')}
+                                href={route('about')}
                                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out ${
-                                    isActive('categories.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    isActive('about') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                             >
-                                Catégories
+                                Notre Histoire
                             </Link>
-
-                            {permissions?.canAccessRessourcerie && (
-                                <Link
-                                    href={route('ressourcerie.dashboard')}
-                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out font-medium text-emerald-600 hover:text-emerald-700 ${
-                                        isActive('ressourcerie.*') ? 'border-emerald-400' : 'border-transparent'
-                                    }`}
-                                >
-                                    Ma Ressourcerie
-                                </Link>
-                            )}
-
-                            {permissions?.canAccessAdmin && (
-                                <Link
-                                    href={route('admin.dashboard')}
-                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out font-medium text-purple-600 hover:text-purple-700 ${
-                                        isActive('admin.*') ? 'border-purple-400' : 'border-transparent'
-                                    }`}
-                                >
-                                    Administration
-                                </Link>
-                            )}
                         </div>
                     </div>
 
                     <div className="hidden sm:flex sm:items-center sm:ml-6">
                         {user ? (
                             <>
-                                <Link
-                                    href={route('favorites.index')}
-                                    className={`px-3 py-2 text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out ${
-                                        isActive('favorites.*') ? 'text-gray-900' : ''
-                                    }`}
-                                >
-                                    Mes Favoris
-                                </Link>
+                                {/* Role-specific links */}
+                                {permissions?.canAccessRessourcerie && (
+                                    <Link
+                                        href={route('ressourcerie.dashboard')}
+                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out font-medium text-emerald-600 hover:text-emerald-700 ${
+                                            isActive('ressourcerie.*') ? 'border-emerald-400' : 'border-transparent'
+                                        }`}
+                                    >
+                                        Ma Ressourcerie
+                                    </Link>
+                                )}
 
+                                {permissions?.canAccessAdmin && (
+                                    <Link
+                                        href={route('admin.dashboard')}
+                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out font-medium text-purple-600 hover:text-purple-700 ${
+                                            isActive('admin.*') ? 'border-purple-400' : 'border-transparent'
+                                        }`}
+                                    >
+                                        Administration
+                                    </Link>
+                                )}
+
+                                {/* User menu */}
+                                <Dropdown>
+                                    <Dropdown.Trigger>
+                                        <span className="inline-flex rounded-md">
+                                            <button type="button" className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                                                <div className="flex items-center">
+                                                    <span>{user.name}</span>
+                                                    <span className="ml-2">
+                                                        <RoleBadge role={user.role} />
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        </span>
+                                    </Dropdown.Trigger>
+
+                                    <Dropdown.Content>
+                                        {menuItems}
+                                    </Dropdown.Content>
+                                </Dropdown>
+
+                                {/* Cart icon */}
                                 <Link
                                     href={route('cart.index')}
-                                    className={`px-3 py-2 text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out ${
-                                        isActive('cart.*') ? 'text-gray-900' : ''
-                                    }`}
+                                    className="ml-4 text-gray-500 hover:text-gray-700"
                                 >
-                                    <svg
-                                        className="h-6 w-6"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                                        />
+                                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                 </Link>
-
-                                <div className="ml-3 relative">
-                                    <Dropdown>
-                                        <Dropdown.Trigger>
-                                            <span className="inline-flex rounded-md">
-                                                <button type="button" className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                                    <div className="flex items-center">
-                                                        <span>{user.name}</span>
-                                                        <span className="ml-2">
-                                                            <RoleBadge role={user.role} />
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                            </span>
-                                        </Dropdown.Trigger>
-
-                                        <Dropdown.Content>
-                                            {menuItems}
-                                        </Dropdown.Content>
-                                    </Dropdown>
-                                </div>
                             </>
                         ) : (
                             <div className="space-x-4">
                                 <Link
                                     href={route('login')}
-                                    className="text-sm font-medium text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out"
+                                    className="text-sm font-medium text-gray-500 hover:text-gray-700"
                                 >
-                                    Connexion
+                                    Se connecter
                                 </Link>
                                 <Link
                                     href={route('register')}
-                                    className="text-sm font-medium text-emerald-600 hover:text-emerald-500 transition duration-150 ease-in-out"
+                                    className="text-sm font-medium text-emerald-600 hover:text-emerald-500"
                                 >
-                                    Inscription
+                                    S'inscrire
                                 </Link>
                             </div>
                         )}

@@ -40,5 +40,6 @@ class AuthServiceProvider extends ServiceProvider
 
         // Permissions de visualisation
         Gate::define('view-dashboard', fn (User $user) => in_array($user->role, ['admin', 'ressourcerie']));
+        Gate::define('view-products', fn (User $user) => true); // Tout le monde peut voir les produits
     }
 }

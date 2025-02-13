@@ -1,46 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function OrderShow() {
-    // Données statiques pour l'exemple
-    const fakeOrder = {
-        id: 'CMD-2024-001',
-        date: '15 Mars 2024',
-        status: 'completed',
-        total: 156.90,
-        payment: {
-            status: 'paid',
-            method: 'Stripe',
-            cardLast4: '4242',
-            transactionId: 'pi_3O9X4Z2eZvKYlo2C1J8F9K2M'
-        },
-        shipping: {
-            name: 'John Doe',
-            address: '123 Rue de Paris',
-            city: 'Paris',
-            postalCode: '75001',
-            country: 'France'
-        },
-        items: [
-            {
-                id: 1,
-                name: 'Table basse vintage',
-                price: 89.90,
-                quantity: 1,
-                image: '/storage/products/table.jpg',
-                ressourcerie: 'Ressourcerie du Centre'
-            },
-            {
-                id: 2,
-                name: 'Lampe de bureau',
-                price: 67.00,
-                quantity: 1,
-                image: '/storage/products/lampe.jpg',
-                ressourcerie: 'Ressourcerie du Centre'
-            }
-        ]
-    };
-
+export default function OrderShow({ order }) {
     const getStatusBadgeColor = (status) => {
         const colors = {
             completed: 'bg-green-100 text-green-800',
@@ -50,9 +11,18 @@ export default function OrderShow() {
         return colors[status] || 'bg-gray-100 text-gray-800';
     };
 
+    const getStatusLabel = (status) => {
+        const labels = {
+            completed: 'Payée',
+            pending: 'En attente',
+            cancelled: 'Annulée'
+        };
+        return labels[status] || status;
+    };
+
     return (
-        <AppLayout title={`Commande ${fakeOrder.id}`}>
-            <Head title={`Commande ${fakeOrder.id}`} />
+        <AppLayout title={`Commande ${order.id}`}>
+            <Head title={`Commande ${order.id}`} />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -69,10 +39,10 @@ export default function OrderShow() {
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h1 className="text-2xl font-semibold">
-                                    Commande {fakeOrder.id}
+                                    Commande {order.id}
                                 </h1>
-                                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusBadgeColor(fakeOrder.status)}`}>
-                                    {fakeOrder.status === 'completed' ? 'Payée' : 'En attente'}
+                                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusBadgeColor(order.status)}`}>
+                                    {getStatusLabel(order.status)}
                                 </span>
                             </div>
 
@@ -81,9 +51,9 @@ export default function OrderShow() {
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h2 className="text-lg font-medium mb-4">Informations de commande</h2>
                                     <div className="space-y-2">
-                                        <p><span className="font-medium">Date :</span> {fakeOrder.date}</p>
-                                        <p><span className="font-medium">Numéro de commande :</span> {fakeOrder.id}</p>
-                                        <p><span className="font-medium">Total :</span> {fakeOrder.total.toFixed(2)}€</p>
+                                        <p><span className="font-medium">Date :</span> {order.date}</p>
+                                        <p><span className="font-medium">Numéro de commande :</span> {order.id}</p>
+                                        <p><span className="font-medium">Total :</span> {order.total.toFixed(2)}€</p>
                                     </div>
                                 </div>
 
@@ -91,9 +61,9 @@ export default function OrderShow() {
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h2 className="text-lg font-medium mb-4">Paiement</h2>
                                     <div className="space-y-2">
-                                        <p><span className="font-medium">Méthode :</span> {fakeOrder.payment.method}</p>
-                                        <p><span className="font-medium">Carte :</span> •••• {fakeOrder.payment.cardLast4}</p>
-                                        <p><span className="font-medium">Transaction :</span> {fakeOrder.payment.transactionId}</p>
+                                        <p><span className="font-medium">Méthode :</span> {order.payment.method}</p>
+                                        <p><span className="font-medium">Carte :</span> •••• {order.payment.cardLast4}</p>
+                                        <p><span className="font-medium">Transaction :</span> {order.payment.transactionId}</p>
                                     </div>
                                 </div>
                             </div>
@@ -102,10 +72,10 @@ export default function OrderShow() {
                             <div className="mb-8">
                                 <h2 className="text-lg font-medium mb-4">Adresse de livraison</h2>
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p>{fakeOrder.shipping.name}</p>
-                                    <p>{fakeOrder.shipping.address}</p>
-                                    <p>{fakeOrder.shipping.postalCode} {fakeOrder.shipping.city}</p>
-                                    <p>{fakeOrder.shipping.country}</p>
+                                    <p>{order.shipping.name}</p>
+                                    <p>{order.shipping.address}</p>
+                                    <p>{order.shipping.postalCode} {order.shipping.city}</p>
+                                    <p>{order.shipping.country}</p>
                                 </div>
                             </div>
 
@@ -131,14 +101,14 @@ export default function OrderShow() {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {fakeOrder.items.map((item) => (
+                                            {order.items.map((item) => (
                                                 <tr key={item.id}>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="flex items-center">
                                                             <div className="h-10 w-10 flex-shrink-0">
                                                                 <img
                                                                     className="h-10 w-10 rounded-full object-cover"
-                                                                    src="https://via.placeholder.com/150"
+                                                                    src={item.image}
                                                                     alt={item.name}
                                                                 />
                                                             </div>
@@ -167,7 +137,7 @@ export default function OrderShow() {
                                                     Total
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap font-medium">
-                                                    {fakeOrder.total.toFixed(2)}€
+                                                    {order.total.toFixed(2)}€
                                                 </td>
                                             </tr>
                                         </tfoot>

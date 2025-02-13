@@ -1,7 +1,25 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
-export default function OrdersIndex() {
+export default function OrdersIndex({ orders }) {
+    const getStatusBadgeColor = (status) => {
+        const colors = {
+            completed: 'bg-green-100 text-green-800',
+            pending: 'bg-yellow-100 text-yellow-800',
+            cancelled: 'bg-red-100 text-red-800'
+        };
+        return colors[status] || 'bg-gray-100 text-gray-800';
+    };
+
+    const getStatusLabel = (status) => {
+        const labels = {
+            completed: 'Payée',
+            pending: 'En attente',
+            cancelled: 'Annulée'
+        };
+        return labels[status] || status;
+    };
+
     return (
         <AppLayout title="Mes Commandes">
             <Head title="Mes Commandes" />
@@ -28,7 +46,7 @@ export default function OrdersIndex() {
                                 </div>
                             </div>
 
-                            {/* Liste des commandes (exemple statique) */}
+                            {/* Liste des commandes */}
                             <div className="border rounded-lg overflow-hidden">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
@@ -45,14 +63,52 @@ export default function OrdersIndex() {
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Total
                                             </th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Actions
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        <tr>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-500" colSpan="4">
-                                                Aucune commande pour le moment
-                                            </td>
-                                        </tr>
+                                        {orders.length > 0 ? (
+                                            orders.map((order) => (
+                                                <tr key={order.id}>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-medium text-gray-900">
+                                                            {order.id}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-900">
+                                                            {order.date}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(order.status)}`}>
+                                                            {getStatusLabel(order.status)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-900">
+                                                            {order.total.toFixed(2)}€
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <Link
+                                                            href={route('client.orders.show', order.id)}
+                                                            className="text-indigo-600 hover:text-indigo-900"
+                                                        >
+                                                            Voir détails
+                                                        </Link>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-500" colSpan="5">
+                                                    Aucune commande pour le moment
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
