@@ -1,5 +1,3 @@
-import { motion } from 'framer-motion';
-
 export default function PageLoader() {
     return (
         <div className="fixed inset-0 bg-white/75 flex items-center justify-center z-50">

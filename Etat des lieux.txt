@@ -79,6 +79,16 @@ En tant que admin, je peux :
 
 
 
-
-
-
+- panel admin a rework
+- inscription et connexion front
+- guest access
+- panier 
+- image produit rework
+- envoi mail apres inscription
+- envoi mail apres commande
+- envoi mail apres paiement
+- envoi mail apres livraison
+- envoi mail apres reception
+- envoi mail apres annulation
+- verification entreprise ressourcerie
+- dashboard ressourcerie avec graph etc..

@@ -1,15 +1,16 @@
+import MainLayout from '@/Layouts/MainLayout';
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+
 export default function Dashboard({ auth, stats }) {
     return (
-        <AppLayout title="Administration">
-            <Head title="Administration" />
-
+        <MainLayout title="Tableau de bord Admin">
+            <Head title="Tableau de bord Admin" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
+                            <h1 className="text-2xl font-semibold mb-6">Tableau de bord Administrateur</h1>
                             <h3 className="text-lg font-medium mb-4">Statistiques</h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -48,6 +49,6 @@ export default function Dashboard({ auth, stats }) {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 } 

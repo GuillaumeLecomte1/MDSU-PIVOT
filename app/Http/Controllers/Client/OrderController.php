@@ -23,11 +23,11 @@ class OrderController extends Controller
                 'date' => '10 Mars 2024',
                 'status' => 'pending',
                 'total' => 89.90,
-            ]
+            ],
         ];
 
         return Inertia::render('Client/Orders/Index', [
-            'orders' => $orders
+            'orders' => $orders,
         ]);
     }
 
@@ -43,14 +43,14 @@ class OrderController extends Controller
                 'status' => 'paid',
                 'method' => 'Stripe',
                 'cardLast4' => '4242',
-                'transactionId' => 'pi_3O9X4Z2eZvKYlo2C1J8F9K2M'
+                'transactionId' => 'pi_3O9X4Z2eZvKYlo2C1J8F9K2M',
             ],
             'shipping' => [
                 'name' => auth()->user()->name,
                 'address' => '123 Rue de Paris',
                 'city' => 'Paris',
                 'postalCode' => '75001',
-                'country' => 'France'
+                'country' => 'France',
             ],
             'items' => [
                 [
@@ -59,7 +59,7 @@ class OrderController extends Controller
                     'price' => 89.90,
                     'quantity' => 1,
                     'image' => 'https://via.placeholder.com/150',
-                    'ressourcerie' => 'Ressourcerie du Centre'
+                    'ressourcerie' => 'Ressourcerie du Centre',
                 ],
                 [
                     'id' => 2,
@@ -67,13 +67,13 @@ class OrderController extends Controller
                     'price' => 67.00,
                     'quantity' => 1,
                     'image' => 'https://via.placeholder.com/150',
-                    'ressourcerie' => 'Ressourcerie du Centre'
-                ]
-            ]
+                    'ressourcerie' => 'Ressourcerie du Centre',
+                ],
+            ],
         ];
 
         return Inertia::render('Client/Orders/Show', [
-            'order' => $order
+            'order' => $order,
         ]);
     }
 }
