@@ -54,6 +54,6 @@
         "ASSET_URL": "https://your-domain.vercel.app",
         "COMPOSER_HOME": "/tmp/.composer",
         "COMPOSER_VENDOR_DIR": "/tmp/vendor",
-        "COMPOSER_ALLOW_SUPERUSER": 1
+        "COMPOSER_ALLOW_SUPERUSER": "1"
     }
 } 
