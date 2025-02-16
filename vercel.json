@@ -3,9 +3,12 @@
     "framework": null,
     "functions": {
         "api/*.php": {
-            "runtime": "vercel-php@1.0.0"
+            "runtime": "vercel-php@0.6.0",
+            "memory": 1024,
+            "maxDuration": 10
         }
     },
+    "buildCommand": "composer install --no-dev --optimize-autoloader && npm run build",
     "outputDirectory": "public",
     "routes": [
         {
@@ -48,6 +51,9 @@
         "LOG_CHANNEL": "stderr",
         "SESSION_DRIVER": "cookie",
         "SSR": "false",
-        "ASSET_URL": "https://your-domain.vercel.app"
+        "ASSET_URL": "https://your-domain.vercel.app",
+        "COMPOSER_HOME": "/tmp/.composer",
+        "COMPOSER_VENDOR_DIR": "/tmp/vendor",
+        "COMPOSER_ALLOW_SUPERUSER": 1
     }
 } 
