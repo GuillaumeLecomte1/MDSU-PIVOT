@@ -18,27 +18,26 @@
             "use": "@vercel/static"
         }
     ],
-    "outputDirectory": "public",
     "routes": [
         {
             "src": "/build/assets/(.*)",
-            "dest": "/build/assets/$1"
+            "dest": "/public/build/assets/$1"
         },
         {
             "src": "/build/(.*)",
-            "dest": "/build/$1"
+            "dest": "/public/build/$1"
         },
         {
             "src": "/favicon\\.ico",
-            "dest": "/favicon.ico"
+            "dest": "/public/favicon.ico"
         },
         {
             "src": "/robots\\.txt",
-            "dest": "/robots.txt"
+            "dest": "/public/robots.txt"
         },
         {
             "src": "/storage/(.*)",
-            "dest": "/storage/$1"
+            "dest": "/public/storage/$1"
         },
         {
             "src": "/(.*)",
@@ -49,7 +48,7 @@
         "APP_NAME": "Marketplace",
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_URL": "https://your-domain.vercel.app",
+        "APP_URL": "https://mdsu-pivot.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
@@ -60,7 +59,7 @@
         "LOG_CHANNEL": "stderr",
         "SESSION_DRIVER": "cookie",
         "SSR": "false",
-        "ASSET_URL": "https://your-domain.vercel.app",
+        "ASSET_URL": "https://mdsu-pivot.vercel.app",
         "COMPOSER_HOME": "/tmp/.composer",
         "COMPOSER_VENDOR_DIR": "/tmp/vendor",
         "COMPOSER_ALLOW_SUPERUSER": "1"
