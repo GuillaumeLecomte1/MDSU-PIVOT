@@ -1,11 +1,16 @@
 {
     "version": 2,
     "framework": null,
-    "functions": {
-        "api/*.php": {
-            "runtime": "vercel-php@0.6.0"
+    "builds": [
+        {
+            "src": "api/index.php",
+            "use": "@vercel/php"
+        },
+        {
+            "src": "public/**",
+            "use": "@vercel/static"
         }
-    },
+    ],
     "routes": [
         {
             "src": "/build/assets/(.*)",
@@ -48,15 +53,5 @@
         "SESSION_DRIVER": "cookie",
         "SSR": "false",
         "ASSET_URL": "https://your-domain.vercel.app"
-    },
-    "builds": [
-        {
-            "src": "api/index.php",
-            "use": "@vercel/php"
-        },
-        {
-            "src": "public/**",
-            "use": "@vercel/static"
-        }
-    ]
+    }
 } 
