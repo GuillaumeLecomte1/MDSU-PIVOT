@@ -6,7 +6,7 @@
 [![Laravel Version](https://img.shields.io/badge/Laravel-10.x-red.svg)](https://laravel.com)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%205-brightgreen.svg)](https://phpstan.org/)
 [![StyleCI](https://github.styleci.io/repos/872337695/shield?branch=main)](https://github.styleci.io/repos/872337695)
-[![Vercel](https://therealsujitk-vercel-badge.vercel.app/?app=marketplace)](https://marketplace.vercel.app)
+[![Vercel](https://therealsujitk-vercel-badge.vercel.app/?app=pivot)](https://vercel.com/guillaume-lecomtes-projects/pivot)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>
@@ -119,6 +119,23 @@ composer style:fix # Corriger automatiquement le style
 ## 📝 Gestion des Commits (Gitmoji)
 
 Nous utilisons Gitmoji pour maintenir une convention de commits cohérente et visuelle.
+
+### Installation de l'alias Gitmoji
+
+Pour faciliter l'utilisation de Gitmoji, vous pouvez configurer un alias dans votre terminal :
+
+```bash
+# Pour PowerShell (Windows)
+Function gitmoji { npx gitmoji-cli }
+Set-Alias -Name gitmoji -Value gitmoji
+
+# Pour Bash/Zsh (Linux/MacOS)
+alias gitmoji="npx gitmoji-cli"
+```
+
+Pour rendre l'alias permanent :
+- **Windows** : Ajoutez la fonction et l'alias dans votre profil PowerShell (`$PROFILE`)
+- **Linux/MacOS** : Ajoutez l'alias dans votre `.bashrc` ou `.zshrc`
 
 ### Types de Commits Principaux
 
