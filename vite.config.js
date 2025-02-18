@@ -21,30 +21,10 @@ export default defineConfig({
         },
         host: '127.0.0.1',
         port: 5173,
-        proxy: {
-            '/logout': {
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-                ws: true,
-                rewrite: (path) => path,
-            },
-        },
     },
     build: {
         chunkSizeWarningLimit: 1600,
         outDir: 'public/build',
-        rollupOptions: {
-            output: {
-                manualChunks: {
-                    vendor: ['react', 'react-dom', '@inertiajs/react'],
-                },
-            },
-        },
         manifest: true,
-        ssrManifest: true,
-    },
-    optimizeDeps: {
-        include: ['@inertiajs/react'],
     },
 });
