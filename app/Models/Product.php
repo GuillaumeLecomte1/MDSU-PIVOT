@@ -26,27 +26,23 @@ class Product extends Model
         'brand',
         'stock',
         'is_available',
-        'images',
         'ressourcerie_id',
         'category_id',
-        'main_image',
-        'path',
         'user_id',
     ];
 
     protected $casts = [
         'price' => 'float',
-        'images' => 'array',
         'stock' => 'integer',
         'is_available' => 'boolean',
         'is_favorite' => 'boolean',
-        'path' => 'string',
     ];
 
     protected $appends = [
-        'main_image',
         'is_favorite',
     ];
+
+    protected $with = ['images'];
 
     public function categories(): BelongsToMany
     {
@@ -66,14 +62,7 @@ class Product extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(ProductImage::class);
-    }
-
-    public function getMainImageAttribute(): ?string
-    {
-        $firstImage = $this->images()->first();
-
-        return $firstImage ? $firstImage->getAttribute('path') : null;
+        return $this->hasMany(ProductImage::class)->orderBy('order');
     }
 
     public function getIsFavoriteAttribute(): bool

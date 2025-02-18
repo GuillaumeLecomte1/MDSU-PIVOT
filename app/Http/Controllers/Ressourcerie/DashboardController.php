@@ -11,11 +11,6 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'ressourcerie', 'verified']);
-    }
-
     public function index(Request $request): Response
     {
         $ressourcerie = $request->user()->ressourcerie;

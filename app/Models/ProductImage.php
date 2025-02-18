@@ -13,6 +13,13 @@ class ProductImage extends Model
     protected $fillable = [
         'path',
         'product_id',
+        'thumbnails',
+        'order',
+    ];
+
+    protected $casts = [
+        'thumbnails' => 'array',
+        'order' => 'integer',
     ];
 
     public function product(): BelongsTo

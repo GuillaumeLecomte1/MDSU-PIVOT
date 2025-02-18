@@ -41,12 +41,12 @@ Route::get('/ressourceries/{ressourcerie}', [RessourcerieController::class, 'sho
 
 // Route racine avec redirection vers login si non connecté
 Route::get('/', function () {
-    $latestProducts = Product::with(['categories', 'ressourcerie', 'favorites'])
+    $latestProducts = Product::with(['categories', 'ressourcerie', 'favorites', 'images'])
         ->latest()
         ->take(4)
         ->get();
 
-    $popularProducts = Product::with(['categories', 'ressourcerie', 'favorites'])
+    $popularProducts = Product::with(['categories', 'ressourcerie', 'favorites', 'images'])
         ->withCount('favorites')
         ->orderByDesc('favorites_count')
         ->take(4)
@@ -55,9 +55,6 @@ Route::get('/', function () {
     // Ajouter l'état des favoris pour chaque produit
     $processProducts = function ($products) {
         foreach ($products as $product) {
-            $images = json_decode($product->images) ?? [];
-            $product->images = $images;
-            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
             $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
         }
 
@@ -104,12 +101,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Routes spécifiques aux rôles
 Route::middleware(['auth', 'verified'])->group(function () {
     // Routes pour les ressourceries (gestion des produits)
-    Route::prefix('ressourcerie')->middleware('can:access-ressourcerie')->name('ressourcerie.')->group(function () {
-        Route::get('/dashboard', [RessourcerieDashboardController::class, 'index'])->name('dashboard');
-        Route::resource('products', App\Http\Controllers\Ressourcerie\ProductController::class)->names('products');
-        Route::get('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'update'])->name('profile.update');
-    });
+    Route::prefix('ressourcerie')
+        ->middleware(['auth', 'verified', 'can:access-ressourcerie'])
+        ->name('ressourcerie.')
+        ->group(function () {
+            Route::get('/dashboard', [RessourcerieDashboardController::class, 'index'])->name('dashboard');
+            Route::resource('products', App\Http\Controllers\Ressourcerie\ProductController::class)->names('products');
+            Route::get('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'edit'])->name('profile.edit');
+            Route::patch('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'update'])->name('profile.update');
+        });
 
     // Routes pour les admins
     Route::prefix('admin')->middleware('can:access-admin')->name('admin.')->group(function () {

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use App\Models\Ressourcerie;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -14,29 +15,22 @@ class ProductFactory extends Factory
     /**
      * Define the model's default state.
      *
-     * @return array<model-property<\App\Models\Product>, mixed>
+     * @return array<string, mixed>
      */
     public function definition(): array
     {
-        $name = fake()->words(3, true);
-        $conditions = ['Neuf', 'Très bon état', 'Bon état', 'État moyen', 'À rénover'];
-        $colors = ['Rouge', 'Bleu', 'Vert', 'Jaune', 'Noir', 'Blanc', 'Gris', 'Marron'];
-
+        $name = $this->faker->words(3, true);
         return [
-            'name' => ucfirst($name),
+            'name' => $name,
             'slug' => Str::slug($name),
-            'description' => fake()->paragraphs(2, true),
-            'price' => fake()->randomFloat(2, 5, 1000),
-            'condition' => fake()->randomElement($conditions),
-            'dimensions' => fake()->numerify('##x##x## cm'),
-            'color' => fake()->randomElement($colors),
-            'brand' => fake()->company(),
-            'stock' => fake()->numberBetween(0, 10),
-            'is_available' => fake()->boolean(80),
-            'images' => json_encode([
-                fake()->imageUrl(640, 480, 'product'),
-                fake()->imageUrl(640, 480, 'product'),
-            ]),
+            'description' => $this->faker->paragraphs(2, true),
+            'price' => $this->faker->randomFloat(2, 10, 1000),
+            'condition' => $this->faker->randomElement(['Neuf', 'Très bon état', 'Bon état', 'État moyen', 'À rénover']),
+            'dimensions' => $this->faker->numberBetween(10, 100).'x'.$this->faker->numberBetween(10, 100).'x'.$this->faker->numberBetween(10, 100).' cm',
+            'color' => $this->faker->colorName(),
+            'brand' => $this->faker->company(),
+            'stock' => $this->faker->numberBetween(0, 10),
+            'is_available' => $this->faker->boolean(80),
             'ressourcerie_id' => Ressourcerie::factory(),
         ];
     }

@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Ressourcerie;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\ProductImageService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -14,15 +16,16 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'ressourcerie', 'verified']);
-    }
+    use AuthorizesRequests;
+
+    public function __construct(
+        private readonly ProductImageService $imageService
+    ) {}
 
     public function index(Request $request): Response
     {
         $products = $request->user()->ressourcerie->products()
-            ->with(['categories'])
+            ->with(['categories', 'images'])
             ->latest()
             ->paginate(10);
 
@@ -58,18 +61,15 @@ class ProductController extends Controller
         $product = new Product($validated);
         $product->slug = Str::slug($validated['name']);
         $product->ressourcerie_id = $request->user()->ressourcerie->id;
+        $product->is_available = true;
         $product->save();
 
         if (isset($validated['categories'])) {
             $product->categories()->sync($validated['categories']);
         }
 
-        // Gérer le téléchargement des images
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                $product->images()->create(['path' => $path]);
-            }
+            $this->imageService->addImages($product, $request->file('images'));
         }
 
         return redirect()->route('ressourcerie.products.index')
@@ -81,7 +81,7 @@ class ProductController extends Controller
         $this->authorize('update', $product);
 
         return Inertia::render('Ressourcerie/Products/Edit', [
-            'product' => $product->load('categories'),
+            'product' => $product->load(['categories', 'images']),
             'categories' => Category::all(),
         ]);
     }
@@ -103,6 +103,10 @@ class ProductController extends Controller
             'categories.*' => 'exists:market__categories,id',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'delete_images' => 'nullable|array',
+            'delete_images.*' => 'exists:product_images,id',
+            'reorder_images' => 'nullable|array',
+            'reorder_images.*' => 'exists:product_images,id',
         ]);
 
         $product->update($validated);
@@ -111,12 +115,20 @@ class ProductController extends Controller
             $product->categories()->sync($validated['categories']);
         }
 
-        // Gérer le téléchargement des nouvelles images
+        // Gérer la suppression des images
+        if (!empty($validated['delete_images'])) {
+            $this->imageService->deleteImages($validated['delete_images']);
+        }
+
+        // Gérer l'ajout de nouvelles images
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                $product->images()->create(['path' => $path]);
-            }
+            $startOrder = $product->images()->max('order') + 1;
+            $this->imageService->addImages($product, $request->file('images'), $startOrder);
+        }
+
+        // Gérer la réorganisation des images
+        if (!empty($validated['reorder_images'])) {
+            $this->imageService->reorderImages($product, $validated['reorder_images']);
         }
 
         return redirect()->route('ressourcerie.products.index')
@@ -127,6 +139,8 @@ class ProductController extends Controller
     {
         $this->authorize('delete', $product);
 
+        // Supprimer toutes les images avant de supprimer le produit
+        $this->imageService->deleteAllImages($product);
         $product->delete();
 
         return redirect()->route('ressourcerie.products.index')

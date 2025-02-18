@@ -14,6 +14,7 @@ class Ressourcerie extends Model
     protected $table = 'market__ressourceries';
 
     protected $fillable = [
+        'user_id',
         'name',
         'slug',
         'description',
@@ -37,6 +38,14 @@ class Ressourcerie extends Model
         'latitude' => 'float',
         'longitude' => 'float',
     ];
+
+    /**
+     * Get the user that owns the ressourcerie.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Get the products for the ressourcerie.
