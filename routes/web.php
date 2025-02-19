@@ -134,4 +134,10 @@ Route::get('/forbidden', function () {
     return Inertia::render('Error/Forbidden');
 })->name('forbidden');
 
+// Admin Documentation Routes
+Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/documentation', [App\Http\Controllers\Admin\DocumentationController::class, 'index'])->name('documentation.index');
+    Route::get('/documentation/{filename}', [App\Http\Controllers\Admin\DocumentationController::class, 'show'])->name('documentation.show');
+});
+
 require __DIR__.'/auth.php';

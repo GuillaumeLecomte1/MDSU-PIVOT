@@ -100,13 +100,22 @@ export default function MobileNav() {
                             )}
 
                             {permissions?.canAccessAdmin && (
-                                <Link
-                                    href={route('admin.dashboard')}
-                                    active={isActive('admin.*')}
-                                    className="mobile text-purple-600"
-                                >
-                                    Administration
-                                </Link>
+                                <>
+                                    <Link
+                                        href={route('admin.dashboard')}
+                                        active={isActive('admin.*')}
+                                        className="mobile text-purple-600"
+                                    >
+                                        Administration
+                                    </Link>
+                                    <Link
+                                        href={route('admin.documentation.index')}
+                                        active={isActive('admin.documentation.*')}
+                                        className="mobile text-purple-600"
+                                    >
+                                        Documentation
+                                    </Link>
+                                </>
                             )}
 
                             {/* User Menu Items */}

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import Navigation from '@/Components/Navigation';
+import Navigation from '@/Components/Layout/Navigation';
 
 export default function AdminLayout({ children }) {
     return (

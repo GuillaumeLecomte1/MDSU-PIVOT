@@ -1,4 +1,4 @@
-import Navigation from '@/Components/Navigation';
+import Navigation from '@/Components/Layout/Navigation';
 import { Head } from '@inertiajs/react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

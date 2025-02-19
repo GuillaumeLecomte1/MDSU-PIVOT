@@ -2,9 +2,21 @@ import Link from '@/Components/Common/Link';
 import { usePage } from '@inertiajs/react';
 import RoleBadge from '@/Components/RoleBadge';
 import Dropdown from '@/Components/Dropdown';
+import DocLink from '@/Components/Documentation/DocLink';
 
 export default function DesktopNav() {
-    const { auth: { user, permissions } = { user: null, permissions: null } } = usePage().props;
+    const { auth } = usePage().props;
+    const user = auth?.user;
+    const permissions = auth?.permissions || {};
+
+    // Debug logs with distinctive markers
+    console.log('🔍 DesktopNav COMPONENT - START LOGS 🔍');
+    console.log('📱 DesktopNav - Auth:', auth);
+    console.log('👤 DesktopNav - User:', user);
+    console.log('🔑 DesktopNav - Permissions:', permissions);
+    console.log('👮 DesktopNav - Can Access Admin:', permissions.canAccessAdmin);
+    console.log('🎭 DesktopNav - Current Role:', user?.role);
+    console.log('🔍 DesktopNav COMPONENT - END LOGS 🔍');
 
     const isActive = (route) => {
         return route === window.location.pathname;
@@ -47,14 +59,21 @@ export default function DesktopNav() {
                         </Link>
                     )}
 
+                    {/* Admin Links */}
                     {permissions?.canAccessAdmin && (
-                        <Link
-                            href={route('admin.dashboard')}
-                            active={isActive('admin.*')}
-                            className="text-purple-600 hover:text-purple-700"
-                        >
-                            Administration
-                        </Link>
+                        <>
+                            <DocLink
+                                className="text-blue-600 hover:text-blue-700"
+                            />
+
+                            <Link
+                                href={route('admin.dashboard')}
+                                active={isActive('admin.*')}
+                                className="text-purple-600 hover:text-purple-700"
+                            >
+                                Administration
+                            </Link>
+                        </>
                     )}
 
                     {/* User Menu */}
@@ -74,6 +93,16 @@ export default function DesktopNav() {
                             <Dropdown.Link href={route('profile.edit')}>
                                 Mon Profil
                             </Dropdown.Link>
+                            {permissions?.canAccessAdmin && (
+                                <>
+                                    <Dropdown.Link href={route('admin.dashboard')}>
+                                        Administration
+                                    </Dropdown.Link>
+                                    <Dropdown.Link href={route('admin.documentation.index')}>
+                                        Documentation
+                                    </Dropdown.Link>
+                                </>
+                            )}
                             <Dropdown.Link href={route('logout')} method="post" as="button">
                                 Déconnexion
                             </Dropdown.Link>

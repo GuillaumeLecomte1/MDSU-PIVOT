@@ -16,11 +16,16 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.jsx'),
         ),
     setup({ el, App, props }) {
+        // Debug logs
+        const pageProps = props.initialPage.props;
+        console.log('Inertia Setup - Auth:', pageProps.auth);
+        console.log('Inertia Setup - User:', pageProps.auth?.user);
+        console.log('Inertia Setup - Permissions:', pageProps.auth?.permissions);
+        
         // Configure Axios avec le CSRF token
-        if (props.csrf_token) {
-            axios.defaults.headers.common['X-CSRF-TOKEN'] = props.csrf_token;
-            // Met à jour le meta tag CSRF
-            document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', props.csrf_token);
+        if (pageProps.csrf_token) {
+            axios.defaults.headers.common['X-CSRF-TOKEN'] = pageProps.csrf_token;
+            document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', pageProps.csrf_token);
         }
         axios.defaults.withCredentials = true;
 

@@ -4,19 +4,25 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
     /**
-     * The root template that is loaded on the first page visit.
+     * The root template that's loaded on the first page visit.
      *
+     * @see https://inertiajs.com/server-side-setup#root-template
      * @var string
      */
     protected $rootView = 'app';
 
     /**
-     * Determine the current asset version.
+     * Determines the current asset version.
+     *
+     * @see https://inertiajs.com/asset-versioning
+     * @param  \Illuminate\Http\Request  $request
+     * @return string|null
      */
     public function version(Request $request): ?string
     {
@@ -24,49 +30,51 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Define the props that are shared by default.
+     * Defines the props that are shared by default.
      *
-     * @return array<string, mixed>
+     * @see https://inertiajs.com/shared-data
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
      */
     public function share(Request $request): array
     {
         $user = $request->user();
+        
+        // Debug logs
+        Log::info('HandleInertiaRequests - share method', [
+            'user' => $user,
+            'is_authenticated' => $request->user() !== null,
+            'session_id' => $request->session()->getId(),
+            'session_data' => $request->session()->all(),
+        ]);
 
-        return [
-            ...parent::share($request),
+        $sharedData = array_merge(parent::share($request), [
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
                     'name' => $user->name,
-                    'firstname' => $user->firstname,
                     'email' => $user->email,
                     'role' => $user->role,
-                    'role_label' => $user->getRoleLabel(),
                 ] : null,
-                'permissions' => $user ? [
-                    'isAdmin' => Gate::allows('admin'),
-                    'isRessourcerie' => Gate::allows('ressourcerie'),
-                    'isClient' => Gate::allows('client'),
-                    'canAccessAdmin' => $user ? $user->can('access-admin') : false,
-                    'canAccessRessourcerie' => $user ? $user->can('access-ressourcerie') : false,
-                    'canAccessClient' => $user ? $user->can('access-client') : false,
-                    'canManageUsers' => $user ? $user->can('manage-users') : false,
-                    'canManageProducts' => $user ? $user->can('manage-products') : false,
-                    'canManageCategories' => $user ? $user->can('manage-categories') : false,
-                    'canManageOrders' => $user ? $user->can('manage-orders') : false,
-                    'canViewOrders' => $user ? $user->can('view-orders') : false,
-                ] : [],
-            ],
-            'csrf_token' => csrf_token(),
-            'app' => [
-                'name' => config('app.name'),
-                'url' => config('app.url'),
+                'permissions' => [
+                    'canAccessAdmin' => $user ? Gate::allows('access-admin') : false,
+                    'canAccessRessourcerie' => $user ? Gate::allows('access-ressourcerie') : false,
+                ],
             ],
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),
-                'error' => fn () => $request->session()->get('error'),
                 'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
-        ];
+            'csrf_token' => csrf_token(),
+        ]);
+
+        // Debug logs for shared data
+        Log::info('HandleInertiaRequests - shared data', [
+            'auth' => $sharedData['auth'],
+            'csrf_token' => $sharedData['csrf_token'],
+        ]);
+
+        return $sharedData;
     }
 }
