@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 
 // Composant de formulaire de paiement
@@ -61,9 +61,31 @@ function CheckoutForm({ stripe, elements, onCancel }) {
 
 export default function Cart({ products }) {
     const [updatingQuantity, setUpdatingQuantity] = useState(false);
-    const [showPayment, setShowPayment] = useState(false);
-    const [stripe, setStripe] = useState(null);
-    const [elements, setElements] = useState(null);
+    const [paymentState, setPaymentState] = useState({
+        show: false,
+        stripe: null,
+        elements: null,
+        paymentElement: null
+    });
+
+    // Effet pour gérer le montage/démontage du formulaire de paiement
+    useEffect(() => {
+        if (paymentState.show && paymentState.elements && !paymentState.paymentElement) {
+            const paymentElement = paymentState.elements.create('payment');
+            const element = document.getElementById('payment-element');
+            if (element) {
+                paymentElement.mount('#payment-element');
+                setPaymentState(prev => ({ ...prev, paymentElement }));
+            }
+        }
+
+        // Nettoyage lors du démontage
+        return () => {
+            if (paymentState.paymentElement) {
+                paymentState.paymentElement.destroy();
+            }
+        };
+    }, [paymentState.show, paymentState.elements]);
 
     const updateQuantity = (productId, newQuantity) => {
         if (updatingQuantity) return;
@@ -113,11 +135,7 @@ export default function Cart({ products }) {
                 return;
             }
 
-            // Initialiser Stripe
             const stripeInstance = await loadStripe(import.meta.env.VITE_STRIPE_KEY);
-            setStripe(stripeInstance);
-            
-            // Créer Elements
             const elementsInstance = stripeInstance.elements({
                 clientSecret: data.clientSecret,
                 appearance: {
@@ -127,22 +145,13 @@ export default function Cart({ products }) {
                     },
                 },
             });
-            setElements(elementsInstance);
 
-            // Afficher le formulaire
-            setShowPayment(true);
-            
-            // Attendre que le DOM soit mis à jour
-            setTimeout(() => {
-                const paymentElement = document.getElementById('payment-element');
-                if (paymentElement) {
-                    // Créer et monter le formulaire de paiement
-                    const paymentElementInstance = elementsInstance.create('payment');
-                    paymentElementInstance.mount('#payment-element');
-                } else {
-                    console.error('Element #payment-element not found in DOM');
-                }
-            }, 100);
+            setPaymentState({
+                show: true,
+                stripe: stripeInstance,
+                elements: elementsInstance,
+                paymentElement: null
+            });
 
         } catch (error) {
             console.error('Erreur lors de l\'initialisation du paiement:', error);
@@ -268,14 +277,17 @@ export default function Cart({ products }) {
                                             </span>
                                         </div>
                                         <div className="mt-6">
-                                            {showPayment && stripe && elements ? (
+                                            {paymentState.show ? (
                                                 <CheckoutForm 
-                                                    stripe={stripe}
-                                                    elements={elements}
+                                                    stripe={paymentState.stripe}
+                                                    elements={paymentState.elements}
                                                     onCancel={() => {
-                                                        setShowPayment(false);
-                                                        setStripe(null);
-                                                        setElements(null);
+                                                        setPaymentState({
+                                                            show: false,
+                                                            stripe: null,
+                                                            elements: null,
+                                                            paymentElement: null
+                                                        });
                                                     }}
                                                 />
                                             ) : (
