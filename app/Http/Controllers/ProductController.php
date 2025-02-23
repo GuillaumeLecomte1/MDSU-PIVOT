@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ProductController extends Controller
 {
@@ -49,38 +50,38 @@ class ProductController extends Controller
         ]);
     }
 
-    public function show(Product $product)
+    /**
+     * Display the specified product.
+     */
+    public function show(Product $product): Response
     {
-        $product->load(['categories', 'ressourcerie']);
-
-        $imagesData = is_string($product->images) ? json_decode($product->images) : [];
-        $images = is_array($imagesData) ? $imagesData : [];
-        $product->setAttribute('images', array_map(function ($image) {
-            return '/storage/products/'.$image;
-        }, $images));
-        $product->setAttribute('main_image', ! empty($images) ? '/storage/products/'.$images[0] : null);
-
-        /** @var ?User $user */
-        $user = Auth::user();
-        $product->setAttribute('isFavorite', $user !== null && $product->isFavoritedBy($user));
-
-        $similarProducts = Product::with(['categories', 'ressourcerie'])
+        $product->load(['images', 'categories', 'ressourcerie']);
+        
+        $similarProducts = Product::query()
             ->where('ressourcerie_id', $product->ressourcerie_id)
             ->where('id', '!=', $product->id)
+            ->with(['images'])
             ->take(4)
             ->get();
 
-        foreach ($similarProducts as $similarProduct) {
-            $imagesData = is_string($similarProduct->images) ? json_decode($similarProduct->images) : [];
-            $images = is_array($imagesData) ? $imagesData : [];
-            $similarProduct->setAttribute('images', $images);
-            $similarProduct->setAttribute('main_image', ! empty($images) ? '/storage/products/'.$images[0] : null);
-            $similarProduct->setAttribute('isFavorite', $user !== null && $similarProduct->isFavoritedBy($user));
-        }
-
         return Inertia::render('Products/Show', [
-            'product' => $product,
-            'similarProducts' => $similarProducts,
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'description' => $product->description,
+                'dimensions' => $product->dimensions,
+                'condition' => $product->condition,
+                'images' => $product->images->map(fn($image) => $image->url),
+                'categories' => $product->categories,
+                'ressourcerie' => $product->ressourcerie,
+            ],
+            'similarProducts' => $similarProducts->map(fn($product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'image' => $product->images->first()?->url,
+            ]),
         ]);
     }
 
