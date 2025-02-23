@@ -7,6 +7,7 @@ export default function Show({ product, similarProducts }) {
     const [selectedImage, setSelectedImage] = useState(0);
     const [isFavorite, setIsFavorite] = useState(product.isFavorite);
     const [isLoading, setIsLoading] = useState(false);
+    const [addingToCart, setAddingToCart] = useState(false);
 
     const toggleFavorite = (e) => {
         e.preventDefault();
@@ -38,6 +39,22 @@ export default function Show({ product, similarProducts }) {
                 console.error('Erreur lors de la modification des favoris');
             },
             onFinish: () => setIsLoading(false),
+        });
+    };
+
+    const addToCart = () => {
+        if (addingToCart) return;
+
+        setAddingToCart(true);
+        router.post(route('cart.add', product.id), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Le compteur sera automatiquement mis à jour via les props partagées
+            },
+            onError: () => {
+                console.error('Erreur lors de l\'ajout au panier');
+            },
+            onFinish: () => setAddingToCart(false),
         });
     };
 
@@ -111,13 +128,15 @@ export default function Show({ product, similarProducts }) {
                         <div className="flex space-x-4">
                             <button
                                 type="button"
-                                className="flex-1 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                onClick={addToCart}
+                                disabled={addingToCart}
+                                className="flex-1 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <span className="flex items-center justify-center space-x-2">
                                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
-                                    <span>Ajouter au panier</span>
+                                    <span>{addingToCart ? 'Ajout en cours...' : 'Ajouter au panier'}</span>
                                 </span>
                             </button>
                             {auth.user && (

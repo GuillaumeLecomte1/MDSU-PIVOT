@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $cart = session()->get('cart', []);
         
         // Debug logs
         Log::info('HandleInertiaRequests - share method', [
@@ -67,6 +68,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'csrf_token' => csrf_token(),
+            'cartCount' => array_sum($cart),
         ]);
 
         // Debug logs for shared data
