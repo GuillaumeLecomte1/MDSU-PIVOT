@@ -1,14 +1,54 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 
-export default function ProductCard({ product, showEditButton = false, editRoute = null }) {
+export default function ProductCard({ product, showEditButton = false, editRoute = null, inFavoritesPage = false }) {
+    const { auth } = usePage().props;
+    const [isFavorite, setIsFavorite] = useState(inFavoritesPage ? true : product.isFavorite);
+
+    // Mettre à jour l'état si la prop product.isFavorite change
+    useEffect(() => {
+        if (!inFavoritesPage) {
+            setIsFavorite(product.isFavorite);
+        }
+    }, [product.isFavorite, inFavoritesPage]);
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    const toggleFavorite = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!auth.user || isLoading) return;
+
+        setIsLoading(true);
+        const newFavoriteState = !isFavorite;
+        setIsFavorite(newFavoriteState); // Optimistic update
+
+        router.post(route('favorites.toggle', product.id), {}, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                const flashData = page.props.flash;
+                if (flashData && typeof flashData.isFavorite !== 'undefined') {
+                    setIsFavorite(flashData.isFavorite);
+                }
+            },
+            onError: () => {
+                setIsFavorite(!newFavoriteState);
+                console.error('Erreur lors de la modification des favoris');
+            },
+            onFinish: () => setIsLoading(false),
+        });
+    };
+
     const mainImage = product.images && product.images.length > 0
-        ? `/storage/${product.images[0].path}`
+        ? product.images[0].url
         : '/images/placeholder.jpg';
 
     return (
         <Link
             href={route('products.show', product.slug)}
-            className="block"
+            className="block relative"
         >
             <div className="bg-white rounded-lg shadow-sm overflow-hidden border hover:shadow-lg transition-shadow duration-200">
                 <div className="relative">
@@ -17,10 +57,36 @@ export default function ProductCard({ product, showEditButton = false, editRoute
                         alt={product.name}
                         className="w-full h-48 object-cover"
                     />
+                    {auth.user && (
+                        <button
+                            onClick={toggleFavorite}
+                            disabled={isLoading}
+                            className={`absolute top-2 right-2 p-2 rounded-full bg-white/80 backdrop-blur-sm
+                                hover:bg-white transition-all duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <svg 
+                                className={`h-6 w-6 transition-colors duration-200 ${
+                                    isFavorite 
+                                        ? 'text-red-500 fill-current' 
+                                        : 'text-gray-400 hover:text-red-500'
+                                }`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth="2" 
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                                />
+                            </svg>
+                        </button>
+                    )}
                     {showEditButton && editRoute && (
                         <Link
                             href={route(editRoute, product.id)}
-                            className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
+                            className="absolute top-2 left-2 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">

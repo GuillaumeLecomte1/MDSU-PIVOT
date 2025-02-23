@@ -89,8 +89,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Favorites routes
-    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
-    Route::post('/products/{product}/favorite', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+        Route::post('/products/{product}/favorite', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
+    });
 
     // Cart routes
     Route::get('/cart', function () {

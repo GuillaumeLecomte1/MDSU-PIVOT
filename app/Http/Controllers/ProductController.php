@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Http\Resources\ProductResource;
 
 class ProductController extends Controller
 {
     public function index()
     {
-        $query = Product::with(['categories', 'ressourcerie']);
+        $query = Product::with(['categories', 'ressourcerie', 'images']);
 
         if (request('category')) {
             $query->whereHas('categories', function ($q) {
@@ -37,15 +38,8 @@ class ProductController extends Controller
 
         $products = $query->paginate(12);
 
-        foreach ($products as $product) {
-            $images = $product->images ? (is_string($product->images) ? json_decode($product->images) : $product->images) : [];
-            $product->images = $images;
-            $product->main_image = ! empty($images) ? '/storage/products/'.$images[0] : null;
-            $product->isFavorite = Auth::check() ? $product->isFavoritedBy(Auth::user()) : false;
-        }
-
         return Inertia::render('Products/Index', [
-            'products' => $products,
+            'products' => ProductResource::collection($products),
             'filters' => request()->all(['category', 'price_min', 'price_max', 'city']),
         ]);
     }
@@ -60,28 +54,40 @@ class ProductController extends Controller
         $similarProducts = Product::query()
             ->where('ressourcerie_id', $product->ressourcerie_id)
             ->where('id', '!=', $product->id)
-            ->with(['images'])
+            ->with(['images', 'categories'])
             ->take(4)
             ->get();
 
-        return Inertia::render('Products/Show', [
-            'product' => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'price' => $product->price,
-                'description' => $product->description,
-                'dimensions' => $product->dimensions,
-                'condition' => $product->condition,
-                'images' => $product->images->map(fn($image) => $image->url),
-                'categories' => $product->categories,
-                'ressourcerie' => $product->ressourcerie,
-            ],
-            'similarProducts' => $similarProducts->map(fn($product) => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'price' => $product->price,
-                'image' => $product->images->first()?->url,
+        // Créer un tableau personnalisé pour le produit principal
+        $productData = [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'price' => $product->price,
+            'description' => $product->description,
+            'dimensions' => $product->dimensions,
+            'condition' => $product->condition,
+            'images' => $product->images->map(fn($image) => [
+                'path' => $image->path,
+                'url' => $image->url,
             ]),
+            'categories' => $product->categories->map(fn($category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+            ]),
+            'ressourcerie' => [
+                'id' => $product->ressourcerie->id,
+                'name' => $product->ressourcerie->name,
+            ],
+            'is_available' => $product->is_available,
+            'stock' => $product->stock,
+            'isFavorite' => Auth::check() ? $product->isFavoritedBy(Auth::user()) : false,
+        ];
+
+        return Inertia::render('Products/Show', [
+            'product' => $productData,
+            'similarProducts' => ProductResource::collection($similarProducts)->resolve(),
         ]);
     }
 

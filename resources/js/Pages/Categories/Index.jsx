@@ -7,19 +7,23 @@ import SearchBar from '@/Components/SearchBar';
 import Pagination from '@/Components/Pagination';
 
 export default function Index({ categories, products, ressourceries, filters: initialFilters }) {
-    const [filters, setFilters] = useState(initialFilters || {
+    const defaultFilters = {
         categories: [],
         min_price: '',
         max_price: '',
         city: '',
         search: '',
         color: '',
-        quantity: 'all'
-    });
+        quantity: 'all',
+        sort: 'recent'
+    };
+
+    const [filters, setFilters] = useState({ ...defaultFilters, ...initialFilters });
 
     const handleFilterChange = (newFilters) => {
-        setFilters(newFilters);
-        router.get(route('categories.index'), newFilters, {
+        const updatedFilters = { ...filters, ...newFilters };
+        setFilters(updatedFilters);
+        router.get(route('categories.index'), updatedFilters, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -40,8 +44,8 @@ export default function Index({ categories, products, ressourceries, filters: in
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex-1 max-w-xl">
                         <SearchBar 
-                            value={filters.search}
-                            onChange={(value) => handleFilterChange({ ...filters, search: value })}
+                            value={filters.search || ''}
+                            onChange={(value) => handleFilterChange({ search: value })}
                             placeholder="Rechercher un produit..."
                             className="w-full"
                         />
@@ -49,7 +53,7 @@ export default function Index({ categories, products, ressourceries, filters: in
                     <div className="ml-4">
                         <select
                             value={filters.sort || 'recent'}
-                            onChange={(e) => handleFilterChange({ ...filters, sort: e.target.value })}
+                            onChange={(e) => handleFilterChange({ sort: e.target.value })}
                             className="border-gray-300 rounded-md shadow-sm focus:border-green-500 focus:ring focus:ring-green-200"
                         >
                             {sortOptions.map(option => (

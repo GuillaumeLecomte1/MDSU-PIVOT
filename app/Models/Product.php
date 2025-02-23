@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\Favoritable;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, Favoritable;
 
     protected $table = 'market__products';
 

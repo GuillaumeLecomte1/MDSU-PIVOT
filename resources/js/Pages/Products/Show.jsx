@@ -1,9 +1,45 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 
 export default function Show({ product, similarProducts }) {
+    const { auth } = usePage().props;
     const [selectedImage, setSelectedImage] = useState(0);
+    const [isFavorite, setIsFavorite] = useState(product.isFavorite);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const toggleFavorite = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!auth.user || isLoading) return;
+
+        setIsLoading(true);
+        const newFavoriteState = !isFavorite;
+        setIsFavorite(newFavoriteState); // Optimistic update
+
+        router.post(route('favorites.toggle', product.id), {}, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                // Debug logs
+                console.log('Flash data:', page.props.flash);
+                
+                // Vérifier si nous avons des données flash
+                const flashData = page.props.flash;
+                if (flashData && typeof flashData.isFavorite !== 'undefined') {
+                    setIsFavorite(flashData.isFavorite);
+                } else {
+                    // Si pas de données flash, garder la mise à jour optimiste
+                    console.log('No flash data received, keeping optimistic update');
+                }
+            },
+            onError: () => {
+                setIsFavorite(!newFavoriteState); // Revenir à l'état précédent en cas d'erreur
+                console.error('Erreur lors de la modification des favoris');
+            },
+            onFinish: () => setIsLoading(false),
+        });
+    };
 
     return (
         <MainLayout>
@@ -15,7 +51,7 @@ export default function Show({ product, similarProducts }) {
                     <div className="space-y-4">
                         <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg">
                             <img
-                                src={product.images[selectedImage]}
+                                src={product.images[selectedImage]?.url || '/images/placeholder.jpg'}
                                 alt={product.name}
                                 className="h-full w-full object-cover object-center"
                             />
@@ -30,7 +66,7 @@ export default function Show({ product, similarProducts }) {
                                     }`}
                                 >
                                     <img
-                                        src={image}
+                                        src={image.url}
                                         alt={`${product.name} ${index + 1}`}
                                         className="h-full w-full object-cover object-center"
                                     />
@@ -84,14 +120,36 @@ export default function Show({ product, similarProducts }) {
                                     <span>Ajouter au panier</span>
                                 </span>
                             </button>
-                            <button
-                                type="button"
-                                className="p-3 rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                            >
-                                <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                            </button>
+                            {auth.user && (
+                                <button
+                                    type="button"
+                                    onClick={toggleFavorite}
+                                    disabled={isLoading}
+                                    className={`p-3 rounded-md border transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                                        isLoading 
+                                            ? 'opacity-50 cursor-not-allowed' 
+                                            : isFavorite 
+                                                ? 'border-red-300 bg-red-50 hover:bg-red-100' 
+                                                : 'border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <svg 
+                                        className={`h-6 w-6 transition-colors duration-200 ${
+                                            isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'
+                                        }`} 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path 
+                                            strokeLinecap="round" 
+                                            strokeLinejoin="round" 
+                                            strokeWidth="2" 
+                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                                        />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
 
                         <div className="prose prose-sm mt-4">
@@ -107,15 +165,15 @@ export default function Show({ product, similarProducts }) {
                         Également dans cette ressourcerie
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {similarProducts.map((product) => (
+                        {Array.isArray(similarProducts) && similarProducts.map((product) => (
                             <Link
                                 key={product.id}
-                                href={route('products.show', product.id)}
+                                href={route('products.show', product.slug)}
                                 className="group"
                             >
                                 <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg">
                                     <img
-                                        src={product.image}
+                                        src={product.images?.[0]?.url || '/images/placeholder.jpg'}
                                         alt={product.name}
                                         className="h-full w-full object-cover object-center group-hover:opacity-75"
                                     />
