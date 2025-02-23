@@ -11,8 +11,8 @@ export default function Welcome({ latestProducts, popularProducts, categories })
             <Head title="Accueil" />
 
             {/* Hero Section */}
-            <section className="py-8 bg-[#F2F2F2]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-8 ">
+                {/* <div className=""> */}
                     <div className="bg-[#E7E7E7] p-12 rounded-lg">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                             <div>
@@ -66,13 +66,13 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                                 />
                             </div>
                         </div>
-                    </div>
+                    {/* </div> */}
                 </div>
             </section>
 
             {/* Ressourceries Section */}
-            <section className="py-8 bg-[#F2F2F2]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-8 ">
+                {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> */}
                     <div className="flex justify-between items-center mb-4">
                         <div>
                             <h2 className="text-3xl font-bold text-gray-900">Les ressourceries digitalisées</h2>
@@ -97,12 +97,12 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                         ))}
                     </div>
-                </div>
+                {/* </div> */}
             </section>
 
             {/* Featured Products */}
-            <section className="py-8 bg-[#F2F2F2]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-8 ">
+                {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> */}
                     <div className="grid grid-cols-12 gap-8">
                         <div className="col-span-3">
                             <h2 className="text-[28px] font-bold mb-2">
@@ -132,12 +132,11 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             ))}
                         </div>
                     </div>
-                </div>
+                {/* </div> */}
             </section>
 
             {/* Categories Grid */}
-            <section className="py-8 bg-[#F2F2F2]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-8 ">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <CategoryCard
                             title="Art de la table"
@@ -188,12 +187,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             href={route('categories.index')}
                         />
                     </div>
-                </div>
             </section>
 
             {/* Latest Products */}
-            <section className="py-8 bg-[#F2F2F2]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-8 ">
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h2 className="text-3xl font-bold text-gray-900">Les derniers arrivages</h2>
@@ -244,12 +241,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
 
             {/* About Section */}
-            <section className="py-12 bg-[#F2F2F2]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-12 ">
                     <div className="grid grid-cols-12 gap-24">
                         {/* Left side with image and stats */}
                         <div className="col-span-5 relative">
@@ -289,12 +284,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </Link>
                         </div>
                     </div>
-                </div>
             </section>
 
             {/* Blog Section */}
-            <section className="py-12 bg-[#F2F2F2]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-12 ">
                     <div className="flex justify-between items-start mb-12">
                         <div>
                             <h2 className="text-[40px] font-bold text-gray-900 mb-3">L'actu' ressourcé</h2>
@@ -393,12 +386,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
 
             {/* Newsletter Section */}
-            <section className="py-16 bg-[#F2F2F2]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-16 ">
                     <div className="bg-[#F1FBF4] rounded-2xl py-16 px-8">
                         <div className="max-w-3xl mx-auto text-center">
                             <h2 className="text-[40px] font-bold text-gray-900 mb-6">La sélection du mois</h2>
@@ -418,7 +409,6 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
         </MainLayout>
     );

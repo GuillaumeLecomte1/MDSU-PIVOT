@@ -1,4 +1,7 @@
 import {
+  useMediaQuery
+} from "./chunk-SDAJGAET.js";
+import {
   computed,
   ref,
   shallowRef,
@@ -56,12 +59,6 @@ var useData = useData$;
 function ensureStartingSlash(path) {
   return path.startsWith("/") ? path : `/${path}`;
 }
-
-// node_modules/vitepress/dist/client/theme-default/composables/aside.js
-import { useMediaQuery as useMediaQuery2 } from "@vueuse/core";
-
-// node_modules/vitepress/dist/client/theme-default/composables/sidebar.js
-import { useMediaQuery } from "@vueuse/core";
 
 // node_modules/vitepress/dist/client/theme-default/support/sidebar.js
 function getSidebar(_sidebar, path) {

@@ -1,4 +1,4 @@
-# Marketplace - Documentation Technique
+# Pivot - Documentation Technique
 
 ::: tip À propos de cette documentation
 Cette documentation technique est destinée aux développeurs, administrateurs système et contributeurs du projet Marketplace. Elle fournit toutes les informations nécessaires pour comprendre, développer et maintenir l'application.
@@ -215,4 +215,36 @@ Nous encourageons les contributions ! Consultez notre [guide de contribution](/c
   border-left: 4px solid var(--vp-c-brand);
   margin: 1rem 0;
 }
-</style> 
+</style>
+
+---
+layout: home
+hero:
+  name: Marketplace
+  text: Documentation complète
+  tagline: Guide complet pour le développement, le déploiement et la maintenance
+  actions:
+    - theme: brand
+      text: Commencer
+      link: /guide/
+    - theme: alt
+      text: Déploiement
+      link: /guide/deployment
+    - theme: alt
+      text: GitHub
+      link: https://github.com/GuillaumeLecomte1/MDSU-Pivot
+
+features:
+  - icon: 🚀
+    title: Guide de déploiement
+    details: Instructions détaillées pour déployer l'application sur un VPS avec Nginx
+  - icon: 🛠️
+    title: Configuration
+    details: Guide complet de configuration du serveur et de l'application
+  - icon: 🔒
+    title: Sécurité
+    details: Meilleures pratiques de sécurité et recommandations
+  - icon: 🔄
+    title: Maintenance
+    details: Procédures de maintenance et de mise à jour
+--- 
