@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 
 // Routes publiques (login, register)
 Route::middleware('guest')->group(function () {
@@ -100,6 +101,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/cart/{product}', [CartController::class, 'add'])->name('cart.add');
     Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove');
     Route::patch('/cart/{product}', [CartController::class, 'updateQuantity'])->name('cart.update');
+
+    // Routes pour les commandes
+    Route::post('/orders/checkout', [OrderController::class, 'checkout'])->name('orders.checkout');
+    Route::get('/orders/success', [OrderController::class, 'success'])->name('orders.success');
+    Route::get('/orders/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 });
 
 // Routes spécifiques aux rôles

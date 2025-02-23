@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,14 +18,10 @@ class Order extends Model
         'total',
         'status',
         'payment_intent_id',
-        'shipping_address',
-        'billing_address',
     ];
 
     protected $casts = [
         'total' => 'decimal:2',
-        'shipping_address' => 'array',
-        'billing_address' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -33,7 +31,7 @@ class Order extends Model
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class)
+        return $this->belongsToMany(Product::class, 'order_product')
             ->withPivot('quantity', 'price')
             ->withTimestamps();
     }

@@ -1,9 +1,69 @@
 import { Head, router } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+
+// Composant de formulaire de paiement
+function CheckoutForm({ stripe, elements, onCancel }) {
+    const [error, setError] = useState(null);
+    const [processing, setProcessing] = useState(false);
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        if (!stripe || !elements) {
+            return;
+        }
+
+        setProcessing(true);
+
+        const { error: submitError } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+                return_url: `${window.location.origin}/orders/success`,
+            },
+        });
+
+        if (submitError) {
+            setError(submitError.message);
+            setProcessing(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="mt-4">
+            <div id="payment-element" className="mb-4"></div>
+            {error && <div className="text-red-600 mt-2">{error}</div>}
+            <div className="mt-4 flex justify-end space-x-4">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    disabled={processing}
+                >
+                    Annuler
+                </button>
+                <button
+                    type="submit"
+                    disabled={!stripe || processing}
+                    className={`px-6 py-2 rounded-md text-white
+                        ${processing || !stripe
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-green-600 hover:bg-green-700'
+                        }`}
+                >
+                    {processing ? 'Traitement...' : 'Payer'}
+                </button>
+            </div>
+        </form>
+    );
+}
 
 export default function Cart({ products }) {
     const [updatingQuantity, setUpdatingQuantity] = useState(false);
+    const [showPayment, setShowPayment] = useState(false);
+    const [stripe, setStripe] = useState(null);
+    const [elements, setElements] = useState(null);
 
     const updateQuantity = (productId, newQuantity) => {
         if (updatingQuantity) return;
@@ -35,6 +95,59 @@ export default function Cart({ products }) {
 
     const hasUnavailableProducts = products.some(product => !product.is_available || product.stock <= 0);
     const availableProducts = products.filter(product => product.is_available && product.stock > 0);
+
+    const initiateCheckout = async () => {
+        try {
+            const response = await fetch(route('orders.checkout'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                console.error(data.error);
+                return;
+            }
+
+            // Initialiser Stripe
+            const stripeInstance = await loadStripe(import.meta.env.VITE_STRIPE_KEY);
+            setStripe(stripeInstance);
+            
+            // Créer Elements
+            const elementsInstance = stripeInstance.elements({
+                clientSecret: data.clientSecret,
+                appearance: {
+                    theme: 'stripe',
+                    variables: {
+                        colorPrimary: '#16a34a',
+                    },
+                },
+            });
+            setElements(elementsInstance);
+
+            // Afficher le formulaire
+            setShowPayment(true);
+            
+            // Attendre que le DOM soit mis à jour
+            setTimeout(() => {
+                const paymentElement = document.getElementById('payment-element');
+                if (paymentElement) {
+                    // Créer et monter le formulaire de paiement
+                    const paymentElementInstance = elementsInstance.create('payment');
+                    paymentElementInstance.mount('#payment-element');
+                } else {
+                    console.error('Element #payment-element not found in DOM');
+                }
+            }, 100);
+
+        } catch (error) {
+            console.error('Erreur lors de l\'initialisation du paiement:', error);
+        }
+    };
 
     return (
         <MainLayout title="Mon Panier">
@@ -154,18 +267,33 @@ export default function Cart({ products }) {
                                                 {calculateTotal().toFixed(2)} €
                                             </span>
                                         </div>
-                                        <div className="mt-6 flex justify-end">
-                                            <button
-                                                type="button"
-                                                disabled={availableProducts.length === 0}
-                                                className={`px-6 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2
-                                                    ${availableProducts.length === 0
-                                                        ? 'bg-gray-300 cursor-not-allowed'
-                                                        : 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500'
-                                                    }`}
-                                            >
-                                                {availableProducts.length === 0 ? 'Aucun produit disponible' : 'Passer la commande'}
-                                            </button>
+                                        <div className="mt-6">
+                                            {showPayment && stripe && elements ? (
+                                                <CheckoutForm 
+                                                    stripe={stripe}
+                                                    elements={elements}
+                                                    onCancel={() => {
+                                                        setShowPayment(false);
+                                                        setStripe(null);
+                                                        setElements(null);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={initiateCheckout}
+                                                        disabled={availableProducts.length === 0}
+                                                        className={`px-6 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2
+                                                            ${availableProducts.length === 0
+                                                                ? 'bg-gray-300 cursor-not-allowed'
+                                                                : 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500'
+                                                            }`}
+                                                    >
+                                                        {availableProducts.length === 0 ? 'Aucun produit disponible' : 'Passer la commande'}
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

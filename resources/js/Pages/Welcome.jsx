@@ -9,10 +9,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
     return (
         <MainLayout>
             <Head title="Accueil" />
-
-            {/* Hero Section */}
-            <section className="py-8 ">
-                {/* <div className=""> */}
+            <div className="px-24 rounded-lg">
+                {/* Hero Section */}
+                <section className="py-8 ">
+                    {/* <div className=""> */}
                     <div className="bg-[#E7E7E7] p-12 rounded-lg">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                             <div>
@@ -410,6 +410,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         </div>
                     </div>
             </section>
+            </div>
         </MainLayout>
     );
 }

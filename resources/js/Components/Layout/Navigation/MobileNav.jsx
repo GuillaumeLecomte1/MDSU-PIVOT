@@ -122,6 +122,10 @@ export default function MobileNav() {
                                 Mon Profil
                             </Link>
 
+                            <Link href={route('client.orders.index')} className="mobile">
+                                Mes Commandes
+                            </Link>
+
                             <Link
                                 href={route('logout')}
                                 method="post"

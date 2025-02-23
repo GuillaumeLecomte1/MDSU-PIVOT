@@ -3,77 +3,65 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class OrderController extends Controller
 {
     public function index()
     {
-        // Exemple de commandes pour le front
-        $orders = [
-            [
-                'id' => 'CMD-2024-001',
-                'date' => '15 Mars 2024',
-                'status' => 'completed',
-                'total' => 156.90,
-            ],
-            [
-                'id' => 'CMD-2024-002',
-                'date' => '10 Mars 2024',
-                'status' => 'pending',
-                'total' => 89.90,
-            ],
-        ];
+        /** @var User $user */
+        $user = Auth::user();
+        
+        $orders = $user->orders()
+            ->with(['products'])
+            ->latest()
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'date' => $order->created_at->format('d F Y'),
+                    'status' => $order->status,
+                    'total' => $order->total,
+                    'payment_intent_id' => $order->payment_intent_id,
+                ];
+            });
 
         return Inertia::render('Client/Orders/Index', [
             'orders' => $orders,
         ]);
     }
 
-    public function show($orderId)
+    public function show(Order $order)
     {
-        // Exemple d'une commande détaillée pour le front
-        $order = [
-            'id' => 'CMD-2024-001',
-            'date' => '15 Mars 2024',
-            'status' => 'completed',
-            'total' => 156.90,
-            'payment' => [
-                'status' => 'paid',
-                'method' => 'Stripe',
-                'cardLast4' => '4242',
-                'transactionId' => 'pi_3O9X4Z2eZvKYlo2C1J8F9K2M',
-            ],
-            'shipping' => [
-                'name' => auth()->user()->name,
-                'address' => '123 Rue de Paris',
-                'city' => 'Paris',
-                'postalCode' => '75001',
-                'country' => 'France',
-            ],
-            'items' => [
-                [
-                    'id' => 1,
-                    'name' => 'Table basse vintage',
-                    'price' => 89.90,
-                    'quantity' => 1,
-                    'image' => 'https://via.placeholder.com/150',
-                    'ressourcerie' => 'Ressourcerie du Centre',
-                ],
-                [
-                    'id' => 2,
-                    'name' => 'Lampe de bureau art déco',
-                    'price' => 67.00,
-                    'quantity' => 1,
-                    'image' => 'https://via.placeholder.com/150',
-                    'ressourcerie' => 'Ressourcerie du Centre',
-                ],
-            ],
-        ];
+        // Vérifier que l'utilisateur est propriétaire de la commande
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $order->load('products.ressourcerie');
 
         return Inertia::render('Client/Orders/Show', [
-            'order' => $order,
+            'order' => [
+                'id' => $order->id,
+                'date' => $order->created_at->format('d F Y'),
+                'status' => $order->status,
+                'total' => $order->total,
+                'payment_intent_id' => $order->payment_intent_id,
+                'items' => $order->products->map(function ($product) {
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'price' => $product->pivot->price,
+                        'quantity' => $product->pivot->quantity,
+                        'image' => $product->images->first()?->url ?? '/images/placeholder.jpg',
+                        'ressourcerie' => $product->ressourcerie->name,
+                    ];
+                }),
+            ],
         ]);
     }
 }

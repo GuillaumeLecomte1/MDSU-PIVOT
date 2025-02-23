@@ -71,6 +71,9 @@ export default function Navigation() {
                                         <Dropdown.Link href={route('profile.edit')}>
                                             Mon Profil
                                         </Dropdown.Link>
+                                        <Dropdown.Link href={route('client.orders.index')}>
+                                            Mes Commandes
+                                        </Dropdown.Link>
                                         <Dropdown.Link href={route('logout')} method="post" as="button">
                                             Déconnexion
                                         </Dropdown.Link>
