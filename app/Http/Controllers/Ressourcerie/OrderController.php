@@ -28,11 +28,13 @@ class OrderController extends Controller
         // Filtre de recherche
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            })
-            ->orWhere('id', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhere('id', 'like', "%{$search}%");
+            });
         }
 
         // Filtre de statut
@@ -77,7 +79,7 @@ class OrderController extends Controller
                     'created_at' => $order->created_at->format('d/m/Y'),
                     'status' => $order->status->value,
                     'status_label' => $order->status_label,
-                    'total' => number_format($order->total, 2, ',', ' '),
+                    'total' => number_format((float) $order->total, 2, ',', ' '),
                 ];
             });
 
@@ -106,15 +108,15 @@ class OrderController extends Controller
                     'email' => $order->user->email,
                 ],
                 'date' => $order->created_at->format('d/m/Y H:i'),
-                'status' => $order->status,
-                'total' => $order->total,
+                'status' => $order->status->value,
+                'total' => (float) $order->total,
                 'products' => $order->products
                     ->where('ressourcerie_id', $ressourcerie->id)
                     ->map(function ($product) {
                         return [
                             'id' => $product->id,
                             'name' => $product->name,
-                            'price' => $product->price,
+                            'price' => (float) $product->price,
                             'quantity' => $product->pivot->quantity,
                             'image' => $product->image,
                         ];

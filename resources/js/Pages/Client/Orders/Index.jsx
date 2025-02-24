@@ -13,8 +13,16 @@ export default function OrdersIndex({ orders }) {
                 className: 'bg-yellow-100 text-yellow-800',
             },
             'processing': {
-                text: 'En cours',
+                text: 'En traitement',
                 className: 'bg-blue-100 text-blue-800',
+            },
+            'ready': {
+                text: 'Prête',
+                className: 'bg-indigo-100 text-indigo-800',
+            },
+            'delivered': {
+                text: 'Livrée',
+                className: 'bg-purple-100 text-purple-800',
             },
             'completed': {
                 text: 'Terminée',

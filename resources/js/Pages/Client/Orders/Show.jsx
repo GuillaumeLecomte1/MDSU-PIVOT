@@ -16,7 +16,9 @@ export default function Show({ order: initialOrder }) {
                     if (e.order_id === order.id) {
                         setOrder(prevOrder => ({
                             ...prevOrder,
-                            status: e.new_status
+                            status: e.new_status,
+                            // Mettre à jour can_complete en fonction du nouveau statut
+                            can_complete: e.new_status === 'delivered'
                         }));
                         
                         toast.info(`Le statut de votre commande a été mis à jour : ${e.status_label}`);
@@ -28,6 +30,16 @@ export default function Show({ order: initialOrder }) {
             };
         }
     }, [order.id, order.user_id]);
+
+    // Forcer la mise à jour de can_complete si le statut est 'delivered'
+    useEffect(() => {
+        if (order.status === 'delivered' && !order.can_complete) {
+            setOrder(prevOrder => ({
+                ...prevOrder,
+                can_complete: true
+            }));
+        }
+    }, [order.status]);
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('fr-FR', {

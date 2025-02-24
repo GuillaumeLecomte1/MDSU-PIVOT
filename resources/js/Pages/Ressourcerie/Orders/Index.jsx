@@ -1,13 +1,31 @@
-import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 
 export default function Index({ orders, filters }) {
-    const [filters, setFilters] = useState({
-        search: '',
-        status: 'all',
-        date: 'all'
+    const [localFilters, setLocalFilters] = useState({
+        search: filters?.search || '',
+        status: filters?.status || 'all',
+        date: filters?.date || 'all'
     });
+
+    // Fonction pour appliquer les filtres
+    const applyFilters = () => {
+        router.get(route('ressourcerie.orders.index'), localFilters, {
+            preserveState: true,
+            replace: true,
+            only: ['orders', 'filters']
+        });
+    };
+
+    // Appliquer les filtres après un délai pour éviter trop de requêtes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            applyFilters();
+        }, 500);
+        
+        return () => clearTimeout(timeoutId);
+    }, [localFilters]);
 
     const getStatusColor = (status) => {
         return {
@@ -24,16 +42,21 @@ export default function Index({ orders, filters }) {
         return {
             pending: 'En attente',
             processing: 'En traitement',
+            ready: 'Prête',
+            delivered: 'Livrée',
             completed: 'Terminée',
             cancelled: 'Annulée'
         }[status] || 'Inconnu';
     };
 
     const formatPrice = (price) => {
+        // S'assurer que price est un nombre
+        const numericPrice = typeof price === 'string' ? parseFloat(price.replace(/[^\d.,]/g, '')) : parseFloat(price);
+        
         return new Intl.NumberFormat('fr-FR', {
             style: 'currency',
             currency: 'EUR'
-        }).format(price);
+        }).format(numericPrice);
     };
 
     return (
@@ -53,19 +76,21 @@ export default function Index({ orders, filters }) {
                                         type="text"
                                         placeholder="Rechercher une commande..."
                                         className="w-full rounded-md border-gray-300"
-                                        value={filters.search}
-                                        onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                                        value={localFilters.search}
+                                        onChange={(e) => setLocalFilters({ ...localFilters, search: e.target.value })}
                                     />
                                 </div>
                                 <div>
                                     <select
                                         className="w-full rounded-md border-gray-300"
-                                        value={filters.status}
-                                        onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                                        value={localFilters.status}
+                                        onChange={(e) => setLocalFilters({ ...localFilters, status: e.target.value })}
                                     >
                                         <option value="all">Tous les statuts</option>
                                         <option value="pending">En attente</option>
                                         <option value="processing">En traitement</option>
+                                        <option value="ready">Prête</option>
+                                        <option value="delivered">Livrée</option>
                                         <option value="completed">Terminées</option>
                                         <option value="cancelled">Annulées</option>
                                     </select>
@@ -73,8 +98,8 @@ export default function Index({ orders, filters }) {
                                 <div>
                                     <select
                                         className="w-full rounded-md border-gray-300"
-                                        value={filters.date}
-                                        onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+                                        value={localFilters.date}
+                                        onChange={(e) => setLocalFilters({ ...localFilters, date: e.target.value })}
                                     >
                                         <option value="all">Toutes les dates</option>
                                         <option value="today">Aujourd'hui</option>
@@ -127,7 +152,7 @@ export default function Index({ orders, filters }) {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {order.total} €
+                                                    {formatPrice(order.total)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     <Link

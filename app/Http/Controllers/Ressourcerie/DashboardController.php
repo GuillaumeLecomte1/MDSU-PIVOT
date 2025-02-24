@@ -94,7 +94,7 @@ class DashboardController extends Controller
                         'id' => $order->id,
                         'reference' => sprintf('#%06d', $order->id),
                         'client_name' => $order->user->name,
-                        'total' => $order->total,
+                        'total' => (float) $order->total,
                         'status' => $order->status->value,
                         'status_label' => $order->status_label,
                         'created_at' => $order->created_at->format('d/m/Y'),
@@ -170,7 +170,7 @@ class DashboardController extends Controller
             for ($date = $startDate->copy(); $date <= $endDate; $date->addDay()) {
                 $dateString = $date->format('Y-m-d');
                 $labels[] = $date->format('d/m');
-                $data[] = $salesByDay[$dateString] ?? 0;
+                $data[] = isset($salesByDay[$dateString]) ? (float) $salesByDay[$dateString] : 0;
             }
 
             return [

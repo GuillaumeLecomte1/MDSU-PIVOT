@@ -27,9 +27,9 @@ class OrderController extends Controller
                 return [
                     'id' => $order->id,
                     'date' => $order->created_at->format('d/m/Y H:i'),
-                    'status' => $order->status,
+                    'status' => $order->status->value,
                     'total' => $order->total,
-                    'can_complete' => $order->status === OrderStatus::DELIVERED->value,
+                    'can_complete' => $order->status === OrderStatus::DELIVERED,
                     'ressourceries' => $order->products->pluck('ressourcerie.name')->unique(),
                 ];
             });
@@ -51,10 +51,11 @@ class OrderController extends Controller
         return Inertia::render('Client/Orders/Show', [
             'order' => [
                 'id' => $order->id,
+                'user_id' => $order->user_id,
                 'date' => $order->created_at->format('d/m/Y H:i'),
-                'status' => $order->status,
+                'status' => $order->status->value,
                 'total' => $order->total,
-                'can_complete' => $order->status === OrderStatus::DELIVERED->value,
+                'can_complete' => $order->status === OrderStatus::DELIVERED,
                 'products' => $order->products->map(function ($product) {
                     return [
                         'id' => $product->id,
@@ -78,9 +79,9 @@ class OrderController extends Controller
         abort_unless($order->user_id === Auth::id(), 403);
 
         // Vérifier que la commande est bien en statut DELIVERED
-        abort_unless($order->status === OrderStatus::DELIVERED->value, 422, 'La commande n\'est pas encore livrée.');
+        abort_unless($order->status === OrderStatus::DELIVERED, 422, 'La commande n\'est pas encore livrée.');
 
-        $oldStatus = $order->status;
+        $oldStatus = $order->status->value;
 
         $order->update([
             'status' => OrderStatus::COMPLETED->value,

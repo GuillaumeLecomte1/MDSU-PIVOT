@@ -78,7 +78,6 @@ En tant que admin, je peux :
 - modifier un client
 
 
-
 - panel admin a rework
 - inscription et connexion front
 - guest access
