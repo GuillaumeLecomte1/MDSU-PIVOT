@@ -1,6 +1,6 @@
 import { Link as InertiaLink } from '@inertiajs/react';
 
-export default function Link({ href, active = false, className = '', children, ...props }) {
+export default function Link({ href, active = false, className = '', method = 'get', as = 'a', children, ...props }) {
     const baseClasses = {
         desktop: 'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out',
         mobile: 'block w-full pl-3 pr-4 py-2 border-l-4 text-left text-base font-medium transition duration-150 ease-in-out'
@@ -26,6 +26,8 @@ export default function Link({ href, active = false, className = '', children, .
     return (
         <InertiaLink
             href={href}
+            method={method}
+            as={as}
             className={classes}
             {...props}
         >

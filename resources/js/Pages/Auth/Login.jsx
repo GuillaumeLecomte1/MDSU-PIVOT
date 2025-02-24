@@ -1,41 +1,33 @@
 import { Link, useForm } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function Login({ status, canResetPassword }) {
     const [error, setError] = useState(null);
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
         remember: false,
     });
 
-    // Debug: Log CSRF token on component mount
-    useEffect(() => {
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        console.log('CSRF Token:', token);
-    }, []);
-
     const submit = async (e) => {
         e.preventDefault();
         setError(null);
 
-        try {
-            await post(route('login'), {
-                onSuccess: (response) => {
-                    console.log('Login successful');
-                    // La redirection est gérée par le backend
-                },
-                onError: (errors) => {
-                    console.error('Login errors:', errors);
-                    setError('Une erreur est survenue lors de la connexion. Veuillez vérifier vos identifiants.');
-                },
-                preserveScroll: true,
-                preserveState: true,
-            });
-        } catch (err) {
-            console.error('Unexpected error during login:', err);
-            setError('Une erreur inattendue est survenue. Veuillez réessayer.');
-        }
+        post(route('login'), {
+            onSuccess: () => {
+                // Success is handled by the redirect
+            },
+            onError: (errors) => {
+                if (errors.email) {
+                    setError(errors.email);
+                } else if (errors.password) {
+                    setError(errors.password);
+                } else {
+                    setError('Une erreur est survenue lors de la connexion. Veuillez réessayer.');
+                }
+            },
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -95,23 +87,16 @@ export default function Login({ status, canResetPassword }) {
                         </div>
                     )}
 
-                    {/* Debug: Display CSRF token */}
-                    {process.env.NODE_ENV === 'development' && (
-                        <div className="mb-4 p-4 bg-gray-100 text-xs">
-                            <p>CSRF Token: {document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')}</p>
-                </div>
-            )}
-
                     <form onSubmit={submit} className="space-y-6">
                         {/* Email */}
-                <div>
+                        <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                 Email
                             </label>
                             <input
                                 type="email"
-                        id="email"
-                        value={data.email}
+                                id="email"
+                                value={data.email}
                                 onChange={e => setData('email', e.target.value)}
                                 className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 ${
                                     errors.email ? 'border-red-500' : ''
@@ -122,7 +107,7 @@ export default function Login({ status, canResetPassword }) {
                             {errors.email && (
                                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                             )}
-                </div>
+                        </div>
 
                         {/* Password */}
                         <div>
@@ -131,19 +116,19 @@ export default function Login({ status, canResetPassword }) {
                             </label>
                             <input
                                 type="password"
-                        id="password"
-                        value={data.password}
+                                id="password"
+                                value={data.password}
                                 onChange={e => setData('password', e.target.value)}
                                 className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 ${
                                     errors.password ? 'border-red-500' : ''
                                 }`}
                                 required
-                        autoComplete="current-password"
-                    />
+                                autoComplete="current-password"
+                            />
                             {errors.password && (
                                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>
                             )}
-                </div>
+                        </div>
 
                         {/* Remember Me */}
                         <div className="flex items-center justify-between">
@@ -151,23 +136,23 @@ export default function Login({ status, canResetPassword }) {
                                 <input
                                     type="checkbox"
                                     id="remember"
-                            checked={data.remember}
+                                    checked={data.remember}
                                     onChange={e => setData('remember', e.target.checked)}
                                     className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                        />
+                                />
                                 <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
                                     Se souvenir de moi
-                    </label>
-                </div>
+                                </label>
+                            </div>
 
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
+                            {canResetPassword && (
+                                <Link
+                                    href={route('password.request')}
                                     className="text-sm text-emerald-600 hover:text-emerald-500"
-                        >
+                                >
                                     Mot de passe oublié ?
-                        </Link>
-                    )}
+                                </Link>
+                            )}
                         </div>
 
                         <div>

@@ -7,6 +7,7 @@ import CartBubble from '@/Components/CartBubble';
 export default function MobileNav() {
     const [isOpen, setIsOpen] = useState(false);
     const { auth: { user, permissions } = { user: null, permissions: null } } = usePage().props;
+    const isRessourcerie = user?.role === 'ressourcerie';
 
     const isActive = (route) => {
         return route === window.location.pathname;
@@ -40,32 +41,49 @@ export default function MobileNav() {
             {/* Mobile Menu */}
             <div className={`${isOpen ? 'block' : 'hidden'} sm:hidden`}>
                 <div className="pt-2 pb-3 space-y-1">
-                    {/* Public Links */}
-                    <Link href={route('home')} active={isActive('home')} className="mobile">
-                        Accueil
-                    </Link>
+                    {isRessourcerie ? (
+                        // Navigation pour les ressourceries
+                        <>
+                            <Link href={route('ressourcerie.dashboard')} active={isActive('ressourcerie.dashboard')} className="mobile text-emerald-600">
+                                Tableau de bord
+                            </Link>
+                            <Link href={route('ressourcerie.products.index')} active={isActive('ressourcerie.products.*')} className="mobile text-emerald-600">
+                                Mes Produits
+                            </Link>
+                            <Link href={route('ressourcerie.orders.index')} active={isActive('ressourcerie.orders.*')} className="mobile text-emerald-600">
+                                Commandes
+                            </Link>
+                        </>
+                    ) : (
+                        // Navigation standard pour les clients
+                        <>
+                            <Link href={route('home')} active={isActive('home')} className="mobile">
+                                Accueil
+                            </Link>
 
-                    <Link href={route('products.index')} active={isActive('products.*')} className="mobile">
-                        Produits
-                    </Link>
+                            <Link href={route('products.index')} active={isActive('products.*')} className="mobile">
+                                Produits
+                            </Link>
 
-                    <Link href={route('categories.index')} active={isActive('categories.*')} className="mobile">
-                        Catégories
-                    </Link>
+                            <Link href={route('categories.index')} active={isActive('categories.*')} className="mobile">
+                                Catégories
+                            </Link>
 
-                    <Link href={route('ressourceries.index')} active={isActive('ressourceries.*')} className="mobile">
-                        Ressourceries
-                    </Link>
+                            <Link href={route('ressourceries.index')} active={isActive('ressourceries.*')} className="mobile">
+                                Ressourceries
+                            </Link>
 
-                    <Link href={route('about')} active={isActive('about')} className="mobile">
-                        Notre Histoire
-                    </Link>
+                            <Link href={route('about')} active={isActive('about')} className="mobile">
+                                Notre Histoire
+                            </Link>
 
-                    {/* Cart */}
-                    <div className="mobile flex items-center justify-between">
-                        <span>Panier</span>
-                        <CartBubble />
-                    </div>
+                            {/* Cart */}
+                            <div className="mobile flex items-center justify-between">
+                                <span>Panier</span>
+                                <CartBubble />
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Authenticated Section */}
@@ -87,50 +105,23 @@ export default function MobileNav() {
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            {/* Role-specific links */}
-                            {permissions?.canAccessRessourcerie && (
-                                <Link
-                                    href={route('ressourcerie.dashboard')}
-                                    active={isActive('ressourcerie.*')}
-                                    className="mobile text-emerald-600"
-                                >
-                                    Ma Ressourcerie
-                                </Link>
-                            )}
-
-                            {permissions?.canAccessAdmin && (
-                                <>
-                                    <Link
-                                        href={route('admin.dashboard')}
-                                        active={isActive('admin.*')}
-                                        className="mobile text-purple-600"
-                                    >
-                                        Administration
-                                    </Link>
-                                    <Link
-                                        href={route('admin.documentation.index')}
-                                        active={isActive('admin.documentation.*')}
-                                        className="mobile text-purple-600"
-                                    >
-                                        Documentation
-                                    </Link>
-                                </>
-                            )}
-
                             {/* User Menu Items */}
                             <Link href={route('profile.edit')} className="mobile">
                                 Mon Profil
                             </Link>
 
-                            <Link href={route('client.orders.index')} className="mobile">
-                                Mes Commandes
-                            </Link>
+                            {!isRessourcerie && (
+                                <Link href={route('client.orders.index')} className="mobile">
+                                    Mes Commandes
+                                </Link>
+                            )}
 
                             <Link
                                 href={route('logout')}
                                 method="post"
                                 as="button"
                                 className="mobile w-full text-left"
+                                preserveScroll
                             >
                                 Déconnexion
                             </Link>

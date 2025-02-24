@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Ressourcerie\ProductController as RessourcerieProductController;
+use App\Http\Controllers\Ressourcerie\OrderController as RessourcerieOrderController;
 
 // Routes publiques (login, register)
 Route::middleware('guest')->group(function () {
@@ -88,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('can:access-client')->prefix('client')->name('client.')->group(function () {
         Route::get('/orders', [App\Http\Controllers\Client\OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [App\Http\Controllers\Client\OrderController::class, 'show'])->name('orders.show');
+        Route::patch('/orders/{order}/confirm-reception', [App\Http\Controllers\Client\OrderController::class, 'confirmReception'])->name('orders.confirm-reception');
     });
 
     // Favorites routes
@@ -111,15 +114,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Routes spécifiques aux rôles
 Route::middleware(['auth', 'verified'])->group(function () {
     // Routes pour les ressourceries (gestion des produits)
-    Route::prefix('ressourcerie')
-        ->middleware(['auth', 'verified', 'can:access-ressourcerie'])
-        ->name('ressourcerie.')
-        ->group(function () {
-            Route::get('/dashboard', [RessourcerieDashboardController::class, 'index'])->name('dashboard');
-            Route::resource('products', App\Http\Controllers\Ressourcerie\ProductController::class)->names('products');
-            Route::get('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'edit'])->name('profile.edit');
-            Route::patch('/profile', [App\Http\Controllers\Ressourcerie\ProfileController::class, 'update'])->name('profile.update');
-        });
+    Route::middleware(['auth', 'verified', 'can:ressourcerie'])->prefix('ressourcerie')->name('ressourcerie.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Ressourcerie\DashboardController::class, 'index'])->name('dashboard');
+        Route::resource('products', App\Http\Controllers\Ressourcerie\ProductController::class);
+        Route::get('orders', [App\Http\Controllers\Ressourcerie\OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/{order}', [App\Http\Controllers\Ressourcerie\OrderController::class, 'show'])->name('orders.show');
+        Route::patch('orders/{order}/status', [App\Http\Controllers\Ressourcerie\OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    });
 
     // Routes pour les admins
     Route::prefix('admin')->middleware('can:access-admin')->name('admin.')->group(function () {

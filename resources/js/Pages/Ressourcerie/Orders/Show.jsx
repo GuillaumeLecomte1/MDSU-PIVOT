@@ -1,39 +1,43 @@
 import { useState, useEffect } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import { toast } from 'react-toastify';
 
 export default function Show({ order: initialOrder }) {
     const [order, setOrder] = useState(initialOrder);
-    const { patch, processing } = useForm();
+    const { flash } = usePage().props;
 
+    // Afficher les messages flash
     useEffect(() => {
-        // S'assurer que Echo est disponible
-        if (window.Echo) {
-            // Écouter les mises à jour de statut en temps réel
-            const channel = window.Echo.private(`orders.${order.user_id}`)
-                .listen('.order.status.updated', (e) => {
-                    if (e.order_id === order.id) {
-                        setOrder(prevOrder => ({
-                            ...prevOrder,
-                            status: e.new_status
-                        }));
-                        
-                        toast.info(`Le statut de votre commande a été mis à jour : ${e.status_label}`);
-                    }
-                });
-
-            return () => {
-                channel.stopListening('.order.status.updated');
-            };
+        if (flash.success) {
+            toast.success(flash.success);
         }
-    }, [order.id, order.user_id]);
+        if (flash.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('fr-FR', {
             style: 'currency',
             currency: 'EUR'
         }).format(price);
+    };
+
+    const handleStatusChange = (e) => {
+        const newStatus = e.target.value;
+        
+        router.patch(route('ressourcerie.orders.updateStatus', order.id), {
+            status: newStatus
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setOrder(prevOrder => ({
+                    ...prevOrder,
+                    status: newStatus
+                }));
+            },
+        });
     };
 
     const getStatusColor = (status) => {
@@ -58,35 +62,18 @@ export default function Show({ order: initialOrder }) {
         }[status] || 'Inconnu';
     };
 
-    const handleConfirmReception = () => {
-        if (confirm('Êtes-vous sûr de vouloir confirmer la réception de cette commande ?')) {
-            patch(route('client.orders.confirm-reception', order.id), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.success('Réception de la commande confirmée avec succès');
-                },
-                onError: () => {
-                    toast.error('Une erreur est survenue lors de la confirmation');
-                }
-            });
-        }
-    };
-
     return (
-        <MainLayout>
-            <Head title={`Commande #${order.id}`} />
+        <MainLayout title="Détails de la commande">
+            <Head title="Détails de la commande" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="mb-6">
                         <Link
-                            href={route('client.orders.index')}
-                            className="text-emerald-600 hover:text-emerald-700 flex items-center"
+                            href={route('ressourcerie.orders.index')}
+                            className="text-emerald-600 hover:text-emerald-700"
                         >
-                            <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                            Retour aux commandes
+                            ← Retour aux commandes
                         </Link>
                     </div>
 
@@ -101,26 +88,45 @@ export default function Show({ order: initialOrder }) {
                                         Passée le {order.date}
                                     </p>
                                 </div>
-                                <div className="text-right">
-                                    <div className="mb-4">
-                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                                            {getStatusLabel(order.status)}
-                                        </span>
-                                    </div>
-                                    {order.can_complete && (
-                                        <button
-                                            onClick={handleConfirmReception}
-                                            disabled={processing}
-                                            className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 disabled:opacity-50"
+                                <div className="flex items-center space-x-4">
+                                    {order.status !== 'completed' && order.status !== 'cancelled' ? (
+                                        <select
+                                            value={order.status}
+                                            onChange={handleStatusChange}
+                                            className="rounded-md border-gray-300"
                                         >
-                                            {processing ? 'Confirmation...' : 'Confirmer la réception'}
-                                        </button>
-                                    )}
+                                            <option value="pending">En attente</option>
+                                            <option value="processing">En traitement</option>
+                                            <option value="ready">Prête</option>
+                                            <option value="delivered">Livrée</option>
+                                            <option value="cancelled">Annulée</option>
+                                        </select>
+                                    ) : null}
+                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                                        {getStatusLabel(order.status)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Informations client */}
+                            <div className="mb-8">
+                                <h2 className="text-lg font-semibold mb-4">Informations client</h2>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-sm text-gray-600">Nom</p>
+                                            <p className="font-medium">{order.customer.name}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-600">Email</p>
+                                            <p className="font-medium">{order.customer.email}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Produits */}
-                            <div className="mt-8">
+                            <div className="mb-8">
                                 <h2 className="text-lg font-semibold mb-4">Produits commandés</h2>
                                 <div className="bg-gray-50 rounded-lg overflow-hidden">
                                     <table className="min-w-full divide-y divide-gray-200">
@@ -141,7 +147,7 @@ export default function Show({ order: initialOrder }) {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {order.products && order.products.map((product) => (
+                                            {order.products.map((product) => (
                                                 <tr key={product.id}>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="flex items-center">
@@ -155,9 +161,6 @@ export default function Show({ order: initialOrder }) {
                                                             <div>
                                                                 <div className="text-sm font-medium text-gray-900">
                                                                     {product.name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-500">
-                                                                    {product.ressourcerie.name}
                                                                 </div>
                                                             </div>
                                                         </div>

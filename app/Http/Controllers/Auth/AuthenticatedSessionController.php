@@ -6,12 +6,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -20,7 +22,10 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Login');
+        return Inertia::render('Auth/Login', [
+            'canResetPassword' => Route::has('password.request'),
+            'status' => session('status'),
+        ]);
     }
 
     /**
@@ -28,19 +33,22 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
-        $request->session()->regenerate();
+        try {
+            $request->authenticate();
 
-        $user = Auth::user();
+            $request->session()->regenerate();
 
-        // Redirection basée sur le rôle
-        $redirectRoute = match ($user->role) {
-            'admin' => 'admin.dashboard',
-            'ressourcerie' => 'ressourcerie.dashboard',
-            default => 'dashboard',
-        };
+            // Get the redirect URL based on user role
+            $redirectTo = RouteServiceProvider::redirectTo($request);
 
-        return redirect()->intended(route($redirectRoute))->with('success', 'Connexion réussie');
+            return redirect()->intended($redirectTo);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors([
+                'email' => 'Une erreur est survenue lors de la connexion.',
+            ])->withInput($request->except('password'));
+        }
     }
 
     /**
@@ -51,8 +59,9 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect('/');
     }
 }

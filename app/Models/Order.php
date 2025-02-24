@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,14 +16,24 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
-        'total',
         'status',
-        'payment_intent_id',
+        'total',
+        'completed_at',
     ];
 
     protected $casts = [
-        'total' => 'decimal:2',
+        'status' => OrderStatus::class,
+        'completed_at' => 'datetime',
     ];
+
+    protected $appends = [
+        'status_label',
+    ];
+
+    public function getStatusLabelAttribute(): ?string
+    {
+        return $this->status instanceof OrderStatus ? $this->status->label() : null;
+    }
 
     public function user(): BelongsTo
     {
@@ -31,8 +42,8 @@ class Order extends Model
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'order_product')
-            ->withPivot('quantity', 'price')
+        return $this->belongsToMany(Product::class)
+            ->withPivot('quantity')
             ->withTimestamps();
     }
 }

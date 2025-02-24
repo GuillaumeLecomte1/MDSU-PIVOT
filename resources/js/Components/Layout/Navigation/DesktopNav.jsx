@@ -12,7 +12,7 @@ export default function DesktopNav() {
             </Link>
 
             <Link href={route('categories.index')} active={isActive('categories.*')}>
-                Catégorie
+                Catégories
             </Link>
 
             <Link href={route('ressourceries.index')} active={isActive('ressourceries.*')}>

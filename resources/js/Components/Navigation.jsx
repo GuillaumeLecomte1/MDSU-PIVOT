@@ -46,15 +46,6 @@ export default function Navigation() {
         );
     }
 
-    // Ajouter les liens de ressourcerie si l'utilisateur a les permissions
-    if (permissions?.canAccessRessourcerie) {
-        menuItems.push(
-            <Dropdown.Link key="ressourcerie-dashboard" href={route('ressourcerie.dashboard')}>
-                Tableau de bord
-            </Dropdown.Link>
-        );
-    }
-
     // Ajouter les liens d'administration si l'utilisateur a les permissions
     if (permissions?.canAccessAdmin) {
         menuItems.push(

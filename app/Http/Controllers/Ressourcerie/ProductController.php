@@ -24,13 +24,79 @@ class ProductController extends Controller
 
     public function index(Request $request): Response
     {
-        $products = $request->user()->ressourcerie->products()
-            ->with(['categories', 'images'])
-            ->latest()
-            ->paginate(10);
+        $query = $request->user()->ressourcerie->products()
+            ->with(['categories', 'images']);
+
+        // Filtre de recherche
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtre de disponibilité
+        if ($request->filled('availability')) {
+            $availability = $request->input('availability');
+            if ($availability === 'available') {
+                $query->where('is_available', true);
+            } elseif ($availability === 'unavailable') {
+                $query->where('is_available', false);
+            }
+        }
+
+        // Tri
+        if ($request->filled('sort')) {
+            $sort = $request->input('sort');
+            switch ($sort) {
+                case 'oldest':
+                    $query->oldest();
+                    break;
+                case 'price_asc':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('price', 'desc');
+                    break;
+                default:
+                    $query->latest();
+                    break;
+            }
+        } else {
+            $query->latest();
+        }
+
+        $products = $query->paginate(10)
+            ->through(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'description' => $product->description,
+                    'price' => $product->price,
+                    'stock' => $product->stock,
+                    'is_available' => $product->is_available,
+                    'categories' => $product->categories->map(function ($category) {
+                        return [
+                            'id' => $category->id,
+                            'name' => $category->name,
+                        ];
+                    }),
+                    'images' => $product->images->map(function ($image) {
+                        return [
+                            'id' => $image->id,
+                            'path' => $image->path,
+                            'order' => $image->order,
+                        ];
+                    }),
+                    'created_at' => $product->created_at,
+                ];
+            });
 
         return Inertia::render('Ressourcerie/Products/Index', [
             'products' => $products,
+            'filters' => $request->only(['search', 'availability', 'sort']),
         ]);
     }
 

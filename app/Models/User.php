@@ -89,6 +89,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'admin';
     }
 
+    /**
+     * Check if the user is a ressourcerie.
+     *
+     * @return bool
+     */
     public function isRessourcerie(): bool
     {
         return $this->role === 'ressourcerie';
