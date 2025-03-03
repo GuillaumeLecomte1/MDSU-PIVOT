@@ -1,0 +1,15 @@
+documentation/
+└── pivot/
+    ├── introduction/
+    ├── contexte/
+    ├── etat_actuel/
+    ├── modelisation/
+    ├── matrice_decisionnelle/
+    ├── specifications/
+    │   ├── fonctionnelles/
+    │   └── techniques/
+    ├── prototype/
+    ├── tests/
+    ├── securite/
+    ├── accessibilite/
+    └── conclusion/
