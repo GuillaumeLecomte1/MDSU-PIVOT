@@ -47,7 +47,7 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # Final stage
 FROM php-base
-ARG PORT=80
+ARG PORT=4004
 
 # Copy application code
 COPY --from=php-build --chown=www-data:www-data /var/www /var/www

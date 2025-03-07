@@ -1,0 +1,3 @@
+version: '1'
+dockerfile: Dockerfile
+port: 4002 
