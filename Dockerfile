@@ -126,20 +126,12 @@ COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 # Configure Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copy and make the check script executable
+# Copy and make scripts executable
 COPY docker/check-vite-manifest.sh /var/www/docker/check-vite-manifest.sh
-RUN chmod +x /var/www/docker/check-vite-manifest.sh
-
-# Copy the PHP fix script
 COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
-
-# Copy the health check script
 COPY docker/healthcheck.sh /var/www/docker/healthcheck.sh
-RUN chmod +x /var/www/docker/healthcheck.sh
-
-# Copy the static files fix script
 COPY docker/fix-static-files.sh /var/www/docker/fix-static-files.sh
-RUN chmod +x /var/www/docker/fix-static-files.sh
+RUN chmod +x /var/www/docker/*.sh
 
 # Run the PHP fix script
 RUN cd /var/www && php docker/fix-vite-issues.php
@@ -147,15 +139,11 @@ RUN cd /var/www && php docker/fix-vite-issues.php
 # Run the static files fix script
 RUN /var/www/docker/fix-static-files.sh
 
-# Copy the copy-images script
-COPY docker/copy-images.sh /usr/local/bin/copy-images
-RUN chmod +x /usr/local/bin/copy-images
-
-# Build Vite assets
-RUN npm run build
-
-# Run the copy-images script after build
-RUN /usr/local/bin/copy-images
+# Create image directories if they don't exist
+RUN mkdir -p /var/www/public/build/assets/images && \
+    mkdir -p /var/www/public/images && \
+    chown -R www-data:www-data /var/www/public/build /var/www/public/images && \
+    chmod -R 755 /var/www/public/build /var/www/public/images
 
 # Expose port
 EXPOSE ${PORT}
