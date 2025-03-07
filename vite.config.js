@@ -7,6 +7,7 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.jsx'],
             refresh: true,
+            manifest: true,
         }),
         react(),
     ],
@@ -26,5 +27,11 @@ export default defineConfig({
         chunkSizeWarningLimit: 1600,
         outDir: 'public/build',
         manifest: true,
+        assetsDir: '',
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
     },
 });

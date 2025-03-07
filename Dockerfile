@@ -31,20 +31,41 @@ WORKDIR /var/www
 COPY package*.json ./
 RUN npm ci
 COPY . .
-# Ensure the build directory exists
-RUN mkdir -p public/build
-# Run the build
-RUN npm run build
-# Verify the manifest exists
-RUN ls -la public/build/
+
+# Ensure we're in production mode for the build
+ENV NODE_ENV=production
+
+# Run the build with explicit output
+RUN echo "Building Vite assets..." && \
+    npm run build && \
+    echo "Build completed. Checking manifest..." && \
+    if [ -f "public/build/manifest.json" ]; then \
+        echo "✅ Manifest found at public/build/manifest.json"; \
+        cat public/build/manifest.json | head -n 10; \
+    else \
+        echo "❌ Manifest NOT found at public/build/manifest.json"; \
+        find public -type f | grep -i manifest; \
+        exit 1; \
+    fi
 
 # PHP build stage
 FROM php-base AS php-build
+WORKDIR /var/www
+
+# Copy application code first
 COPY . /var/www/
-# Explicitly copy the build directory with the manifest
+
+# Copy the build directory from node-build
 COPY --from=node-build /var/www/public/build /var/www/public/build
-# Ensure the manifest is copied
-RUN ls -la /var/www/public/build/
+
+# Verify the manifest is copied
+RUN if [ -f "public/build/manifest.json" ]; then \
+        echo "✅ Manifest found at public/build/manifest.json in php-build stage"; \
+    else \
+        echo "❌ Manifest NOT found at public/build/manifest.json in php-build stage"; \
+        find public -type f | grep -i manifest; \
+        exit 1; \
+    fi
 
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
@@ -55,13 +76,19 @@ RUN chown -R www-data:www-data /var/www/public/build
 
 # Final stage
 FROM php-base
-ARG PORT=4004
+ARG PORT=4002
 
 # Copy application code
 COPY --from=php-build --chown=www-data:www-data /var/www /var/www
 
 # Verify the manifest exists in the final stage
-RUN ls -la /var/www/public/build/
+RUN if [ -f "/var/www/public/build/manifest.json" ]; then \
+        echo "✅ Manifest found at /var/www/public/build/manifest.json in final stage"; \
+    else \
+        echo "❌ Manifest NOT found at /var/www/public/build/manifest.json in final stage"; \
+        find /var/www/public -type f | grep -i manifest; \
+        exit 1; \
+    fi
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
@@ -72,6 +99,20 @@ COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Configure Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy and make the check script executable
+COPY docker/check-vite-manifest.sh /var/www/docker/check-vite-manifest.sh
+RUN chmod +x /var/www/docker/check-vite-manifest.sh
+
+# Copy the PHP fix script
+COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
+
+# Copy the health check script
+COPY docker/healthcheck.sh /var/www/docker/healthcheck.sh
+RUN chmod +x /var/www/docker/healthcheck.sh
+
+# Run the PHP fix script
+RUN cd /var/www && php docker/fix-vite-issues.php
 
 # Expose port
 EXPOSE ${PORT}
