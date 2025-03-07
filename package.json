@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build && mkdir dist && cp -R public/build/. dist/",
+        "build": "vite build",
         "docs:dev": "vitepress dev documentation",
         "docs:build": "vitepress build documentation",
         "docs:preview": "vitepress preview documentation"

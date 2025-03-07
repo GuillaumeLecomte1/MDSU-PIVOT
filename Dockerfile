@@ -31,26 +31,37 @@ WORKDIR /var/www
 COPY package*.json ./
 RUN npm ci
 COPY . .
+# Ensure the build directory exists
+RUN mkdir -p public/build
+# Run the build
 RUN npm run build
+# Verify the manifest exists
+RUN ls -la public/build/
 
 # PHP build stage
 FROM php-base AS php-build
 COPY . /var/www/
+# Explicitly copy the build directory with the manifest
 COPY --from=node-build /var/www/public/build /var/www/public/build
-COPY --from=node-build /var/www/dist /var/www/dist
+# Ensure the manifest is copied
+RUN ls -la /var/www/public/build/
 
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/public/build
 
 # Final stage
 FROM php-base
-ARG PORT=4004
+ARG PORT=4002
 
 # Copy application code
 COPY --from=php-build --chown=www-data:www-data /var/www /var/www
+
+# Verify the manifest exists in the final stage
+RUN ls -la /var/www/public/build/
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
