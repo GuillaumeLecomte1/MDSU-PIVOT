@@ -35,25 +35,28 @@ COPY . .
 # Ensure we're in production mode for the build
 ENV NODE_ENV=production
 
-# Run the build with explicit output and manifest handling
+# Run the build and handle manifest
 RUN echo "Building Vite assets..." && \
     npm run build && \
     echo "Build completed. Checking manifest..." && \
-    if [ -f "public/build/.vite/manifest.json" ]; then \
-        echo "✅ Manifest found at public/build/.vite/manifest.json"; \
-        mkdir -p public/build; \
+    mkdir -p public/build && \
+    if [ -f "public/build/manifest.json" ]; then \
+        echo "✅ Manifest found at public/build/manifest.json"; \
+        cat public/build/manifest.json | head -n 10; \
+    elif [ -f "public/build/.vite/manifest.json" ]; then \
+        echo "✅ Found manifest in .vite directory, copying..."; \
         cp public/build/.vite/manifest.json public/build/manifest.json; \
-        echo "✅ Copied manifest to public/build/manifest.json"; \
         cat public/build/manifest.json | head -n 10; \
     else \
-        echo "❌ Manifest NOT found at public/build/.vite/manifest.json"; \
+        echo "❌ Manifest not found in any location"; \
         find public -type f | grep -i manifest; \
         exit 1; \
     fi
 
-# Create necessary directories and set permissions
+# Ensure proper permissions and directories
 RUN mkdir -p public/build/assets/images && \
-    chmod -R 755 public/build
+    chmod -R 755 public/build && \
+    chown -R node:node public/build
 
 # PHP build stage
 FROM php-base AS php-build

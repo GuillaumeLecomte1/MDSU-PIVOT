@@ -8,18 +8,27 @@ export default defineConfig({
         laravel({
             input: 'resources/js/app.jsx',
             refresh: true,
-            buildDirectory: 'build'
+            buildDirectory: 'build',
+            manifest: true
         }),
         react(),
     ],
     build: {
         outDir: 'public/build',
         emptyOutDir: true,
-        manifest: 'manifest.json',
+        chunkSizeWarningLimit: 1000,
         rollupOptions: {
             input: 'resources/js/app.jsx',
             output: {
-                manualChunks: undefined,
+                manualChunks: {
+                    vendor: [
+                        '@inertiajs/react',
+                        'react',
+                        'react-dom',
+                    ],
+                    charts: ['chart.js'],
+                    leaflet: ['leaflet'],
+                },
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name.match(/\.(png|jpe?g|gif|svg|webp)$/)) {
                         return 'assets/images/[name]-[hash][extname]';
