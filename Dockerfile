@@ -39,11 +39,14 @@ ENV NODE_ENV=production
 RUN echo "Building Vite assets..." && \
     npm run build && \
     echo "Build completed. Checking manifest..." && \
-    if [ -f "public/build/manifest.json" ]; then \
-        echo "✅ Manifest found at public/build/manifest.json"; \
+    if [ -f "public/build/.vite/manifest.json" ]; then \
+        echo "✅ Manifest found at public/build/.vite/manifest.json"; \
+        mkdir -p public/build; \
+        cp public/build/.vite/manifest.json public/build/manifest.json; \
+        echo "✅ Copied manifest to public/build/manifest.json"; \
         cat public/build/manifest.json | head -n 10; \
     else \
-        echo "❌ Manifest NOT found at public/build/manifest.json"; \
+        echo "❌ Manifest NOT found at public/build/.vite/manifest.json"; \
         find public -type f | grep -i manifest; \
         exit 1; \
     fi
