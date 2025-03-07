@@ -1,6 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import { getImageUrl } from '@/Utils/ImageHelper';
 
 export default function ProductCard({ product, showEditButton = false, editRoute = null, inFavoritesPage = false }) {
     const { auth } = usePage().props;
@@ -41,9 +42,22 @@ export default function ProductCard({ product, showEditButton = false, editRoute
         });
     };
 
+    // Utiliser l'utilitaire d'images pour obtenir l'URL correcte
+    const getProductImageUrl = (url) => {
+        if (!url) return getImageUrl('images/placeholder.jpg');
+        
+        // Si l'URL est déjà absolue, la retourner telle quelle
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        }
+        
+        // Sinon, utiliser l'utilitaire d'images
+        return getImageUrl(url);
+    };
+
     const mainImage = product.images && product.images.length > 0
-        ? product.images[0].url
-        : '/images/placeholder.jpg';
+        ? getProductImageUrl(product.images[0].url)
+        : getImageUrl('images/placeholder.jpg');
 
     return (
         <Link
@@ -56,6 +70,10 @@ export default function ProductCard({ product, showEditButton = false, editRoute
                         src={mainImage}
                         alt={product.name}
                         className="w-full h-48 object-cover"
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = getImageUrl('images/placeholder.jpg');
+                        }}
                     />
                     {auth.user && (
                         <button

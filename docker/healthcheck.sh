@@ -46,6 +46,21 @@ else
     fi
 fi
 
+# Check static files access
+echo "Checking static files access..."
+if [ -x "/var/www/docker/fix-static-files.sh" ]; then
+    echo "Running static files fix script..."
+    /var/www/docker/fix-static-files.sh
+else
+    echo "❌ Static files fix script not found or not executable"
+    
+    # Set permissions manually
+    echo "Setting permissions manually..."
+    find /var/www/public -type d -exec chmod 755 {} \;
+    find /var/www/public -type f -exec chmod 644 {} \;
+    chown -R www-data:www-data /var/www/public
+fi
+
 # Check if Laravel is properly configured
 cd /var/www && php artisan --version
 if [ $? -eq 0 ]; then

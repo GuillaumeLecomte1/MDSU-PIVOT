@@ -81,6 +81,7 @@ RUN composer install --optimize-autoloader --no-dev
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 RUN chown -R www-data:www-data /var/www/public/build
+RUN chown -R www-data:www-data /var/www/public
 
 # Final stage
 FROM php-base
@@ -103,6 +104,11 @@ RUN if [ -f "/var/www/public/build/manifest.json" ]; then \
         fi \
     fi
 
+# Set proper permissions for all public files
+RUN find /var/www/public -type d -exec chmod 755 {} \;
+RUN find /var/www/public -type f -exec chmod 644 {} \;
+RUN chown -R www-data:www-data /var/www/public
+
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 RUN sed -i "s/listen 80/listen ${PORT}/g" /etc/nginx/sites-available/default
@@ -124,8 +130,15 @@ COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
 COPY docker/healthcheck.sh /var/www/docker/healthcheck.sh
 RUN chmod +x /var/www/docker/healthcheck.sh
 
+# Copy the static files fix script
+COPY docker/fix-static-files.sh /var/www/docker/fix-static-files.sh
+RUN chmod +x /var/www/docker/fix-static-files.sh
+
 # Run the PHP fix script
 RUN cd /var/www && php docker/fix-vite-issues.php
+
+# Run the static files fix script
+RUN /var/www/docker/fix-static-files.sh
 
 # Expose port
 EXPOSE ${PORT}
