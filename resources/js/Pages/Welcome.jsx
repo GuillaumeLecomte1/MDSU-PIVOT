@@ -5,26 +5,18 @@ import CategoryCard from '@/Components/CategoryCard';
 import BlogCard from '@/Components/BlogCard';
 import ProductCard from '@/Components/Products/ProductCard';
 
-// Import des images
-import imageAccueil1 from '@/../public/storage/imagesAccueil/imageAccueil1.png';
-import calqueLogo from '@/../public/storage/imagesAccueil/Calque_1.svg';
-import dernierArrivage from '@/../public/storage/imagesAccueil/dernierArrivage.png';
-import aPropos from '@/../public/storage/imagesAccueil/aPropos.png';
-import blog1 from '@/../public/storage/imagesAccueil/blog1.png';
-import blog2 from '@/../public/storage/imagesAccueil/blog2.png';
-
 // Import de l'utilitaire d'images
 import { getImageUrl } from '@/Utils/ImageHelper';
 
 export default function Welcome({ latestProducts, popularProducts, categories }) {
-    // Utilisation de l'utilitaire d'images comme fallback si les imports ne fonctionnent pas
+    // Définir les URLs des images en utilisant l'utilitaire
     const imageUrls = {
-        imageAccueil1: imageAccueil1 || getImageUrl('storage/imagesAccueil/imageAccueil1.png'),
-        calqueLogo: calqueLogo || getImageUrl('storage/imagesAccueil/Calque_1.svg'),
-        dernierArrivage: dernierArrivage || getImageUrl('storage/imagesAccueil/dernierArrivage.png'),
-        aPropos: aPropos || getImageUrl('storage/imagesAccueil/aPropos.png'),
-        blog1: blog1 || getImageUrl('storage/imagesAccueil/blog1.png'),
-        blog2: blog2 || getImageUrl('storage/imagesAccueil/blog2.png'),
+        imageAccueil1: getImageUrl('storage/imagesAccueil/imageAccueil1.png'),
+        calqueLogo: getImageUrl('storage/imagesAccueil/Calque_1.svg'),
+        dernierArrivage: getImageUrl('storage/imagesAccueil/dernierArrivage.png'),
+        aPropos: getImageUrl('storage/imagesAccueil/aPropos.png'),
+        blog1: getImageUrl('storage/imagesAccueil/blog1.png'),
+        blog2: getImageUrl('storage/imagesAccueil/blog2.png'),
     };
     
     return (
@@ -84,6 +76,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                                     src={imageUrls.imageAccueil1}
                                     alt="Hero"
                                     className="rounded-lg shadow-lg w-full h-[540px] object-cover"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = getImageUrl('images/placeholder.jpg');
+                                    }}
                                 />
                             </div>
                         </div>
@@ -113,7 +109,15 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={i} className="w-32 h-32 flex items-center justify-center">
                                 <div className="text-4xl font-bold text-gray-200">
-                                    <img src={imageUrls.calqueLogo} alt="Logo" className="w-24 h-24 fill-gray-400" />
+                                    <img 
+                                        src={imageUrls.calqueLogo} 
+                                        alt="Logo" 
+                                        className="w-24 h-24 fill-gray-400"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = getImageUrl('images/placeholder.jpg');
+                                        }}
+                                    />
                                 </div>
                             </div>
                         ))}
@@ -243,6 +247,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                                     src={imageUrls.dernierArrivage} 
                                     alt="Pluie de couleurs" 
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = getImageUrl('images/placeholder.jpg');
+                                    }}
                                 />
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="bg-[#F2F2F2] rounded-lg p-8 mx-8 w-[80%]">
@@ -273,6 +281,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                                 src={imageUrls.aPropos}
                                 alt="Qui sommes-nous"
                                 className="w-full h-[600px] object-cover rounded-lg"
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = getImageUrl('images/placeholder.jpg');
+                                }}
                             />
                             {/* Stats overlaid on image */}
                             <div className="absolute top-[15%] right-[-15%] bg-white rounded-lg p-8 shadow-lg z-10">
@@ -335,6 +347,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                                 src={imageUrls.blog1}
                                 alt="Comment meubler son intérieur"
                                 className="w-full aspect-[4/3] object-cover rounded-lg mb-6"
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = getImageUrl('images/placeholder.jpg');
+                                }}
                             />
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-gray-500 text-sm">24/08/2024</span>
@@ -354,6 +370,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                                 src={imageUrls.blog2}
                                 alt="Focus ressourcerie"
                                 className="w-full aspect-[4/3] object-cover rounded-lg mb-6"
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = getImageUrl('images/placeholder.jpg');
+                                }}
                             />
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-gray-500 text-sm">24/08/2024</span>

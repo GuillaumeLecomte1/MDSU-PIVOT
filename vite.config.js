@@ -6,19 +6,34 @@ import { resolve } from 'path';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.jsx'],
+            input: 'resources/js/app.jsx',
             refresh: true,
-            manifest: true,
-            publicDirectory: 'public',
         }),
         react(),
     ],
+    build: {
+        outDir: 'public/build',
+        assetsDir: '',
+        manifest: true,
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+                assetFileNames: (assetInfo) => {
+                    if (assetInfo.name.match(/\.(png|jpe?g|gif|svg|webp)$/)) {
+                        return 'assets/images/[name]-[hash][extname]';
+                    }
+                    return 'assets/[name]-[hash][extname]';
+                },
+            },
+        },
+    },
     resolve: {
         alias: {
             '@': '/resources/js',
-            'public': resolve(__dirname, './public'),
+            'public': '/public',
         },
     },
+    publicDir: 'public',
     server: {
         hmr: {
             host: '127.0.0.1',
@@ -28,23 +43,6 @@ export default defineConfig({
     },
     build: {
         chunkSizeWarningLimit: 1600,
-        outDir: 'public/build',
-        manifest: true,
-        assetsDir: '',
         assetsInlineLimit: 4096,
-        rollupOptions: {
-            output: {
-                manualChunks: undefined,
-                assetFileNames: (assetInfo) => {
-                    let extType = assetInfo.name.split('.').at(1);
-                    if (/png|jpe?g|svg|gif|tiff|bmp|ico|webp/i.test(extType)) {
-                        extType = 'img';
-                    }
-                    return `assets/${extType}/[name]-[hash][extname]`;
-                },
-                chunkFileNames: 'assets/js/[name]-[hash].js',
-                entryFileNames: 'assets/js/[name]-[hash].js',
-            },
-        },
     },
 });

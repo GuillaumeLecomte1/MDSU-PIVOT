@@ -140,6 +140,16 @@ RUN cd /var/www && php docker/fix-vite-issues.php
 # Run the static files fix script
 RUN /var/www/docker/fix-static-files.sh
 
+# Copy the copy-images script
+COPY docker/copy-images.sh /usr/local/bin/copy-images
+RUN chmod +x /usr/local/bin/copy-images
+
+# Build Vite assets
+RUN npm run build
+
+# Run the copy-images script after build
+RUN /usr/local/bin/copy-images
+
 # Expose port
 EXPOSE ${PORT}
 

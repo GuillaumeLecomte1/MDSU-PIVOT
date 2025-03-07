@@ -10,19 +10,17 @@ export function getImageUrl(path) {
     // Remove leading slash if present
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
     
-    // In development, use the direct path
-    if (process.env.NODE_ENV === 'development') {
-        return `/${cleanPath}`;
-    }
-    
-    // In production, try to use the asset URL from Inertia props if available
     try {
+        // Try to get asset_url from Inertia props
         const { asset_url } = usePage().props;
+        
+        // If asset_url is available, use it
         if (asset_url) {
             return `${asset_url}/${cleanPath}`;
         }
     } catch (error) {
-        console.warn('Could not get asset_url from Inertia props:', error);
+        // If usePage() fails (e.g., during SSR), fallback to relative path
+        console.warn('Could not get asset_url from Inertia props, using relative path');
     }
     
     // Fallback to direct path
@@ -51,7 +49,19 @@ export function getStorageImageUrl(path) {
     return getImageUrl(`storage/${path}`);
 }
 
+/**
+ * Helper function to handle image loading errors
+ * 
+ * @param {Event} event - The error event
+ * @param {string} fallbackImage - The fallback image to use
+ */
+export function handleImageError(event, fallbackImage = 'images/placeholder.jpg') {
+    event.target.onerror = null; // Prevent infinite loop
+    event.target.src = getImageUrl(fallbackImage);
+}
+
 export default {
     getImageUrl,
     getStorageImageUrl,
+    handleImageError,
 }; 
