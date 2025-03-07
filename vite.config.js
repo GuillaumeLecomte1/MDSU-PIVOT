@@ -8,14 +8,16 @@ export default defineConfig({
         laravel({
             input: 'resources/js/app.jsx',
             refresh: true,
+            buildDirectory: 'build'
         }),
         react(),
     ],
     build: {
         outDir: 'public/build',
-        assetsDir: '',
+        emptyOutDir: true,
         manifest: true,
         rollupOptions: {
+            input: 'resources/js/app.jsx',
             output: {
                 manualChunks: undefined,
                 assetFileNames: (assetInfo) => {
@@ -24,16 +26,16 @@ export default defineConfig({
                     }
                     return 'assets/[name]-[hash][extname]';
                 },
+                chunkFileNames: 'assets/js/[name]-[hash].js',
+                entryFileNames: 'assets/js/[name]-[hash].js',
             },
         },
     },
     resolve: {
         alias: {
             '@': '/resources/js',
-            'public': '/public',
         },
     },
-    publicDir: 'public',
     server: {
         hmr: {
             host: '127.0.0.1',
@@ -41,8 +43,7 @@ export default defineConfig({
         host: '127.0.0.1',
         port: 5173,
     },
-    build: {
-        chunkSizeWarningLimit: 1600,
-        assetsInlineLimit: 4096,
+    optimizeDeps: {
+        include: ['@inertiajs/react'],
     },
 });
