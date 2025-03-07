@@ -39,11 +39,14 @@ ENV NODE_ENV=production
 RUN echo "Building Vite assets..." && \
     npm run build && \
     echo "Build completed. Checking manifest..." && \
-    if [ -f "public/build/manifest.json" ]; then \
-        echo "✅ Manifest found at public/build/manifest.json"; \
-        cat public/build/manifest.json | head -n 10; \
+    if [ -f "public/build/.vite/manifest.json" ]; then \
+        echo "✅ Manifest found at public/build/.vite/manifest.json"; \
+        cat public/build/.vite/manifest.json | head -n 10; \
+        mkdir -p public/build; \
+        cp public/build/.vite/manifest.json public/build/manifest.json; \
+        echo "✅ Copied manifest to public/build/manifest.json"; \
     else \
-        echo "❌ Manifest NOT found at public/build/manifest.json"; \
+        echo "❌ Manifest NOT found at public/build/.vite/manifest.json"; \
         find public -type f | grep -i manifest; \
         exit 1; \
     fi
@@ -63,8 +66,13 @@ RUN if [ -f "public/build/manifest.json" ]; then \
         echo "✅ Manifest found at public/build/manifest.json in php-build stage"; \
     else \
         echo "❌ Manifest NOT found at public/build/manifest.json in php-build stage"; \
-        find public -type f | grep -i manifest; \
-        exit 1; \
+        if [ -f "public/build/.vite/manifest.json" ]; then \
+            echo "✅ Found manifest at public/build/.vite/manifest.json, copying..."; \
+            cp public/build/.vite/manifest.json public/build/manifest.json; \
+        else \
+            find public -type f | grep -i manifest; \
+            exit 1; \
+        fi \
     fi
 
 # Install PHP dependencies
@@ -86,8 +94,13 @@ RUN if [ -f "/var/www/public/build/manifest.json" ]; then \
         echo "✅ Manifest found at /var/www/public/build/manifest.json in final stage"; \
     else \
         echo "❌ Manifest NOT found at /var/www/public/build/manifest.json in final stage"; \
-        find /var/www/public -type f | grep -i manifest; \
-        exit 1; \
+        if [ -f "/var/www/public/build/.vite/manifest.json" ]; then \
+            echo "✅ Found manifest at /var/www/public/build/.vite/manifest.json, copying..."; \
+            cp /var/www/public/build/.vite/manifest.json /var/www/public/build/manifest.json; \
+        else \
+            find /var/www/public -type f | grep -i manifest; \
+            exit 1; \
+        fi \
     fi
 
 # Configure Nginx
