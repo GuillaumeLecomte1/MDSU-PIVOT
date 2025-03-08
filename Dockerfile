@@ -1,4 +1,4 @@
-FROM php:8.2-fpm AS php-base
+FROM php:8.2.15-fpm AS php-base
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -12,25 +12,29 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     supervisor \
-    procps
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Get latest Composer with specific version
+COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www
 
-# Node.js build stage
-FROM node:18 AS node-build
+# Node.js build stage avec version spécifique
+FROM node:18.19.1-bullseye AS node-build
 WORKDIR /var/www
+
+# Add retry mechanism for npm
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000
+
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 COPY . .
 
 # Ensure we're in production mode for the build
@@ -132,13 +136,13 @@ COPY docker/check-vite-manifest.sh /var/www/docker/check-vite-manifest.sh
 COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
 COPY docker/healthcheck.sh /var/www/docker/healthcheck.sh
 COPY docker/fix-static-files.sh /var/www/docker/fix-static-files.sh
+COPY docker/fix-manifest.sh /var/www/docker/fix-manifest.sh
 RUN chmod +x /var/www/docker/*.sh
 
-# Run the PHP fix script
+# Run the fix scripts
 RUN cd /var/www && php docker/fix-vite-issues.php
-
-# Run the static files fix script
 RUN /var/www/docker/fix-static-files.sh
+RUN /var/www/docker/fix-manifest.sh
 
 # Create image directories if they don't exist
 RUN mkdir -p /var/www/public/build/assets/images && \

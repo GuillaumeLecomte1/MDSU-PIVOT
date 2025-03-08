@@ -6,19 +6,20 @@ import { resolve } from 'path';
 export default defineConfig({
     plugins: [
         laravel({
-            input: 'resources/js/app.jsx',
+            input: ['resources/js/app.jsx', 'resources/css/app.css'],
             refresh: true,
-            buildDirectory: 'build',
-            manifest: true
         }),
         react(),
     ],
     build: {
         outDir: 'public/build',
         emptyOutDir: true,
-        chunkSizeWarningLimit: 1000,
+        manifest: true,
         rollupOptions: {
-            input: 'resources/js/app.jsx',
+            input: {
+                app: 'resources/js/app.jsx',
+                css: 'resources/css/app.css'
+            },
             output: {
                 manualChunks: {
                     vendor: [
@@ -32,6 +33,9 @@ export default defineConfig({
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name.match(/\.(png|jpe?g|gif|svg|webp)$/)) {
                         return 'assets/images/[name]-[hash][extname]';
+                    }
+                    if (assetInfo.name.match(/\.css$/)) {
+                        return 'assets/css/[name]-[hash][extname]';
                     }
                     return 'assets/[name]-[hash][extname]';
                 },
