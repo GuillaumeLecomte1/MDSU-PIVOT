@@ -1,29 +1,32 @@
+/**
+ * Utilitaire pour gérer les images dans l'application
+ */
+
 import { usePage } from '@inertiajs/react';
 
 /**
- * Helper function to get the correct image URL in both development and production environments
- * 
- * @param {string} path - The path to the image relative to the public directory
- * @returns {string} - The correct URL to the image
+ * Obtient l'URL correcte pour une image
+ * @param {string} path - Chemin de l'image
+ * @returns {string} - URL complète de l'image
  */
 export function getImageUrl(path) {
-    // Remove leading slash if present
+    if (!path) return '/images/placeholder.jpg';
+    
+    // Supprimer le slash initial si présent
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
     
     try {
-        // Try to get asset_url from Inertia props
+        // Essayer d'obtenir l'URL de base depuis les props Inertia
         const { asset_url } = usePage().props;
-        
-        // If asset_url is available, use it
         if (asset_url) {
+            console.log('Using asset_url from Inertia props:', asset_url);
             return `${asset_url}/${cleanPath}`;
         }
     } catch (error) {
-        // If usePage() fails (e.g., during SSR), fallback to relative path
-        console.warn('Could not get asset_url from Inertia props, using relative path');
+        console.log('Could not get asset_url from Inertia props, using relative path');
     }
     
-    // Fallback to direct path
+    // Fallback à une URL relative
     return `/${cleanPath}`;
 }
 
@@ -40,28 +43,37 @@ export function getImageUrl(path) {
  */
 
 /**
- * Helper function to get a URL for a storage image
- * 
- * @param {string} path - The path to the image relative to the storage directory
- * @returns {string} - The correct URL to the storage image
+ * Obtient l'URL pour une image stockée dans le répertoire storage
+ * @param {string} path - Chemin de l'image dans storage
+ * @returns {string} - URL complète de l'image
  */
 export function getStorageImageUrl(path) {
+    if (!path) return '/images/placeholder.jpg';
     return getImageUrl(`storage/${path}`);
 }
 
 /**
- * Helper function to handle image loading errors
- * 
- * @param {Event} event - The error event
- * @param {string} fallbackImage - The fallback image to use
+ * Gère les erreurs de chargement d'image
+ * @param {Event} event - Événement d'erreur
  */
-export function handleImageError(event, fallbackImage = 'images/placeholder.jpg') {
-    event.target.onerror = null; // Prevent infinite loop
-    event.target.src = getImageUrl(fallbackImage);
+export function handleImageError(event) {
+    event.target.src = '/images/placeholder.jpg';
+    event.target.onerror = null; // Évite les boucles infinies
+}
+
+/**
+ * Vérifie si une URL est absolue
+ * @param {string} url - URL à vérifier
+ * @returns {boolean} - True si l'URL est absolue
+ */
+export function isAbsoluteUrl(url) {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
 }
 
 export default {
     getImageUrl,
     getStorageImageUrl,
     handleImageError,
+    isAbsoluteUrl
 }; 

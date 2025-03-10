@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
+use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,5 +22,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        // Forcer HTTPS en production
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+        
+        // Partager l'URL de base avec Inertia
+        Inertia::share([
+            'asset_url' => fn () => url(''),
+        ]);
     }
 }

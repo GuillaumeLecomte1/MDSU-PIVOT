@@ -1,7 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { getImageUrl } from '@/Utils/ImageHelper';
+import { getImageUrl, handleImageError, isAbsoluteUrl } from '@/Utils/ImageHelper';
 
 export default function ProductCard({ product, showEditButton = false, editRoute = null, inFavoritesPage = false }) {
     const { auth } = usePage().props;
@@ -42,22 +42,26 @@ export default function ProductCard({ product, showEditButton = false, editRoute
         });
     };
 
-    // Utiliser l'utilitaire d'images pour obtenir l'URL correcte
+    /**
+     * Obtient l'URL de l'image du produit
+     * @param {string} url - URL de l'image
+     * @returns {string} - URL complète de l'image
+     */
     const getProductImageUrl = (url) => {
-        if (!url) return getImageUrl('images/placeholder.jpg');
+        // Si l'URL est vide, utiliser l'image par défaut
+        if (!url) return '/images/placeholder.jpg';
         
-        // Si l'URL est déjà absolue, la retourner telle quelle
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-            return url;
-        }
+        // Si c'est une URL absolue, la retourner telle quelle
+        if (isAbsoluteUrl(url)) return url;
         
-        // Sinon, utiliser l'utilitaire d'images
+        // Sinon, utiliser notre utilitaire pour obtenir l'URL complète
         return getImageUrl(url);
     };
 
-    const mainImage = product.images && product.images.length > 0
+    // Déterminer l'image principale
+    const mainImage = product.images && product.images.length > 0 
         ? getProductImageUrl(product.images[0].url)
-        : getImageUrl('images/placeholder.jpg');
+        : '/images/placeholder.jpg';
 
     return (
         <Link
@@ -69,11 +73,8 @@ export default function ProductCard({ product, showEditButton = false, editRoute
                     <img
                         src={mainImage}
                         alt={product.name}
-                        className="w-full h-48 object-cover"
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = getImageUrl('images/placeholder.jpg');
-                        }}
+                        className="w-full h-48 object-cover rounded-t-lg"
+                        onError={handleImageError}
                     />
                     {auth.user && (
                         <button

@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     nginx \
     supervisor \
     procps \
+    imagemagick \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -137,12 +138,16 @@ COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
 COPY docker/healthcheck.sh /var/www/docker/healthcheck.sh
 COPY docker/fix-static-files.sh /var/www/docker/fix-static-files.sh
 COPY docker/fix-manifest.sh /var/www/docker/fix-manifest.sh
+COPY docker/create-placeholder.sh /var/www/docker/create-placeholder.sh
+COPY docker/fix-images.sh /var/www/docker/fix-images.sh
 RUN chmod +x /var/www/docker/*.sh
 
 # Run the fix scripts
 RUN cd /var/www && php docker/fix-vite-issues.php
 RUN /var/www/docker/fix-static-files.sh
 RUN /var/www/docker/fix-manifest.sh
+RUN /var/www/docker/create-placeholder.sh
+RUN /var/www/docker/fix-images.sh
 
 # Create image directories if they don't exist
 RUN mkdir -p /var/www/public/build/assets/images && \
