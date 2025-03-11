@@ -14,10 +14,10 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 18.x (LTS) - version plus stable que celle par défaut
+# Install Node.js 18.x (LTS) avec une version compatible de npm
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
-    npm install -g npm@latest && \
+    npm install -g npm@10.2.4 && \
     rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -56,12 +56,6 @@ COPY composer.json composer.lock package.json package-lock.json vite.config.js /
 RUN cd /var/www && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev
 
-# Installer les dépendances Node.js avec une configuration optimisée
-ENV NODE_OPTIONS="--max-old-space-size=1536 --no-warnings"
-RUN cd /var/www && \
-    npm ci --production=false --no-audit --no-fund && \
-    npm install terser --save-dev
-
 # Copier le reste du code source
 COPY app /var/www/app/
 COPY bootstrap /var/www/bootstrap/
@@ -72,8 +66,11 @@ COPY resources /var/www/resources/
 COPY routes /var/www/routes/
 COPY artisan /var/www/artisan
 
-# Construire les assets avec une configuration optimisée
+# Installer les dépendances Node.js avec une configuration optimisée et construire les assets
+ENV NODE_OPTIONS="--max-old-space-size=1536 --no-warnings"
 RUN cd /var/www && \
+    npm ci --production=false --no-audit --no-fund && \
+    npm install terser --save-dev && \
     NODE_ENV=production npm run build -- --mode production && \
     npm prune --production && \
     rm -rf node_modules/.cache

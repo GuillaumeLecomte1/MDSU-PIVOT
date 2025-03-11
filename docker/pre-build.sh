@@ -9,6 +9,10 @@ echo "🔍 Recherche des conteneurs en cours d'exécution (sauf pivot-app)..."
 echo "🧹 Nettoyage des ressources Docker inutilisées..."
 docker system prune -f --volumes
 
+# Nettoyer les images non utilisées
+echo "🧹 Suppression des images non utilisées..."
+docker image prune -a -f
+
 # Obtenir la liste des conteneurs en cours d'exécution (sauf pivot-app)
 CONTAINERS=$(docker ps --format "{{.Names}}" | grep -v "pivot-app")
 

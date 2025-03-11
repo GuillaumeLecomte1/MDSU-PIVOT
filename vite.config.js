@@ -18,7 +18,7 @@ export default defineConfig({
         minify: 'esbuild',
         cssMinify: true,
         reportCompressedSize: false,
-        chunkSizeWarningLimit: 1000,
+        chunkSizeWarningLimit: 2000,
         assetsInlineLimit: 4096,
         sourcemap: false,
         rollupOptions: {
@@ -27,29 +27,14 @@ export default defineConfig({
                 css: 'resources/css/app.css'
             },
             output: {
-                manualChunks: (id) => {
-                    if (id.includes('node_modules')) {
-                        if (id.includes('@inertiajs') || id.includes('react')) {
-                            return 'vendor';
-                        }
-                        if (id.includes('chart.js')) {
-                            return 'charts';
-                        }
-                        if (id.includes('leaflet')) {
-                            return 'leaflet';
-                        }
-                        return 'vendor-other';
-                    }
+                manualChunks: {
+                    vendor: [
+                        'react', 
+                        'react-dom', 
+                        '@inertiajs/react'
+                    ],
                 },
-                assetFileNames: (assetInfo) => {
-                    if (assetInfo.name.match(/\.(png|jpe?g|gif|svg|webp)$/)) {
-                        return 'assets/images/[name]-[hash][extname]';
-                    }
-                    if (assetInfo.name.match(/\.css$/)) {
-                        return 'assets/css/[name]-[hash][extname]';
-                    }
-                    return 'assets/[name]-[hash][extname]';
-                },
+                assetFileNames: 'assets/[name]-[hash][extname]',
                 chunkFileNames: 'assets/js/[name]-[hash].js',
                 entryFileNames: 'assets/js/[name]-[hash].js',
             },

@@ -12,6 +12,7 @@ app:
       - NODE_ENV=production
       - VITE_DISABLE_SOURCEMAP=true
       - COMPOSER_NO_DEV=1
+      - NODE_OPTIONS=--max-old-space-size=1536
   env:
     - APP_ENV=production
     - APP_DEBUG=false
@@ -42,4 +43,5 @@ app:
     - docker stop pivot-app 2>/dev/null || true
     - docker rm pivot-app 2>/dev/null || true
     - docker run -d --name pivot-app -p 4004:4004 --memory=2g --cpus=1.0 -v /var/www/html/pivot/storage:/var/www/storage -v /var/www/html/pivot/public/images:/var/www/public/images -v /var/www/html/pivot/.env:/var/www/.env --restart unless-stopped pivot-app:latest
-    - ./docker/post-build.sh 
+    - ./docker/post-build.sh
+    - echo "Déploiement terminé avec succès! L'application est accessible sur http://guillaume-lcte.fr:4004" 
