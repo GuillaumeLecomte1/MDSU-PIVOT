@@ -5,7 +5,7 @@
 echo "🚀 Démarrage du déploiement avec surveillance..."
 
 # Lancer le build Docker en arrière-plan
-docker build -t marketplace-app . &
+docker build -t pivot-app:latest . &
 BUILD_PID=$!
 
 # Fonction pour afficher l'état du build
@@ -46,11 +46,16 @@ if [ $BUILD_STATUS -eq 0 ]; then
   echo "✅ Build terminé avec succès!"
   
   # Arrêter le conteneur existant s'il existe
-  docker stop marketplace-app 2>/dev/null || true
-  docker rm marketplace-app 2>/dev/null || true
+  docker stop pivot-app 2>/dev/null || true
+  docker rm pivot-app 2>/dev/null || true
   
   # Lancer le nouveau conteneur
-  docker run -d --name marketplace-app -p 4004:4004 -v $(pwd)/storage:/var/www/storage marketplace-app
+  docker run -d --name pivot-app -p 4004:4004 \
+    -v /var/www/html/pivot/storage:/var/www/storage \
+    -v /var/www/html/pivot/public/images:/var/www/public/images \
+    -v /var/www/html/pivot/.env:/var/www/.env \
+    --restart unless-stopped \
+    pivot-app:latest
   
   echo "✅ Application déployée sur le port 4004!"
 else

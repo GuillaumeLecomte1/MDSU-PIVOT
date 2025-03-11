@@ -25,38 +25,22 @@ COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy only necessary files first
-COPY composer.json composer.lock package.json package-lock.json vite.config.js /var/www/
-
 # Create necessary directories
 RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/framework/cache \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
     && mkdir -p /var/www/storage/logs \
-    && mkdir -p /var/www/public/images \
-    && mkdir -p /var/www/resources \
-    && mkdir -p /var/www/app \
-    && mkdir -p /var/www/config \
-    && mkdir -p /var/www/routes \
-    && mkdir -p /var/www/bootstrap \
-    && mkdir -p /var/www/database
+    && mkdir -p /var/www/public/images
+
+# Copy the entire application code first
+COPY . /var/www/
 
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
 # Install Node.js dependencies with production flag to speed up installation
 RUN npm ci --production=false --no-audit --no-fund
-
-# Copy the rest of the application code
-COPY app /var/www/app
-COPY bootstrap /var/www/bootstrap
-COPY config /var/www/config
-COPY database /var/www/database
-COPY public /var/www/public
-COPY resources /var/www/resources
-COPY routes /var/www/routes
-COPY artisan /var/www/artisan
 
 # Build assets with production mode and increased memory limit
 ENV NODE_OPTIONS=--max_old_space_size=4096
