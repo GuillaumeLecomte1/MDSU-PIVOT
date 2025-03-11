@@ -40,21 +40,10 @@ RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && 
     echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini
 
 # Configurer Nginx
-RUN rm -f /etc/nginx/sites-enabled/default && \
-    rm -f /etc/nginx/sites-available/default
-COPY docker/nginx.conf /etc/nginx/sites-available/laravel.conf
-RUN ln -s /etc/nginx/sites-available/laravel.conf /etc/nginx/sites-enabled/ && \
-    mkdir -p /var/log/nginx && \
-    touch /var/log/nginx/error.log && \
-    touch /var/log/nginx/access.log && \
-    chown -R www-data:www-data /var/log/nginx
+COPY docker/nginx.conf /etc/nginx/sites-available/default
 
 # Configurer Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Copier le script d'entrypoint
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 # Copier le code source
 COPY . /var/www/
@@ -76,17 +65,8 @@ RUN chown -R www-data:www-data /var/www && \
     find /var/www/public -type d -exec chmod 755 {} \; && \
     find /var/www/public -type f -exec chmod 644 {} \;
 
-# Vérifier que le fichier index.php existe
-RUN if [ ! -f /var/www/public/index.php ]; then \
-        echo "ERREUR: Le fichier index.php n'existe pas dans le répertoire public!" && \
-        exit 1; \
-    fi
-
 # Exposer le port
 EXPOSE 4004
-
-# Utiliser le script d'entrypoint
-ENTRYPOINT ["/entrypoint.sh"]
 
 # Démarrer les services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 

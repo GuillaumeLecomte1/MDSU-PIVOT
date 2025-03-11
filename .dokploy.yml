@@ -26,8 +26,7 @@ app:
     - mkdir -p /var/www/html/pivot/storage/framework/views
     - mkdir -p /var/www/html/pivot/storage/logs
     - mkdir -p /var/www/html/pivot/public/images
-    - touch /var/www/html/pivot/public/images/placeholder.jpg
-    - chmod -R 755 /var/www/html/pivot/public/images
+    - touch /var/www/html/pivot/.env
   post_deploy:
     - docker stop pivot-app 2>/dev/null || true
     - docker rm pivot-app 2>/dev/null || true
