@@ -8,6 +8,8 @@ app:
   build:
     context: .
     dockerfile: Dockerfile
+    args:
+      - NODE_ENV=production
   env:
     - APP_ENV=production
     - APP_DEBUG=false
@@ -19,6 +21,10 @@ app:
     host: guillaume-lcte.fr
     user: ubuntu
     port: 22
+  resources:
+    limits:
+      memory: 2G
+      cpus: '1.0'
   pre_deploy:
     - mkdir -p /var/www/html/pivot/storage/app/public
     - mkdir -p /var/www/html/pivot/storage/framework/cache
@@ -27,7 +33,11 @@ app:
     - mkdir -p /var/www/html/pivot/storage/logs
     - mkdir -p /var/www/html/pivot/public/images
     - touch /var/www/html/pivot/.env
+    - chmod +x docker/pre-build.sh
+    - chmod +x docker/post-build.sh
+    - ./docker/pre-build.sh
   post_deploy:
     - docker stop pivot-app 2>/dev/null || true
     - docker rm pivot-app 2>/dev/null || true
-    - docker run -d --name pivot-app -p 4004:4004 -v /var/www/html/pivot/storage:/var/www/storage -v /var/www/html/pivot/public/images:/var/www/public/images -v /var/www/html/pivot/.env:/var/www/.env --restart unless-stopped pivot-app:latest 
+    - docker run -d --name pivot-app -p 4004:4004 --memory=2g --cpus=1.0 -v /var/www/html/pivot/storage:/var/www/storage -v /var/www/html/pivot/public/images:/var/www/public/images -v /var/www/html/pivot/.env:/var/www/.env --restart unless-stopped pivot-app:latest
+    - ./docker/post-build.sh 
