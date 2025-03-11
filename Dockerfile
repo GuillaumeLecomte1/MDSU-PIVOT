@@ -25,8 +25,8 @@ COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy application code
-COPY . /var/www/
+# Copy only necessary files first
+COPY composer.json composer.lock package.json package-lock.json vite.config.js /var/www/
 
 # Create necessary directories
 RUN mkdir -p /var/www/storage/app/public \
@@ -34,16 +34,38 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
     && mkdir -p /var/www/storage/logs \
-    && mkdir -p /var/www/public/images
+    && mkdir -p /var/www/public/images \
+    && mkdir -p /var/www/resources \
+    && mkdir -p /var/www/app \
+    && mkdir -p /var/www/config \
+    && mkdir -p /var/www/routes \
+    && mkdir -p /var/www/bootstrap \
+    && mkdir -p /var/www/database
 
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Install Node.js dependencies and build assets
-RUN npm install && npm run build
+# Install Node.js dependencies
+RUN npm install
+
+# Copy the rest of the application code
+COPY app /var/www/app
+COPY bootstrap /var/www/bootstrap
+COPY config /var/www/config
+COPY database /var/www/database
+COPY public /var/www/public
+COPY resources /var/www/resources
+COPY routes /var/www/routes
+COPY artisan /var/www/artisan
+
+# Build assets
+RUN npm run build
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
+
+# Configure supervisor
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
@@ -51,9 +73,6 @@ RUN chown -R www-data:www-data /var/www && \
     find /var/www/storage -type f -exec chmod 664 {} \; && \
     find /var/www/public -type d -exec chmod 755 {} \; && \
     find /var/www/public -type f -exec chmod 644 {} \;
-
-# Configure supervisor
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose port
 EXPOSE 4004
