@@ -1,0 +1,14 @@
+version: '1'
+
+app:
+  name: pivot
+  container: pivot-app
+  image: pivot-app:latest
+  port: 4004
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: pivot-app
+  env:
+    - APP_ENV=production
+    - APP_DEBUG=false 

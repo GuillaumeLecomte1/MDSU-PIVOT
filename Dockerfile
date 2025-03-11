@@ -97,7 +97,7 @@ RUN chown -R www-data:www-data /var/www/public/build
 RUN chown -R www-data:www-data /var/www/public
 
 # Final stage
-FROM php-base
+FROM php-base AS pivot-app
 ARG PORT=4004
 
 # Copy application code
