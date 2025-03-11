@@ -18,6 +18,25 @@ if [ "$(docker ps -a -q -f name=$CONTAINER_NAME)" ]; then
     docker rm $CONTAINER_NAME
 fi
 
+# Nettoyer les images Docker non utilisées
+echo "🧹 Nettoyage des images Docker non utilisées..."
+docker system prune -f
+
+# Créer les répertoires nécessaires
+echo "📁 Création des répertoires nécessaires..."
+mkdir -p $APP_DIR/storage/app/public
+mkdir -p $APP_DIR/storage/framework/cache
+mkdir -p $APP_DIR/storage/framework/sessions
+mkdir -p $APP_DIR/storage/framework/views
+mkdir -p $APP_DIR/storage/logs
+mkdir -p $APP_DIR/public/images
+
+# Vérifier si l'image placeholder.jpg existe
+if [ ! -f $APP_DIR/public/images/placeholder.jpg ]; then
+    echo "🖼️ Création de l'image placeholder.jpg..."
+    touch $APP_DIR/public/images/placeholder.jpg
+fi
+
 # Construire l'image Docker
 echo "🔨 Construction de l'image Docker..."
 docker build -t $IMAGE_NAME .
@@ -26,15 +45,6 @@ docker build -t $IMAGE_NAME .
 if [ $? -ne 0 ]; then
     echo "❌ Erreur lors de la construction de l'image Docker."
     exit 1
-fi
-
-# Créer le dossier pour les images si nécessaire
-mkdir -p public/images
-
-# Vérifier si l'image placeholder.jpg existe
-if [ ! -f public/images/placeholder.jpg ]; then
-    echo "🖼️ Création de l'image placeholder.jpg..."
-    cp -f public/images/logo.svg public/images/placeholder.jpg || echo "⚠️ Impossible de créer l'image placeholder.jpg"
 fi
 
 # Lancer le conteneur

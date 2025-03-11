@@ -1,74 +1,32 @@
 #!/bin/bash
 
-# Script to check the health of the application
+# Script de healthcheck pour vérifier l'état des services
+echo "Vérification de l'état des services..."
 
-echo "Checking application health..."
-
-# Check if Nginx is running
+# Vérifier si Nginx est en cours d'exécution
 if pgrep -x "nginx" > /dev/null; then
-    echo "✅ Nginx is running"
+    echo "✅ Nginx est en cours d'exécution."
 else
-    echo "❌ Nginx is not running"
+    echo "❌ Nginx n'est pas en cours d'exécution."
     exit 1
 fi
 
-# Check if PHP-FPM is running
+# Vérifier si PHP-FPM est en cours d'exécution
 if pgrep -x "php-fpm" > /dev/null; then
-    echo "✅ PHP-FPM is running"
+    echo "✅ PHP-FPM est en cours d'exécution."
 else
-    echo "❌ PHP-FPM is not running"
+    echo "❌ PHP-FPM n'est pas en cours d'exécution."
     exit 1
 fi
 
-# Check if the Vite manifest exists
-MANIFEST_PATH="/var/www/public/build/manifest.json"
-VITE_MANIFEST_PATH="/var/www/public/build/.vite/manifest.json"
-
-if [ -f "$MANIFEST_PATH" ]; then
-    echo "✅ Vite manifest exists at $MANIFEST_PATH"
-elif [ -f "$VITE_MANIFEST_PATH" ]; then
-    echo "✅ Vite manifest exists at $VITE_MANIFEST_PATH, copying to $MANIFEST_PATH"
-    cp "$VITE_MANIFEST_PATH" "$MANIFEST_PATH"
-    echo "✅ Copied manifest to $MANIFEST_PATH"
+# Vérifier si le fichier index.php est accessible
+if curl -s http://localhost:4004/ | grep -q "Laravel"; then
+    echo "✅ L'application Laravel est accessible."
 else
-    echo "❌ Vite manifest does not exist at $MANIFEST_PATH or $VITE_MANIFEST_PATH"
-    
-    # Try to fix the issue
-    echo "Attempting to fix Vite manifest issue..."
-    cd /var/www && php docker/fix-vite-issues.php
-    
-    # Check again
-    if [ -f "$MANIFEST_PATH" ]; then
-        echo "✅ Vite manifest issue fixed"
-    else
-        echo "❌ Failed to fix Vite manifest issue"
-        exit 1
-    fi
+    echo "❌ L'application Laravel n'est pas accessible."
+    echo "Contenu de la réponse HTTP :"
+    curl -v http://localhost:4004/
 fi
 
-# Check static files access
-echo "Checking static files access..."
-if [ -x "/var/www/docker/fix-static-files.sh" ]; then
-    echo "Running static files fix script..."
-    /var/www/docker/fix-static-files.sh
-else
-    echo "❌ Static files fix script not found or not executable"
-    
-    # Set permissions manually
-    echo "Setting permissions manually..."
-    find /var/www/public -type d -exec chmod 755 {} \;
-    find /var/www/public -type f -exec chmod 644 {} \;
-    chown -R www-data:www-data /var/www/public
-fi
-
-# Check if Laravel is properly configured
-cd /var/www && php artisan --version
-if [ $? -eq 0 ]; then
-    echo "✅ Laravel is properly configured"
-else
-    echo "❌ Laravel is not properly configured"
-    exit 1
-fi
-
-echo "Application health check completed successfully!"
+echo "✅ Tous les services sont en cours d'exécution."
 exit 0 

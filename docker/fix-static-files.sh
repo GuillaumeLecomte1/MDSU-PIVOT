@@ -1,41 +1,33 @@
 #!/bin/bash
 
-# Script to check and fix static files access issues
+# Script pour corriger les fichiers statiques
+echo "Vérification des fichiers statiques..."
 
-echo "Checking static files access..."
-
-# Check if the public directory exists
-if [ -d "/var/www/public" ]; then
-    echo "✅ Public directory exists"
-else
-    echo "❌ Public directory does not exist"
-    exit 1
+# Vérifier si le dossier images existe
+if [ ! -d /var/www/public/images ]; then
+    echo "Création du dossier images..."
+    mkdir -p /var/www/public/images
+    chown -R www-data:www-data /var/www/public/images
 fi
 
-# Set proper permissions for all public files
-echo "Setting proper permissions for all public files..."
-find /var/www/public -type d -exec chmod 755 {} \;
-find /var/www/public -type f -exec chmod 644 {} \;
-chown -R www-data:www-data /var/www/public
+# Vérifier si l'image placeholder.jpg existe
+if [ ! -f /var/www/public/images/placeholder.jpg ]; then
+    echo "Création de l'image placeholder.jpg..."
+    touch /var/www/public/images/placeholder.jpg
+    chown www-data:www-data /var/www/public/images/placeholder.jpg
+fi
 
-# Check for common image directories
-for dir in "/var/www/public/images" "/var/www/public/img" "/var/www/public/assets"; do
-    if [ -d "$dir" ]; then
-        echo "✅ Found image directory: $dir"
-        echo "Setting permissions for $dir..."
-        find "$dir" -type d -exec chmod 755 {} \;
-        find "$dir" -type f -exec chmod 644 {} \;
-        chown -R www-data:www-data "$dir"
-    fi
-done
+# Vérifier si le lien symbolique storage existe
+if [ ! -L /var/www/public/storage ]; then
+    echo "Création du lien symbolique storage..."
+    cd /var/www && php artisan storage:link
+fi
 
-# List all image files in public directory
-echo "Listing all image files in public directory..."
-find /var/www/public -type f -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" -o -name "*.svg" -o -name "*.webp" | head -n 20
+# Vérifier les permissions
+echo "Vérification des permissions..."
+chown -R www-data:www-data /var/www/storage
+find /var/www/storage -type d -exec chmod 775 {} \;
+find /var/www/storage -type f -exec chmod 664 {} \;
 
-# Check Nginx configuration
-echo "Checking Nginx configuration..."
-nginx -t
-
-echo "Static files access check completed!"
+echo "✅ Vérification des fichiers statiques terminée."
 exit 0 

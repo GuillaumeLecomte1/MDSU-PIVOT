@@ -39,8 +39,8 @@ RUN npm run build
 FROM base AS pivot-app
 
 # Copy application code
-COPY . /var/www/
 COPY --from=builder /var/www/public/build /var/www/public/build
+COPY . /var/www/
 
 # Ensure the storage directory is writable
 RUN mkdir -p /var/www/storage/app/public \
@@ -50,24 +50,27 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/logs
 
 # Create placeholder image if it doesn't exist
-RUN if [ ! -f /var/www/public/images/placeholder.jpg ]; then \
-    cp -f /var/www/public/images/logo.svg /var/www/public/images/placeholder.jpg || \
+RUN mkdir -p /var/www/public/images && \
+    if [ ! -f /var/www/public/images/placeholder.jpg ]; then \
+    touch /var/www/public/images/placeholder.jpg || \
     echo "Placeholder image creation failed, but continuing build"; \
     fi
 
 # Install PHP dependencies
-RUN composer install --optimize-autoloader --no-dev
+RUN cd /var/www && composer install --optimize-autoloader --no-dev
 
 # Create symbolic link for storage
-RUN php artisan storage:link || echo "Storage link creation failed, but continuing build"
+RUN cd /var/www && php artisan storage:link || echo "Storage link creation failed, but continuing build"
 
 # Configure Nginx and PHP-FPM
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Verify that index.php exists
-RUN ls -la /var/www/public/
+# Verify that index.php exists and debug
+RUN ls -la /var/www/public/ && \
+    echo "Content of index.php:" && \
+    cat /var/www/public/index.php || echo "index.php not found"
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
@@ -80,6 +83,9 @@ RUN chown -R www-data:www-data /var/www && \
 ARG PORT=4004
 RUN sed -i "s/listen 4004/listen ${PORT}/g" /etc/nginx/sites-available/default
 EXPOSE ${PORT}
+
+# Debug nginx configuration
+RUN nginx -t
 
 # Start services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
