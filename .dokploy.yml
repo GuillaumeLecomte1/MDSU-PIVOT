@@ -11,4 +11,8 @@ app:
     target: pivot-app
   env:
     - APP_ENV=production
-    - APP_DEBUG=false 
+    - APP_DEBUG=false
+  remote:
+    host: guillaume-lcte.fr
+    user: ubuntu
+    port: 22  # Port SSH standard, changez-le si différent 
