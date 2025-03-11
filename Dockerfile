@@ -45,8 +45,8 @@ COPY docker/nginx.conf /etc/nginx/sites-available/default
 # Configurer Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copier les fichiers de dépendances d'abord
-COPY composer.json composer.lock package.json package-lock.json vite.config.js /var/www/
+# Copier le code source d'abord
+COPY . /var/www/
 
 # Installer les dépendances PHP
 RUN cd /var/www && \
@@ -56,16 +56,6 @@ RUN cd /var/www && \
 RUN cd /var/www && \
     npm ci --production=false --no-audit --no-fund && \
     npm install terser --save-dev
-
-# Copier le reste du code source
-COPY app /var/www/app/
-COPY bootstrap /var/www/bootstrap/
-COPY config /var/www/config/
-COPY database /var/www/database/
-COPY public /var/www/public/
-COPY resources /var/www/resources/
-COPY routes /var/www/routes/
-COPY artisan /var/www/artisan
 
 # Construire les assets avec une configuration optimisée
 ENV NODE_OPTIONS=--max_old_space_size=2048
