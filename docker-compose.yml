@@ -4,6 +4,7 @@ services:
   app:
     container_name: pivot-app
     image: ${IMAGE_NAME:-pivot-app}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
@@ -22,6 +23,12 @@ services:
     networks:
       - traefik-public
       - default
+    healthcheck:
+      test: ["CMD", "/var/www/docker/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 networks:
   traefik-public:
