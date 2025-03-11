@@ -12,9 +12,13 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     supervisor \
-    nodejs \
-    npm \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 18.x (LTS) - version plus stable que celle par défaut
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g npm@latest && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
@@ -45,21 +49,34 @@ COPY docker/nginx.conf /etc/nginx/sites-available/default
 # Configurer Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copier le code source d'abord
-COPY . /var/www/
+# Copier les fichiers de dépendances d'abord pour optimiser le cache Docker
+COPY composer.json composer.lock package.json package-lock.json vite.config.js /var/www/
 
 # Installer les dépendances PHP
 RUN cd /var/www && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev
 
-# Installer les dépendances Node.js
+# Installer les dépendances Node.js avec une configuration optimisée
+ENV NODE_OPTIONS="--max-old-space-size=1536 --no-warnings"
 RUN cd /var/www && \
     npm ci --production=false --no-audit --no-fund && \
     npm install terser --save-dev
 
+# Copier le reste du code source
+COPY app /var/www/app/
+COPY bootstrap /var/www/bootstrap/
+COPY config /var/www/config/
+COPY database /var/www/database/
+COPY public /var/www/public/
+COPY resources /var/www/resources/
+COPY routes /var/www/routes/
+COPY artisan /var/www/artisan
+
 # Construire les assets avec une configuration optimisée
-ENV NODE_OPTIONS=--max_old_space_size=2048
-RUN cd /var/www && npm run build -- --mode production
+RUN cd /var/www && \
+    NODE_ENV=production npm run build -- --mode production && \
+    npm prune --production && \
+    rm -rf node_modules/.cache
 
 # Définir les permissions
 RUN chown -R www-data:www-data /var/www && \

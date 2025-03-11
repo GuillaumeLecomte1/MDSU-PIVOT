@@ -5,6 +5,10 @@
 
 echo "🔍 Recherche des conteneurs en cours d'exécution (sauf pivot-app)..."
 
+# Nettoyer les images et conteneurs inutilisés pour libérer de l'espace disque
+echo "🧹 Nettoyage des ressources Docker inutilisées..."
+docker system prune -f --volumes
+
 # Obtenir la liste des conteneurs en cours d'exécution (sauf pivot-app)
 CONTAINERS=$(docker ps --format "{{.Names}}" | grep -v "pivot-app")
 
@@ -24,4 +28,13 @@ if [ -n "$CONTAINERS" ]; then
     echo "✅ Conteneurs arrêtés avec succès. Ils seront redémarrés après le build."
 else
     echo "ℹ️ Aucun autre conteneur en cours d'exécution à arrêter."
-fi 
+fi
+
+# Libérer le cache système
+echo "🧠 Libération de la mémoire cache système..."
+sync && echo 3 > /proc/sys/vm/drop_caches || true
+
+# Afficher les ressources disponibles
+echo "📊 Ressources disponibles pour le build:"
+free -h
+df -h 

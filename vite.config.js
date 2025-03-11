@@ -19,20 +19,27 @@ export default defineConfig({
         cssMinify: true,
         reportCompressedSize: false,
         chunkSizeWarningLimit: 1000,
+        assetsInlineLimit: 4096,
+        sourcemap: false,
         rollupOptions: {
             input: {
                 app: 'resources/js/app.jsx',
                 css: 'resources/css/app.css'
             },
             output: {
-                manualChunks: {
-                    vendor: [
-                        '@inertiajs/react',
-                        'react',
-                        'react-dom',
-                    ],
-                    charts: ['chart.js'],
-                    leaflet: ['leaflet'],
+                manualChunks: (id) => {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('@inertiajs') || id.includes('react')) {
+                            return 'vendor';
+                        }
+                        if (id.includes('chart.js')) {
+                            return 'charts';
+                        }
+                        if (id.includes('leaflet')) {
+                            return 'leaflet';
+                        }
+                        return 'vendor-other';
+                    }
                 },
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name.match(/\.(png|jpe?g|gif|svg|webp)$/)) {

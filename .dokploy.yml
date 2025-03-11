@@ -10,6 +10,8 @@ app:
     dockerfile: Dockerfile
     args:
       - NODE_ENV=production
+      - VITE_DISABLE_SOURCEMAP=true
+      - COMPOSER_NO_DEV=1
   env:
     - APP_ENV=production
     - APP_DEBUG=false

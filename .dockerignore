@@ -1,0 +1,108 @@
+# Fichiers et dossiers à ignorer lors du build Docker
+
+# Dépendances et modules
+/node_modules
+/vendor
+/.pnp
+.pnp.js
+
+# Fichiers de build et caches
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/bootstrap/cache/*
+/.phpunit.cache
+/.vscode
+/.idea
+/.fleet
+/.phpstorm.cache
+.cache
+*.cache
+
+# Fichiers d'environnement et de configuration locale
+/.env
+/.env.backup
+/.env.production
+/.env.local
+/.env.development.local
+/.env.test.local
+/.env.production.local
+/.env.*.local
+/docker-compose.yml
+/docker-compose.*.yml
+
+# Fichiers de logs et de données
+/storage/logs/*
+/storage/app/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+*.log
+
+# Fichiers Git
+/.git
+/.github
+/.gitattributes
+/.gitignore
+
+# Fichiers de tests
+/tests
+/phpunit.xml
+/.phpunit.result.cache
+
+# Fichiers d'éditeurs et de systèmes
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Fichiers binaires et médias (pour éviter les caractères NUL)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.ico
+*.pdf
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+*.mp3
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.wma
+*.ogg
+*.webm
+*.webp
+*.ttf
+*.woff
+*.woff2
+*.eot
+*.otf
+*.bin
+*.exe
+*.dll
+*.so
+*.dylib
+*.dat
+
+# Autres fichiers spécifiques
+/README.md
+/CHANGELOG.md
+/LICENSE
+/phpstan.neon
+/.styleci.yml
+/.editorconfig
+/docker/pre-build.sh
+/docker/post-build.sh
+
+# Ne pas ignorer ces fichiers essentiels
+!.gitkeep
+!public/index.php
+!public/favicon.ico

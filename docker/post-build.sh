@@ -28,4 +28,16 @@ if [ -f "/tmp/containers_to_restart.txt" ]; then
     rm -f /tmp/containers_to_restart.txt
 else
     echo "ℹ️ Aucun conteneur à redémarrer (fichier non trouvé)."
-fi 
+fi
+
+# Nettoyer les images intermédiaires et le cache de build
+echo "🧹 Nettoyage des images intermédiaires et du cache de build..."
+docker image prune -f
+
+# Vérifier l'état du conteneur pivot-app
+echo "🔍 Vérification de l'état du conteneur pivot-app..."
+docker ps | grep pivot-app
+
+# Afficher les logs du conteneur pour vérifier le démarrage
+echo "📋 Dernières lignes des logs du conteneur pivot-app:"
+docker logs --tail 20 pivot-app 
