@@ -42,6 +42,22 @@ FROM base AS pivot-app
 COPY . /var/www/
 COPY --from=builder /var/www/public/build /var/www/public/build
 
+# Ensure the storage directory is writable
+RUN mkdir -p /var/www/storage/app/public \
+    && mkdir -p /var/www/storage/framework/cache \
+    && mkdir -p /var/www/storage/framework/sessions \
+    && mkdir -p /var/www/storage/framework/views \
+    && mkdir -p /var/www/storage/logs
+
+# Create placeholder image if it doesn't exist
+RUN if [ ! -f /var/www/public/images/placeholder.jpg ]; then \
+    cp /var/www/public/images/logo.svg /var/www/public/images/placeholder.jpg || \
+    echo "Placeholder image creation failed, but continuing build"; \
+    fi
+
+# Create symbolic link for storage
+RUN php artisan storage:link
+
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
@@ -52,6 +68,8 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
+    find /var/www/storage -type d -exec chmod 775 {} \; && \
+    find /var/www/storage -type f -exec chmod 664 {} \; && \
     find /var/www/public -type d -exec chmod 755 {} \; && \
     find /var/www/public -type f -exec chmod 644 {} \;
 

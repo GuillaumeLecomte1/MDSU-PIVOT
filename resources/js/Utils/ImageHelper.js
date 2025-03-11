@@ -10,7 +10,11 @@ import { usePage } from '@inertiajs/react';
  * @returns {string} - URL complète de l'image
  */
 export function getImageUrl(path) {
+    // Si le chemin est vide, retourner l'image par défaut
     if (!path) return '/images/placeholder.jpg';
+    
+    // Si c'est déjà une URL absolue, la retourner telle quelle
+    if (isAbsoluteUrl(path)) return path;
     
     // Supprimer le slash initial si présent
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
@@ -19,8 +23,9 @@ export function getImageUrl(path) {
         // Essayer d'obtenir l'URL de base depuis les props Inertia
         const { asset_url } = usePage().props;
         if (asset_url) {
-            console.log('Using asset_url from Inertia props:', asset_url);
-            return `${asset_url}/${cleanPath}`;
+            // Éviter les doubles slashes
+            const baseUrl = asset_url.endsWith('/') ? asset_url.slice(0, -1) : asset_url;
+            return `${baseUrl}/${cleanPath}`;
         }
     } catch (error) {
         console.log('Could not get asset_url from Inertia props, using relative path');
@@ -57,7 +62,20 @@ export function getStorageImageUrl(path) {
  * @param {Event} event - Événement d'erreur
  */
 export function handleImageError(event) {
-    event.target.src = '/images/placeholder.jpg';
+    try {
+        // Essayer d'obtenir l'URL de base depuis les props Inertia
+        const { asset_url } = usePage().props;
+        if (asset_url) {
+            const baseUrl = asset_url.endsWith('/') ? asset_url.slice(0, -1) : asset_url;
+            event.target.src = `${baseUrl}/images/placeholder.jpg`;
+        } else {
+            event.target.src = '/images/placeholder.jpg';
+        }
+    } catch (error) {
+        // Fallback à une URL relative en cas d'erreur
+        event.target.src = '/images/placeholder.jpg';
+    }
+    
     event.target.onerror = null; // Évite les boucles infinies
 }
 

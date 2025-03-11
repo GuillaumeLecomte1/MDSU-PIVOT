@@ -69,12 +69,14 @@ class HandleInertiaRequests extends Middleware
             ],
             'csrf_token' => csrf_token(),
             'cartCount' => array_sum($cart),
+            'asset_url' => url(''),
         ]);
 
         // Debug logs for shared data
         Log::info('HandleInertiaRequests - shared data', [
             'auth' => $sharedData['auth'],
             'csrf_token' => $sharedData['csrf_token'],
+            'asset_url' => $sharedData['asset_url'],
         ]);
 
         return $sharedData;
