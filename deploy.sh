@@ -1,66 +1,44 @@
 #!/bin/bash
 
-# Configuration
-APP_DIR="/var/www/votre-domaine.com"
-GIT_REPO="votre-repo-github"
-GIT_BRANCH="main"
+# Script de déploiement simplifié pour l'application Laravel
 
-# Couleurs pour les messages
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-NC='\033[0m'
+echo "🚀 Démarrage du déploiement..."
 
-echo -e "${GREEN}Début du déploiement...${NC}"
+# Construire l'image Docker
+echo "🔨 Construction de l'image Docker..."
+docker build -t pivot-app:latest .
 
-# Vérifier si le répertoire existe
-if [ ! -d "$APP_DIR" ]; then
-    echo -e "${RED}Le répertoire $APP_DIR n'existe pas. Création...${NC}"
-    sudo mkdir -p $APP_DIR
-    sudo chown -R $USER:$USER $APP_DIR
+# Vérifier si la construction a réussi
+if [ $? -ne 0 ]; then
+  echo "❌ Échec de la construction de l'image Docker."
+  exit 1
 fi
 
-# Aller dans le répertoire de l'application
-cd $APP_DIR
+echo "✅ Image Docker construite avec succès."
 
-# Cloner ou mettre à jour le dépôt
-if [ ! -d ".git" ]; then
-    echo -e "${GREEN}Clonage du dépôt...${NC}"
-    git clone https://github.com/$GIT_REPO.git .
+# Arrêter et supprimer le conteneur existant s'il existe
+echo "🔄 Arrêt du conteneur existant..."
+docker stop pivot-app 2>/dev/null || true
+docker rm pivot-app 2>/dev/null || true
+
+# Lancer le nouveau conteneur
+echo "🚀 Lancement du nouveau conteneur..."
+docker run -d --name pivot-app \
+  -p 4004:4004 \
+  -v /var/www/html/pivot/storage:/var/www/storage \
+  -v /var/www/html/pivot/public/images:/var/www/public/images \
+  -v /var/www/html/pivot/.env:/var/www/.env \
+  --restart unless-stopped \
+  pivot-app:latest
+
+# Vérifier si le conteneur est en cours d'exécution
+if [ "$(docker ps -q -f name=pivot-app)" ]; then
+  echo "✅ Application déployée avec succès sur le port 4004!"
+  echo "📊 Logs du conteneur:"
+  docker logs pivot-app
 else
-    echo -e "${GREEN}Mise à jour du dépôt...${NC}"
-    git pull origin $GIT_BRANCH
-fi
-
-# Installation des dépendances PHP
-echo -e "${GREEN}Installation des dépendances PHP...${NC}"
-composer install --no-dev --optimize-autoloader
-
-# Installation des dépendances Node.js
-echo -e "${GREEN}Installation des dépendances Node.js...${NC}"
-npm install --production
-
-# Compilation des assets
-echo -e "${GREEN}Compilation des assets...${NC}"
-npm run build
-
-# Configuration des permissions
-echo -e "${GREEN}Configuration des permissions...${NC}"
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-
-# Optimisation de Laravel
-echo -e "${GREEN}Optimisation de Laravel...${NC}"
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan optimize
-
-# Redémarrage de PHP-FPM
-echo -e "${GREEN}Redémarrage de PHP-FPM...${NC}"
-sudo systemctl restart php8.1-fpm
-
-# Redémarrage de Nginx
-echo -e "${GREEN}Redémarrage de Nginx...${NC}"
-sudo systemctl restart nginx
-
-echo -e "${GREEN}Déploiement terminé avec succès!${NC}" 
+  echo "❌ Échec du déploiement. Le conteneur n'est pas en cours d'exécution."
+  echo "📊 Logs du conteneur:"
+  docker logs pivot-app
+  exit 1
+fi 
