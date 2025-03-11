@@ -45,8 +45,8 @@ RUN mkdir -p /var/www/storage/app/public \
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Install Node.js dependencies
-RUN npm install
+# Install Node.js dependencies with production flag to speed up installation
+RUN npm ci --production=false --no-audit --no-fund
 
 # Copy the rest of the application code
 COPY app /var/www/app
@@ -58,8 +58,9 @@ COPY resources /var/www/resources
 COPY routes /var/www/routes
 COPY artisan /var/www/artisan
 
-# Build assets
-RUN npm run build
+# Build assets with production mode and increased memory limit
+ENV NODE_OPTIONS=--max_old_space_size=4096
+RUN npm run build -- --mode production
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default

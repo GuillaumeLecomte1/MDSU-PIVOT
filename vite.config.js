@@ -15,6 +15,16 @@ export default defineConfig({
         outDir: 'public/build',
         emptyOutDir: true,
         manifest: true,
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+            },
+        },
+        cssMinify: true,
+        reportCompressedSize: false,
+        chunkSizeWarningLimit: 1000,
         rollupOptions: {
             input: {
                 app: 'resources/js/app.jsx',
