@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     nginx \
     supervisor \
     procps \
-    imagemagick \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -103,22 +102,6 @@ ARG PORT=4004
 # Copy application code
 COPY --from=php-build --chown=www-data:www-data /var/www /var/www
 
-# Create necessary directories first
-RUN mkdir -p /var/www/public/build/assets/images \
-    && mkdir -p /var/www/public/images \
-    && mkdir -p /var/www/public/storage/imagesAccueil \
-    && mkdir -p /var/www/storage/app/public/imagesAccueil \
-    && chown -R www-data:www-data /var/www/public/build /var/www/public/images /var/www/public/storage /var/www/storage/app/public
-
-# Create placeholder image directly
-RUN apt-get update && apt-get install -y imagemagick \
-    && convert -size 300x300 canvas:lightgray -font Arial -pointsize 20 -gravity center -annotate 0 "Image non disponible" /var/www/public/images/placeholder.jpg \
-    && cp /var/www/public/images/placeholder.jpg /var/www/public/build/images/placeholder.jpg \
-    && chmod 644 /var/www/public/images/placeholder.jpg \
-    && chmod 644 /var/www/public/build/images/placeholder.jpg \
-    && chown www-data:www-data /var/www/public/images/placeholder.jpg \
-    && chown www-data:www-data /var/www/public/build/images/placeholder.jpg
-
 # Verify the manifest exists in the final stage
 RUN if [ -f "/var/www/public/build/manifest.json" ]; then \
         echo "✅ Manifest found at /var/www/public/build/manifest.json in final stage"; \
@@ -140,7 +123,7 @@ RUN chown -R www-data:www-data /var/www/public
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
-RUN sed -i "s/listen 4004/listen ${PORT}/g" /etc/nginx/sites-available/default
+RUN sed -i "s/listen 80/listen ${PORT}/g" /etc/nginx/sites-available/default
 
 # Configure PHP-FPM
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
@@ -148,35 +131,27 @@ COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 # Configure Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copy scripts
+# Copy and make scripts executable
 COPY docker/check-vite-manifest.sh /var/www/docker/check-vite-manifest.sh
 COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
 COPY docker/healthcheck.sh /var/www/docker/healthcheck.sh
 COPY docker/fix-static-files.sh /var/www/docker/fix-static-files.sh
 COPY docker/fix-manifest.sh /var/www/docker/fix-manifest.sh
-COPY docker/create-placeholder.sh /var/www/docker/create-placeholder.sh
-COPY docker/fix-images.sh /var/www/docker/fix-images.sh
-COPY docker/fix-encoding.sh /var/www/docker/fix-encoding.sh
 RUN chmod +x /var/www/docker/*.sh
 
-# Run the fix scripts with proper error handling
-RUN /var/www/docker/fix-encoding.sh || true
-RUN cd /var/www && php docker/fix-vite-issues.php || true
-RUN /var/www/docker/fix-static-files.sh || true
-RUN /var/www/docker/fix-manifest.sh || true
-RUN /var/www/docker/fix-images.sh || true
+# Run the fix scripts
+RUN cd /var/www && php docker/fix-vite-issues.php
+RUN /var/www/docker/fix-static-files.sh
+RUN /var/www/docker/fix-manifest.sh
 
-# Create storage symlink if it doesn't exist
-RUN if [ ! -L "/var/www/public/storage" ] && [ -d "/var/www/storage/app/public" ]; then \
-    ln -sf /var/www/storage/app/public /var/www/public/storage; \
-fi
+# Create image directories if they don't exist
+RUN mkdir -p /var/www/public/build/assets/images && \
+    mkdir -p /var/www/public/images && \
+    chown -R www-data:www-data /var/www/public/build /var/www/public/images && \
+    chmod -R 755 /var/www/public/build /var/www/public/images
 
 # Expose port
 EXPOSE ${PORT}
-
-# Healthcheck to ensure the container is running properly
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD /var/www/docker/healthcheck.sh || exit 1
 
 # Start services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
