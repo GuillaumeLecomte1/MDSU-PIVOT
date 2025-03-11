@@ -1,4 +1,4 @@
-FROM php:8.2.15-fpm AS base
+FROM php:8.2-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     supervisor \
-    procps \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -24,53 +25,37 @@ COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Node.js build stage
-FROM node:18.19.1-bullseye AS builder
-WORKDIR /var/www
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-ENV NODE_ENV=production
-RUN npm run build
-
-# Final stage
-FROM base AS pivot-app
-
 # Copy application code
-COPY --from=builder /var/www/public/build /var/www/public/build
 COPY . /var/www/
 
-# Ensure the storage directory is writable
+# Create necessary directories
 RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/framework/cache \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
-    && mkdir -p /var/www/storage/logs
+    && mkdir -p /var/www/storage/logs \
+    && mkdir -p /var/www/public/images
 
 # Create placeholder image if it doesn't exist
-RUN mkdir -p /var/www/public/images && \
-    if [ ! -f /var/www/public/images/placeholder.jpg ]; then \
-    touch /var/www/public/images/placeholder.jpg || \
-    echo "Placeholder image creation failed, but continuing build"; \
+RUN if [ ! -f /var/www/public/images/placeholder.jpg ]; then \
+    touch /var/www/public/images/placeholder.jpg; \
     fi
 
+# Set proper permissions for images directory
+RUN chown -R www-data:www-data /var/www/public/images \
+    && chmod -R 755 /var/www/public/images
+
 # Install PHP dependencies
-RUN cd /var/www && composer install --optimize-autoloader --no-dev
+RUN composer install --optimize-autoloader --no-dev
+
+# Install Node.js dependencies and build assets
+RUN npm install && npm run build
 
 # Create symbolic link for storage
-RUN cd /var/www && php artisan storage:link || echo "Storage link creation failed, but continuing build"
+RUN php artisan storage:link || echo "Storage link creation failed, but continuing build"
 
-# Configure Nginx and PHP-FPM
+# Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
-COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Verify that index.php exists and debug
-RUN ls -la /var/www/public/ && \
-    echo "Content of index.php:" && \
-    cat /var/www/public/index.php || echo "index.php not found"
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
@@ -79,13 +64,11 @@ RUN chown -R www-data:www-data /var/www && \
     find /var/www/public -type d -exec chmod 755 {} \; && \
     find /var/www/public -type f -exec chmod 644 {} \;
 
-# Configure port
-ARG PORT=4004
-RUN sed -i "s/listen 4004/listen ${PORT}/g" /etc/nginx/sites-available/default
-EXPOSE ${PORT}
+# Configure supervisor
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Debug nginx configuration
-RUN nginx -t
+# Expose port
+EXPOSE 4004
 
 # Start services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 

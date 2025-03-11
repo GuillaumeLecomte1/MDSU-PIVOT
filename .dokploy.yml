@@ -8,9 +8,6 @@ app:
   build:
     context: .
     dockerfile: Dockerfile
-    target: pivot-app
-    args:
-      - PORT=4004
   env:
     - APP_ENV=production
     - APP_DEBUG=false
@@ -21,7 +18,7 @@ app:
   remote:
     host: guillaume-lcte.fr
     user: ubuntu
-    port: 22  # Port SSH standard, changez-le si différent
+    port: 22
   pre_deploy:
     - mkdir -p /var/www/html/pivot/storage/app/public
     - mkdir -p /var/www/html/pivot/storage/framework/cache
@@ -30,6 +27,7 @@ app:
     - mkdir -p /var/www/html/pivot/storage/logs
     - mkdir -p /var/www/html/pivot/public/images
     - touch /var/www/html/pivot/public/images/placeholder.jpg
+    - chmod -R 755 /var/www/html/pivot/public/images
   post_deploy:
     - chmod +x ./deploy-vps.sh
     - ./deploy-vps.sh 
