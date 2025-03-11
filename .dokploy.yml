@@ -29,5 +29,6 @@ app:
     - touch /var/www/html/pivot/public/images/placeholder.jpg
     - chmod -R 755 /var/www/html/pivot/public/images
   post_deploy:
-    - chmod +x ./deploy-vps.sh
-    - ./deploy-vps.sh 
+    - docker stop pivot-app 2>/dev/null || true
+    - docker rm pivot-app 2>/dev/null || true
+    - docker run -d --name pivot-app -p 4004:4004 -v /var/www/html/pivot/storage:/var/www/storage -v /var/www/html/pivot/public/images:/var/www/public/images -v /var/www/html/pivot/.env:/var/www/.env --restart unless-stopped pivot-app:latest 

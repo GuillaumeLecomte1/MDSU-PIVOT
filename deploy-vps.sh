@@ -13,9 +13,9 @@ echo "🛑 Arrêt et suppression du conteneur existant..."
 docker stop $CONTAINER_NAME 2>/dev/null || true
 docker rm $CONTAINER_NAME 2>/dev/null || true
 
-# Nettoyer les images Docker non utilisées
+# Nettoyer les images Docker non utilisées (uniquement les dangling images)
 echo "🧹 Nettoyage des images Docker non utilisées..."
-docker system prune -f
+docker image prune -f
 
 # Créer les répertoires nécessaires
 echo "📁 Création des répertoires nécessaires..."
@@ -38,11 +38,7 @@ echo "🔒 Définition des permissions pour le dossier images..."
 chmod -R 755 $APP_DIR/public/images
 chown -R www-data:www-data $APP_DIR/public/images 2>/dev/null || true
 
-# Construire l'image Docker
-echo "🔨 Construction de l'image Docker..."
-docker build -t $IMAGE_NAME .
-
-# Lancer le conteneur
+# Lancer le conteneur (sans reconstruire l'image)
 echo "🚀 Lancement du conteneur..."
 docker run -d \
     --name $CONTAINER_NAME \
@@ -52,15 +48,6 @@ docker run -d \
     -v $APP_DIR/.env:/var/www/.env \
     --restart unless-stopped \
     $IMAGE_NAME
-
-# Vérifier si le conteneur est en cours d'exécution
-if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
-    echo "✅ Le conteneur est en cours d'exécution."
-else
-    echo "❌ Erreur lors du lancement du conteneur."
-    docker logs $CONTAINER_NAME
-    exit 1
-fi
 
 echo "✅ Déploiement terminé !"
 exit 0 

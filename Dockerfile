@@ -36,23 +36,11 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/logs \
     && mkdir -p /var/www/public/images
 
-# Create placeholder image if it doesn't exist
-RUN if [ ! -f /var/www/public/images/placeholder.jpg ]; then \
-    touch /var/www/public/images/placeholder.jpg; \
-    fi
-
-# Set proper permissions for images directory
-RUN chown -R www-data:www-data /var/www/public/images \
-    && chmod -R 755 /var/www/public/images
-
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
 # Install Node.js dependencies and build assets
 RUN npm install && npm run build
-
-# Create symbolic link for storage
-RUN php artisan storage:link || echo "Storage link creation failed, but continuing build"
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
