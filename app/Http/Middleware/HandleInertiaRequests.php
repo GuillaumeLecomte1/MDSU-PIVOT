@@ -49,6 +49,14 @@ class HandleInertiaRequests extends Middleware
             'session_data' => $request->session()->all(),
         ]);
 
+        // Déterminer l'URL de base pour les assets
+        $assetUrl = config('app.url');
+        
+        // Si nous sommes en production et que l'URL est HTTPS, forcer HTTPS
+        if (config('app.env') === 'production') {
+            $assetUrl = str_replace('http://', 'https://', $assetUrl);
+        }
+
         $sharedData = array_merge(parent::share($request), [
             'auth' => [
                 'user' => $user ? [
@@ -69,7 +77,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'csrf_token' => csrf_token(),
             'cartCount' => array_sum($cart),
-            'asset_url' => url(''),
+            'asset_url' => $assetUrl,
         ]);
 
         // Debug logs for shared data

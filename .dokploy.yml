@@ -12,7 +12,14 @@ app:
   env:
     - APP_ENV=production
     - APP_DEBUG=false
+  volumes:
+    - /var/www/html/pivot/storage:/var/www/storage
+    - /var/www/html/pivot/public/images:/var/www/public/images
+    - /var/www/html/pivot/.env:/var/www/.env
   remote:
     host: guillaume-lcte.fr
     user: ubuntu
-    port: 22  # Port SSH standard, changez-le si différent 
+    port: 22  # Port SSH standard, changez-le si différent
+  post_deploy:
+    - chmod +x ./deploy-vps.sh
+    - ./deploy-vps.sh 

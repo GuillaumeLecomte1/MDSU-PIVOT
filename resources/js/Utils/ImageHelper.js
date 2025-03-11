@@ -4,6 +4,9 @@
 
 import { usePage } from '@inertiajs/react';
 
+// Constante pour l'image par défaut
+const DEFAULT_IMAGE = '/images/placeholder.jpg';
+
 /**
  * Obtient l'URL correcte pour une image
  * @param {string} path - Chemin de l'image
@@ -11,7 +14,7 @@ import { usePage } from '@inertiajs/react';
  */
 export function getImageUrl(path) {
     // Si le chemin est vide, retourner l'image par défaut
-    if (!path) return '/images/placeholder.jpg';
+    if (!path) return DEFAULT_IMAGE;
     
     // Si c'est déjà une URL absolue, la retourner telle quelle
     if (isAbsoluteUrl(path)) return path;
@@ -53,7 +56,7 @@ export function getImageUrl(path) {
  * @returns {string} - URL complète de l'image
  */
 export function getStorageImageUrl(path) {
-    if (!path) return '/images/placeholder.jpg';
+    if (!path) return DEFAULT_IMAGE;
     return getImageUrl(`storage/${path}`);
 }
 
@@ -67,13 +70,13 @@ export function handleImageError(event) {
         const { asset_url } = usePage().props;
         if (asset_url) {
             const baseUrl = asset_url.endsWith('/') ? asset_url.slice(0, -1) : asset_url;
-            event.target.src = `${baseUrl}/images/placeholder.jpg`;
+            event.target.src = `${baseUrl}${DEFAULT_IMAGE}`;
         } else {
-            event.target.src = '/images/placeholder.jpg';
+            event.target.src = DEFAULT_IMAGE;
         }
     } catch (error) {
         // Fallback à une URL relative en cas d'erreur
-        event.target.src = '/images/placeholder.jpg';
+        event.target.src = DEFAULT_IMAGE;
     }
     
     event.target.onerror = null; // Évite les boucles infinies

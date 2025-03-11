@@ -1,57 +1,66 @@
 #!/bin/bash
 
-echo "🚀 Déploiement sur le VPS (guillaume-lcte.fr)..."
+# Script de déploiement personnalisé pour le VPS
+# Ce script est conçu pour être exécuté sur le VPS après le déploiement par dokploy
 
-# Configuration
-VPS_USER="ubuntu"
-VPS_HOST="guillaume-lcte.fr"
+# Définir les variables
+APP_DIR="/var/www/html/pivot"
 CONTAINER_NAME="pivot-app"
 IMAGE_NAME="pivot-app:latest"
 
-# Connexion SSH et nettoyage des conteneurs existants
-echo "🧹 Nettoyage des conteneurs existants..."
-ssh $VPS_USER@$VPS_HOST << EOF
-    # Arrêter et supprimer les conteneurs existants
-    docker ps -a -q | xargs -r docker rm -f
-    
-    # Supprimer les images existantes
-    docker images | grep "pivot-app" | awk '{print \$3}' | xargs -r docker rmi -f
-EOF
+# Afficher un message de début
+echo "🚀 Déploiement de l'application sur le VPS..."
 
-# Construction de l'image localement
-echo "🏗️ Construction de l'image Docker..."
+# Vérifier si le conteneur existe déjà
+if [ "$(docker ps -a -q -f name=$CONTAINER_NAME)" ]; then
+    echo "🛑 Arrêt et suppression du conteneur existant..."
+    docker stop $CONTAINER_NAME
+    docker rm $CONTAINER_NAME
+fi
+
+# Construire l'image Docker
+echo "🔨 Construction de l'image Docker..."
 docker build -t $IMAGE_NAME .
 
-# Sauvegarde de l'image
-echo "💾 Sauvegarde de l'image Docker..."
-docker save $IMAGE_NAME | gzip > pivot-app.tar.gz
+# Vérifier si la construction a réussi
+if [ $? -ne 0 ]; then
+    echo "❌ Erreur lors de la construction de l'image Docker."
+    exit 1
+fi
 
-# Transfert de l'image vers le VPS
-echo "📤 Transfert de l'image vers le VPS..."
-scp pivot-app.tar.gz $VPS_USER@$VPS_HOST:~/
+# Créer le dossier pour les images si nécessaire
+mkdir -p public/images
 
-# Chargement et déploiement sur le VPS
-echo "📥 Chargement et déploiement sur le VPS..."
-ssh $VPS_USER@$VPS_HOST << EOF
-    # Charger l'image
-    docker load < pivot-app.tar.gz
+# Vérifier si l'image placeholder.jpg existe
+if [ ! -f public/images/placeholder.jpg ]; then
+    echo "🖼️ Création de l'image placeholder.jpg..."
+    cp -f public/images/logo.svg public/images/placeholder.jpg || echo "⚠️ Impossible de créer l'image placeholder.jpg"
+fi
+
+# Lancer le conteneur
+echo "🚀 Lancement du conteneur..."
+docker run -d \
+    --name $CONTAINER_NAME \
+    -p 4004:4004 \
+    -v $APP_DIR/storage:/var/www/storage \
+    -v $APP_DIR/public/images:/var/www/public/images \
+    -v $APP_DIR/.env:/var/www/.env \
+    --restart unless-stopped \
+    $IMAGE_NAME
+
+# Vérifier si le conteneur est en cours d'exécution
+if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+    echo "✅ Le conteneur est en cours d'exécution."
     
-    # Démarrer le conteneur
-    docker run -d \
-        --name $CONTAINER_NAME \
-        -p 4004:4004 \
-        --restart unless-stopped \
-        $IMAGE_NAME
+    # Afficher les logs du conteneur
+    echo "📋 Logs du conteneur :"
+    docker logs $CONTAINER_NAME
+else
+    echo "❌ Erreur lors du lancement du conteneur."
+    echo "📋 Logs du conteneur :"
+    docker logs $CONTAINER_NAME
+    exit 1
+fi
 
-    # Nettoyage
-    rm pivot-app.tar.gz
-    
-    # Vérifier le statut
-    docker ps | grep $CONTAINER_NAME
-EOF
-
-# Nettoyage local
-echo "🧹 Nettoyage local..."
-rm pivot-app.tar.gz
-
-echo "✅ Déploiement terminé !" 
+echo "✅ Déploiement terminé avec succès !"
+exit 0 

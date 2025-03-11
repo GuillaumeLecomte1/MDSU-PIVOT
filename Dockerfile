@@ -51,20 +51,23 @@ RUN mkdir -p /var/www/storage/app/public \
 
 # Create placeholder image if it doesn't exist
 RUN if [ ! -f /var/www/public/images/placeholder.jpg ]; then \
-    cp /var/www/public/images/logo.svg /var/www/public/images/placeholder.jpg || \
+    cp -f /var/www/public/images/logo.svg /var/www/public/images/placeholder.jpg || \
     echo "Placeholder image creation failed, but continuing build"; \
     fi
 
-# Create symbolic link for storage
-RUN php artisan storage:link
-
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
+
+# Create symbolic link for storage
+RUN php artisan storage:link || echo "Storage link creation failed, but continuing build"
 
 # Configure Nginx and PHP-FPM
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Verify that index.php exists
+RUN ls -la /var/www/public/
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
@@ -75,7 +78,7 @@ RUN chown -R www-data:www-data /var/www && \
 
 # Configure port
 ARG PORT=4004
-RUN sed -i "s/listen 80/listen ${PORT}/g" /etc/nginx/sites-available/default
+RUN sed -i "s/listen 4004/listen ${PORT}/g" /etc/nginx/sites-available/default
 EXPOSE ${PORT}
 
 # Start services
