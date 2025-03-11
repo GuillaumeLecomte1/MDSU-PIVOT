@@ -124,7 +124,7 @@ RUN chown -R www-data:www-data /var/www/public
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/sites-available/default
-RUN sed -i "s/listen 80/listen ${PORT}/g" /etc/nginx/sites-available/default
+RUN sed -i "s/listen 4004/listen ${PORT}/g" /etc/nginx/sites-available/default
 
 # Configure PHP-FPM
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
@@ -140,9 +140,11 @@ COPY docker/fix-static-files.sh /var/www/docker/fix-static-files.sh
 COPY docker/fix-manifest.sh /var/www/docker/fix-manifest.sh
 COPY docker/create-placeholder.sh /var/www/docker/create-placeholder.sh
 COPY docker/fix-images.sh /var/www/docker/fix-images.sh
+COPY docker/fix-encoding.sh /var/www/docker/fix-encoding.sh
 RUN chmod +x /var/www/docker/*.sh
 
 # Run the fix scripts
+RUN /var/www/docker/fix-encoding.sh
 RUN cd /var/www && php docker/fix-vite-issues.php
 RUN /var/www/docker/fix-static-files.sh
 RUN /var/www/docker/fix-manifest.sh
