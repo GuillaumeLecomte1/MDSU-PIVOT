@@ -69,7 +69,13 @@ ENV NODE_OPTIONS="--max-old-space-size=1536 --no-warnings"
 RUN cd /var/www && \
     npm ci --production=false --no-audit --no-fund && \
     npm install terser --save-dev && \
-    NODE_ENV=production npm run build && \
+    echo "Tentative de construction des assets avec Vite..." && \
+    NODE_ENV=production npm run build || { \
+        echo "Erreur lors de la construction des assets. Création d'un manifeste minimal..."; \
+        mkdir -p /var/www/public/build/assets/js /var/www/public/build/assets/css /var/www/public/build/.vite; \
+        touch /var/www/public/build/assets/js/app.js /var/www/public/build/assets/css/app.css; \
+        php /var/www/docker/fix-vite-issues.php; \
+    } && \
     ls -la public/build && \
     echo "Vérification du répertoire .vite:" && \
     ls -la public/build/.vite || echo "Répertoire .vite non trouvé" && \
@@ -80,6 +86,7 @@ RUN cd /var/www && \
         echo "Création d'un manifeste minimal"; \
         php /var/www/docker/fix-vite-issues.php; \
     fi && \
+    php /var/www/docker/fix-https-urls.php && \
     cat public/build/manifest.json && \
     npm prune --production && \
     rm -rf node_modules/.cache

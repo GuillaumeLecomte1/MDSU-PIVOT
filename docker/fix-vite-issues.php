@@ -26,6 +26,12 @@ if (!is_dir($buildPath)) {
     mkdir($buildPath, 0755, true);
 }
 
+// Vérifier si le répertoire .vite existe
+if (!is_dir($buildPath . '/.vite')) {
+    echo "Le répertoire .vite n'existe pas. Création...\n";
+    mkdir($buildPath . '/.vite', 0755, true);
+}
+
 // Vérifier si le manifeste existe dans le répertoire .vite
 if (file_exists($viteManifestPath)) {
     echo "Manifeste trouvé dans le répertoire .vite. Copie vers le répertoire racine de build...\n";
@@ -43,6 +49,17 @@ elseif (!file_exists($manifestPath)) {
     $assetsDir = $buildPath . '/assets';
     $jsDir = $assetsDir . '/js';
     $cssDir = $assetsDir . '/css';
+    
+    // Créer les répertoires s'ils n'existent pas
+    if (!is_dir($assetsDir)) {
+        mkdir($assetsDir, 0755, true);
+    }
+    if (!is_dir($jsDir)) {
+        mkdir($jsDir, 0755, true);
+    }
+    if (!is_dir($cssDir)) {
+        mkdir($cssDir, 0755, true);
+    }
     
     // Créer un manifeste basé sur les fichiers existants
     $manifest = [];
@@ -65,10 +82,7 @@ elseif (!file_exists($manifestPath)) {
                 "src" => "resources/js/app.jsx"
             ];
             
-            // Créer le répertoire et un fichier vide
-            if (!is_dir($jsDir)) {
-                mkdir($jsDir, 0755, true);
-            }
+            // Créer un fichier vide
             touch($jsDir . '/app.js');
         }
     } else {
@@ -79,8 +93,7 @@ elseif (!file_exists($manifestPath)) {
             "src" => "resources/js/app.jsx"
         ];
         
-        // Créer le répertoire et un fichier vide
-        mkdir($jsDir, 0755, true);
+        // Créer un fichier vide
         touch($jsDir . '/app.js');
     }
     
@@ -102,10 +115,7 @@ elseif (!file_exists($manifestPath)) {
                 "src" => "resources/css/app.css"
             ];
             
-            // Créer le répertoire et un fichier vide
-            if (!is_dir($cssDir)) {
-                mkdir($cssDir, 0755, true);
-            }
+            // Créer un fichier vide
             touch($cssDir . '/app.css');
         }
     } else {
@@ -116,13 +126,15 @@ elseif (!file_exists($manifestPath)) {
             "src" => "resources/css/app.css"
         ];
         
-        // Créer le répertoire et un fichier vide
-        mkdir($cssDir, 0755, true);
+        // Créer un fichier vide
         touch($cssDir . '/app.css');
     }
     
     // Écrire le manifeste dans le fichier
     file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
+    
+    // Également écrire le manifeste dans le répertoire .vite
+    file_put_contents($viteManifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
     
     echo "Manifeste minimal créé avec succès.\n";
 } else {
@@ -152,9 +164,19 @@ elseif (!file_exists($manifestPath)) {
         // Écrire le manifeste dans le fichier
         file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
         
+        // Également écrire le manifeste dans le répertoire .vite
+        file_put_contents($viteManifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
+        
         echo "Manifeste corrigé avec succès.\n";
     } else {
         echo "Le manifeste existant est valide.\n";
+        
+        // S'assurer que le manifeste existe également dans le répertoire .vite
+        if (!file_exists($viteManifestPath)) {
+            echo "Copie du manifeste vers le répertoire .vite...\n";
+            file_put_contents($viteManifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
+            echo "Manifeste copié avec succès.\n";
+        }
     }
 }
 
