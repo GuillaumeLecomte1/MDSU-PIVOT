@@ -11,6 +11,7 @@ export default defineConfig({
             input: ['resources/js/app.jsx', 'resources/css/app.css'],
             refresh: true,
             buildDirectory: '',
+            https: true,
         }),
         react(),
         {

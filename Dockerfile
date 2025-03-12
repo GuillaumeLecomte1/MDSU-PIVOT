@@ -45,10 +45,17 @@ RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && 
     echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini
 
 # Configurer Nginx
-COPY docker/nginx.conf /etc/nginx/sites-available/default
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Configurer Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copier les fichiers de configuration
+COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
+COPY docker/fix-https-urls.php /var/www/docker/fix-https-urls.php
+
+# Donner les permissions d'exécution aux scripts
+RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php
 
 # Copier tout le code source d'abord
 COPY . /var/www/
