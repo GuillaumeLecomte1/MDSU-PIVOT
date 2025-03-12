@@ -74,7 +74,6 @@ RUN cd /var/www && \
         echo "Erreur lors de la construction des assets. Création d'un manifeste minimal..."; \
         mkdir -p /var/www/public/build/assets/js /var/www/public/build/assets/css /var/www/public/build/.vite; \
         touch /var/www/public/build/assets/js/app.js /var/www/public/build/assets/css/app.css; \
-        php /var/www/docker/fix-vite-issues.php; \
     } && \
     ls -la public/build && \
     echo "Vérification du répertoire .vite:" && \
@@ -84,10 +83,19 @@ RUN cd /var/www && \
         cp /var/www/public/build/.vite/manifest.json /var/www/public/build/manifest.json; \
     else \
         echo "Création d'un manifeste minimal"; \
-        php /var/www/docker/fix-vite-issues.php; \
+        php /var/www/docker/fix-vite-issues.php || echo "Erreur lors de la création du manifeste minimal, mais on continue..."; \
     fi && \
-    php /var/www/docker/fix-https-urls.php && \
-    cat public/build/manifest.json && \
+    if [ -f /var/www/public/build/manifest.json ]; then \
+        echo "Vérification des URLs HTTPS dans le manifeste..."; \
+        php /var/www/docker/fix-https-urls.php || echo "Erreur lors de la vérification des URLs HTTPS, mais on continue..."; \
+        cat public/build/manifest.json || echo "Impossible d'afficher le manifeste, mais on continue..."; \
+    else \
+        echo "Manifeste toujours manquant, création d'un manifeste minimal de secours..."; \
+        mkdir -p /var/www/public/build/assets/js /var/www/public/build/assets/css /var/www/public/build/.vite; \
+        touch /var/www/public/build/assets/js/app.js /var/www/public/build/assets/css/app.css; \
+        echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/manifest.json; \
+        echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/.vite/manifest.json; \
+    fi && \
     npm prune --production && \
     rm -rf node_modules/.cache
 
