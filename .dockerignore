@@ -106,3 +106,4 @@ Thumbs.db
 !.gitkeep
 !public/index.php
 !public/favicon.ico
+!artisan

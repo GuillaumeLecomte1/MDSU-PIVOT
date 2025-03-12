@@ -49,22 +49,12 @@ COPY docker/nginx.conf /etc/nginx/sites-available/default
 # Configurer Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copier les fichiers de dépendances d'abord pour optimiser le cache Docker
-COPY composer.json composer.lock package.json package-lock.json vite.config.js /var/www/
+# Copier tout le code source d'abord
+COPY . /var/www/
 
 # Installer les dépendances PHP
 RUN cd /var/www && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev
-
-# Copier le reste du code source
-COPY app /var/www/app/
-COPY bootstrap /var/www/bootstrap/
-COPY config /var/www/config/
-COPY database /var/www/database/
-COPY public /var/www/public/
-COPY resources /var/www/resources/
-COPY routes /var/www/routes/
-COPY artisan /var/www/artisan
 
 # Installer les dépendances Node.js avec une configuration optimisée et construire les assets
 ENV NODE_OPTIONS="--max-old-space-size=1536 --no-warnings"
