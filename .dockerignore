@@ -7,7 +7,6 @@
 .pnp.js
 
 # Fichiers de build et caches
-/public/build
 /public/hot
 /public/storage
 /storage/*.key
@@ -107,3 +106,6 @@ Thumbs.db
 !public/index.php
 !public/favicon.ico
 !artisan
+!vite.config.js
+!resources/js
+!resources/css

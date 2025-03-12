@@ -1,84 +1,96 @@
 <?php
 
 /**
- * Script to fix common Vite issues in production
+ * Script pour vérifier et corriger les problèmes liés au manifeste Vite
+ * 
+ * Ce script vérifie si le manifeste Vite existe et le crée s'il est manquant
  */
 
-// Define paths
-$manifestPath = __DIR__ . '/../public/build/manifest.json';
-$viteManifestPath = __DIR__ . '/../public/build/.vite/manifest.json';
-$buildDir = __DIR__ . '/../public/build';
+// Chemin vers le répertoire public
+$publicPath = '/var/www/public';
 
-echo "Starting Vite issues fix script...\n";
+// Chemin vers le répertoire de build
+$buildPath = $publicPath . '/build';
 
-// Check if build directory exists
-if (!is_dir($buildDir)) {
-    echo "Creating build directory...\n";
-    mkdir($buildDir, 0755, true);
+// Chemin vers le fichier manifeste
+$manifestPath = $buildPath . '/manifest.json';
+
+echo "Vérification du manifeste Vite...\n";
+
+// Vérifier si le répertoire de build existe
+if (!is_dir($buildPath)) {
+    echo "Le répertoire de build n'existe pas. Création...\n";
+    mkdir($buildPath, 0755, true);
 }
 
-// Check if manifest exists
-if (file_exists($manifestPath)) {
-    echo "Manifest found at {$manifestPath}. Checking content...\n";
+// Vérifier si le fichier manifeste existe
+if (!file_exists($manifestPath)) {
+    echo "Le fichier manifest.json n'existe pas. Création d'un manifeste minimal...\n";
     
-    $manifest = json_decode(file_get_contents($manifestPath), true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo "Error parsing manifest: " . json_last_error_msg() . "\n";
-        echo "Recreating manifest...\n";
-        createBasicManifest($manifestPath);
-    } else {
-        echo "Manifest is valid.\n";
-    }
-} elseif (file_exists($viteManifestPath)) {
-    echo "Manifest found at {$viteManifestPath}. Copying to {$manifestPath}...\n";
-    
-    // Ensure the directory exists
-    if (!is_dir(dirname($manifestPath))) {
-        mkdir(dirname($manifestPath), 0755, true);
-    }
-    
-    // Copy the manifest
-    copy($viteManifestPath, $manifestPath);
-    
-    echo "Manifest copied successfully.\n";
-} else {
-    echo "Manifest not found at {$manifestPath} or {$viteManifestPath}. Creating a basic manifest...\n";
-    createBasicManifest($manifestPath);
-}
-
-// Check Laravel configuration
-echo "Checking Laravel configuration...\n";
-echo "Using environment variables provided by Dokploy.\n";
-
-echo "Script completed.\n";
-
-/**
- * Create a basic manifest file
- */
-function createBasicManifest($path) {
-    // Create a basic manifest
+    // Créer un manifeste minimal
     $manifest = [
         "resources/js/app.jsx" => [
-            "file" => "assets/app.js",
-            "src" => "resources/js/app.jsx",
+            "file" => "assets/js/app.js",
             "isEntry" => true,
-            "css" => ["assets/app.css"]
+            "src" => "resources/js/app.jsx"
         ],
         "resources/css/app.css" => [
-            "file" => "assets/app.css",
-            "src" => "resources/css/app.css",
-            "isEntry" => true
+            "file" => "assets/css/app.css",
+            "isEntry" => true,
+            "src" => "resources/css/app.css"
         ]
     ];
     
-    // Ensure the directory exists
-    if (!is_dir(dirname($path))) {
-        mkdir(dirname($path), 0755, true);
+    // Écrire le manifeste dans le fichier
+    file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
+    
+    echo "Manifeste minimal créé avec succès.\n";
+    
+    // Créer des fichiers vides pour les assets référencés
+    if (!is_dir($buildPath . '/assets/js')) {
+        mkdir($buildPath . '/assets/js', 0755, true);
     }
     
-    // Write the manifest
-    file_put_contents($path, json_encode($manifest, JSON_PRETTY_PRINT));
+    if (!is_dir($buildPath . '/assets/css')) {
+        mkdir($buildPath . '/assets/css', 0755, true);
+    }
     
-    echo "Basic manifest created at {$path}. You should rebuild your assets properly.\n";
-} 
+    // Créer des fichiers vides pour les assets
+    touch($buildPath . '/assets/js/app.js');
+    touch($buildPath . '/assets/css/app.css');
+    
+    echo "Fichiers d'assets vides créés.\n";
+} else {
+    echo "Le fichier manifest.json existe déjà.\n";
+    
+    // Vérifier si le manifeste est valide
+    $manifestContent = file_get_contents($manifestPath);
+    $manifest = json_decode($manifestContent, true);
+    
+    if ($manifest === null) {
+        echo "Le manifeste existant n'est pas un JSON valide. Correction...\n";
+        
+        // Créer un manifeste minimal
+        $manifest = [
+            "resources/js/app.jsx" => [
+                "file" => "assets/js/app.js",
+                "isEntry" => true,
+                "src" => "resources/js/app.jsx"
+            ],
+            "resources/css/app.css" => [
+                "file" => "assets/css/app.css",
+                "isEntry" => true,
+                "src" => "resources/css/app.css"
+            ]
+        ];
+        
+        // Écrire le manifeste dans le fichier
+        file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
+        
+        echo "Manifeste corrigé avec succès.\n";
+    } else {
+        echo "Le manifeste existant est valide.\n";
+    }
+}
+
+echo "Vérification terminée.\n"; 

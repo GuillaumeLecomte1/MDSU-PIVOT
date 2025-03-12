@@ -35,7 +35,8 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
     && mkdir -p /var/www/storage/logs \
-    && mkdir -p /var/www/public/images
+    && mkdir -p /var/www/public/images \
+    && mkdir -p /var/www/public/build
 
 # Configurer PHP pour une meilleure performance
 RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && \
@@ -61,16 +62,25 @@ ENV NODE_OPTIONS="--max-old-space-size=1536 --no-warnings"
 RUN cd /var/www && \
     npm ci --production=false --no-audit --no-fund && \
     npm install terser --save-dev && \
-    NODE_ENV=production npm run build -- --mode production && \
+    NODE_ENV=production npm run build && \
+    ls -la public/build && \
+    cat public/build/manifest.json || echo "Manifest file not generated!" && \
     npm prune --production && \
     rm -rf node_modules/.cache
+
+# Vérifier que le manifeste Vite existe
+RUN if [ ! -f /var/www/public/build/manifest.json ]; then \
+    echo "Erreur: Le fichier manifest.json n'a pas été généré correctement."; \
+    exit 1; \
+    fi
 
 # Définir les permissions
 RUN chown -R www-data:www-data /var/www && \
     find /var/www/storage -type d -exec chmod 775 {} \; && \
     find /var/www/storage -type f -exec chmod 664 {} \; && \
     find /var/www/public -type d -exec chmod 755 {} \; && \
-    find /var/www/public -type f -exec chmod 644 {} \;
+    find /var/www/public -type f -exec chmod 644 {} \; && \
+    chmod -R 755 /var/www/public/build
 
 # Exposer le port
 EXPOSE 4004
