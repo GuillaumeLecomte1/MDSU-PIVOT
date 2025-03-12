@@ -64,14 +64,27 @@ RUN cd /var/www && \
     npm install terser --save-dev && \
     NODE_ENV=production npm run build && \
     ls -la public/build && \
-    cat public/build/manifest.json || echo "Manifest file not generated!" && \
+    echo "Vérification du répertoire .vite:" && \
+    ls -la public/build/.vite || echo "Répertoire .vite non trouvé" && \
+    if [ -f /var/www/public/build/.vite/manifest.json ]; then \
+        echo "Copie du manifeste depuis .vite vers le répertoire racine de build"; \
+        cp /var/www/public/build/.vite/manifest.json /var/www/public/build/manifest.json; \
+    else \
+        echo "Création d'un manifeste minimal"; \
+        php /var/www/docker/fix-vite-issues.php; \
+    fi && \
+    cat public/build/manifest.json && \
     npm prune --production && \
     rm -rf node_modules/.cache
 
 # Vérifier que le manifeste Vite existe
 RUN if [ ! -f /var/www/public/build/manifest.json ]; then \
     echo "Erreur: Le fichier manifest.json n'a pas été généré correctement."; \
-    exit 1; \
+    php /var/www/docker/fix-vite-issues.php; \
+    if [ ! -f /var/www/public/build/manifest.json ]; then \
+        echo "Impossible de créer le manifeste. Arrêt du build."; \
+        exit 1; \
+    fi; \
     fi
 
 # Définir les permissions

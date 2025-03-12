@@ -2,15 +2,32 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import fs from 'fs';
+import path from 'path';
 
 export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/js/app.jsx', 'resources/css/app.css'],
             refresh: true,
-            buildDirectory: 'build',
+            buildDirectory: '',
         }),
         react(),
+        {
+            name: 'copy-manifest',
+            closeBundle() {
+                const viteManifestPath = path.resolve(__dirname, 'public/build/.vite/manifest.json');
+                const targetManifestPath = path.resolve(__dirname, 'public/build/manifest.json');
+                
+                if (fs.existsSync(viteManifestPath)) {
+                    console.log('Copie du manifeste Vite vers le répertoire racine de build...');
+                    fs.copyFileSync(viteManifestPath, targetManifestPath);
+                    console.log('Manifeste copié avec succès!');
+                } else {
+                    console.log('Manifeste Vite non trouvé à:', viteManifestPath);
+                }
+            }
+        }
     ],
     build: {
         outDir: 'public/build',
