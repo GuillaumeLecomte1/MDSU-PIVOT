@@ -38,6 +38,8 @@ app:
     - touch /var/www/html/pivot/.env
     - chmod +x docker/pre-build.sh
     - chmod +x docker/post-build.sh
+    - chmod +x docker/fix-env.sh
+    - ./docker/fix-env.sh
     - ./docker/pre-build.sh
   post_deploy:
     - docker stop pivot-app 2>/dev/null || true
