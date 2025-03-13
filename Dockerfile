@@ -53,9 +53,11 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copier les fichiers de configuration
 COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
 COPY docker/fix-https-urls.php /var/www/docker/fix-https-urls.php
+COPY docker/fix-env.sh /var/www/docker/fix-env.sh
+COPY docker/fix-pusher.php /var/www/docker/fix-pusher.php
 
 # Donner les permissions d'exécution aux scripts
-RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php
+RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php
 
 # Copier tout le code source d'abord
 COPY . /var/www/
