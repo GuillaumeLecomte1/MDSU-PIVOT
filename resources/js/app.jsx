@@ -8,6 +8,23 @@ import axios from 'axios';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// Forcer HTTPS pour toutes les requêtes
+if (window.location.protocol === 'https:') {
+    // Intercepter toutes les requêtes fetch pour forcer HTTPS
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+        if (typeof url === 'string' && url.startsWith('http:')) {
+            url = url.replace('http:', 'https:');
+        }
+        return originalFetch(url, options);
+    };
+}
+
+// Afficher des informations de débogage
+console.log('Inertia Setup - Auth:', window.auth || {});
+console.log('Inertia Setup - User:', window.auth?.user || null);
+console.log('Inertia Setup - Permissions:', window.auth?.permissions || {});
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
