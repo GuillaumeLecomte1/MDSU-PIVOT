@@ -3,41 +3,41 @@ set -e
 
 echo "====== DÉMARRAGE DU CONTENEUR ======"
 
-# SOLUTION RADICALE: exécution en premier
-echo "Application de la solution radicale pour les logs..."
-/bin/bash /var/www/docker/radical-fix.sh
+# Préparation des répertoires et des permissions
+echo "Configuration des répertoires et permissions..."
+mkdir -p /var/www/storage/logs
+mkdir -p /var/www/storage/framework/cache
+mkdir -p /var/www/storage/framework/sessions
+mkdir -p /var/www/storage/framework/views
+mkdir -p /var/www/bootstrap/cache
+mkdir -p /var/www/public/images
 
-# SOLUTION AVEC INTERCEPTION PHP: modifie directement index.php
-echo "Application du patch PHP d'interception des logs..."
-php /var/www/docker/quick-fix.php
+# Définir les permissions
+chmod -R 777 /var/www/storage
+chmod -R 777 /var/www/bootstrap/cache
+chown -R www-data:www-data /var/www
 
-# Forcer l'utilisation de stderr pour les logs Laravel
-export LOG_CHANNEL=null
-export LOG_LEVEL=error
+# Créer un fichier de log vide avec les bonnes permissions
+touch /var/www/storage/logs/laravel.log
+chmod 666 /var/www/storage/logs/laravel.log
+chown www-data:www-data /var/www/storage/logs/laravel.log
 
-# Exécution du script de diagnostic des permissions
-echo "Exécution du diagnostic des permissions..."
-/bin/bash /var/www/docker/fix-permissions.sh
+# Configuration PHP pour les logs
+echo "Configuration de PHP pour les logs..."
+echo "log_errors = On" > /usr/local/etc/php/conf.d/error-log.ini
+echo "error_log = /dev/stderr" >> /usr/local/etc/php/conf.d/error-log.ini
 
-# Configuration des logs pour utiliser stdout au lieu de fichiers
-echo "Configuration des logs Laravel pour utiliser STDOUT..."
-cp -f /var/www/docker/logging.php /var/www/config/logging.php
+# Nettoyage des caches Laravel
+echo "Nettoyage des caches Laravel..."
+cd /var/www
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+php artisan route:clear
 
-# Patch direct du bootstrap de Laravel
-echo "Application du patch pour le bootstrap de Laravel..."
-php /var/www/docker/fix-bootstrap.php || true
-
-# Vérification que le système est bien configuré
-echo "Vérification finale de la configuration..."
+# Informations sur le système
+echo "Informations système:"
 php -v
-cd /var/www && php artisan --version || true
-cd /var/www && php artisan config:clear || true
-cd /var/www && php artisan cache:clear || true
-
-# Exécution du script post-déploiement en arrière-plan
-echo "Exécution du script post-déploiement..."
-nohup /bin/bash /var/www/docker/post-deploy.sh > /dev/null 2>&1 &
-
 echo "====== DÉMARRAGE DE SUPERVISORD ======"
 
 # Lancer supervisord

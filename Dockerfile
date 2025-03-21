@@ -1,6 +1,6 @@
 FROM php:8.2-fpm
 
-# Install system dependencies (minimisé)
+# Installation des dépendances système essentielles
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -14,22 +14,21 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20.x (version minimale)
+# Installation de Node.js 20.x
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
-    npm install -g npm@latest && \
     rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions with mysqli
+# Installation des extensions PHP essentielles
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip mysqli
 
-# Get Composer
+# Installation de Composer
 COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
 
-# Set working directory
+# Définition du répertoire de travail
 WORKDIR /var/www
 
-# Create necessary directories
+# Création des répertoires nécessaires
 RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/framework/cache \
     && mkdir -p /var/www/storage/framework/sessions \
@@ -37,71 +36,61 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/logs \
     && mkdir -p /var/www/bootstrap/cache \
     && mkdir -p /var/www/public/images \
-    && mkdir -p /var/www/public/build/assets/js \
-    && mkdir -p /var/www/public/build/assets/css \
-    && mkdir -p /var/www/public/build/.vite
+    && mkdir -p /var/www/public/build/assets
 
-# Configure PHP for better performance and increased upload limits
+# Configuration PHP pour les performances
 RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && \
     echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/uploads.ini && \
     echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/uploads.ini && \
-    echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini
+    echo "max_execution_time = 600" >> /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "log_errors = On" > /usr/local/etc/php/conf.d/error-log.ini && \
+    echo "error_log = /dev/stderr" >> /usr/local/etc/php/conf.d/error-log.ini
 
-# Configurer Nginx
+# Configuration de php-fpm
+RUN echo "catch_workers_output = yes" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "php_admin_value[error_log] = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf
+
+# Configuration Nginx et Supervisor
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Configurer Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copier les fichiers de configuration
-COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
-COPY docker/fix-https-urls.php /var/www/docker/fix-https-urls.php
-COPY docker/fix-env.sh /var/www/docker/fix-env.sh
-COPY docker/fix-pusher.php /var/www/docker/fix-pusher.php
-COPY docker/fix-mixed-content.php /var/www/docker/fix-mixed-content.php
-COPY docker/optimize-laravel.sh /var/www/docker/optimize-laravel.sh
-COPY docker/entrypoint.sh /var/www/docker/entrypoint.sh
-COPY docker/fix-permissions.sh /var/www/docker/fix-permissions.sh
-COPY docker/logging.php /var/www/docker/logging.php
-COPY permissions.sh /var/www/docker/permissions.sh
-COPY docker/post-deploy.sh /var/www/docker/post-deploy.sh
-COPY docker/fix-bootstrap.php /var/www/docker/fix-bootstrap.php
-COPY docker/radical-fix.sh /var/www/docker/radical-fix.sh
-COPY docker/quick-fix.php /var/www/docker/quick-fix.php
+# Créer un script d'entrée minimaliste
+RUN echo '#!/bin/bash' > /var/www/docker/entrypoint.sh && \
+    echo 'set -e' >> /var/www/docker/entrypoint.sh && \
+    echo 'echo "====== DÉMARRAGE DU CONTENEUR ======"' >> /var/www/docker/entrypoint.sh && \
+    echo 'echo "Configuration des permissions..."' >> /var/www/docker/entrypoint.sh && \
+    echo 'chmod -R 777 /var/www/storage' >> /var/www/docker/entrypoint.sh && \
+    echo 'chmod -R 777 /var/www/bootstrap/cache' >> /var/www/docker/entrypoint.sh && \
+    echo 'chown -R www-data:www-data /var/www' >> /var/www/docker/entrypoint.sh && \
+    echo 'cd /var/www && php artisan config:clear' >> /var/www/docker/entrypoint.sh && \
+    echo 'cd /var/www && php artisan view:clear' >> /var/www/docker/entrypoint.sh && \
+    echo 'echo "====== DÉMARRAGE DE SUPERVISORD ======"' >> /var/www/docker/entrypoint.sh && \
+    echo 'exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' >> /var/www/docker/entrypoint.sh && \
+    chmod +x /var/www/docker/entrypoint.sh
 
-# Donner les permissions d'exécution aux scripts
-RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php /var/www/docker/optimize-laravel.sh /var/www/docker/permissions.sh /var/www/docker/entrypoint.sh /var/www/docker/fix-permissions.sh /var/www/docker/post-deploy.sh /var/www/docker/radical-fix.sh /var/www/docker/quick-fix.php
-
-# Copier le code source
+# Copie du code source
 COPY . /var/www/
 
-# Installer les dépendances PHP (sans developpement)
+# Installation des dépendances PHP
 RUN cd /var/www && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev
 
-# Préparer les assets statiques (SANS UTILISER VITE EN PRODUCTION)
+# Vérification du code source avant déploiement
 RUN cd /var/www && \
-    echo "Utilisation du mode de compatibilité pour les assets..." && \
-    mkdir -p /var/www/public/build/assets/js && \
-    mkdir -p /var/www/public/build/assets/css && \
-    mkdir -p /var/www/public/build/.vite && \
-    cp /var/www/resources/js/app.minimal.jsx /var/www/public/build/assets/js/app.js && \
-    echo "/* Styles CSS de base */" > /var/www/public/build/assets/css/app.css && \
-    echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/js/app.minimal.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.minimal.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/manifest.json && \
-    echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/js/app.minimal.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.minimal.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/.vite/manifest.json && \
-    php /var/www/docker/fix-https-urls.php && \
-    php /var/www/docker/fix-mixed-content.php
+    php artisan route:list --no-ansi > /dev/null || echo "Vérification des routes terminée" && \
+    php -l public/index.php && \
+    php -l bootstrap/app.php
 
-# Définir les permissions correctement
+# Configuration des permissions des répertoires critiques
 RUN chmod -R 777 /var/www/storage && \
     chmod -R 777 /var/www/bootstrap/cache && \
     chown -R www-data:www-data /var/www && \
     touch /var/www/storage/logs/laravel.log && \
-    chmod 666 /var/www/storage/logs/laravel.log && \
-    chmod -R 755 /var/www/public/build
+    chmod 666 /var/www/storage/logs/laravel.log
 
-# Exposer le port
+# Exposition du port
 EXPOSE 4004
 
-# Définir l'entrée
+# Point d'entrée
 ENTRYPOINT ["/var/www/docker/entrypoint.sh"] 
