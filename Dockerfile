@@ -67,6 +67,9 @@ RUN chmod +x /var/www/docker/entrypoint.sh
 # Copie du code source
 COPY . /var/www/
 
+# Copy production environment file
+COPY docker/env.production /var/www/.env
+
 # Ensure entrypoint.sh still has executable permissions after copying files
 RUN chmod +x /var/www/docker/entrypoint.sh && \
     ls -la /var/www/docker/entrypoint.sh
