@@ -60,24 +60,16 @@ RUN echo "catch_workers_output = yes" >> /usr/local/etc/php-fpm.d/www.conf && \
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Créer un script d'entrée minimaliste
-RUN echo '#!/bin/bash' > /var/www/docker/entrypoint.sh && \
-    echo 'set -e' >> /var/www/docker/entrypoint.sh && \
-    echo 'echo "====== DÉMARRAGE DU CONTENEUR ======"' >> /var/www/docker/entrypoint.sh && \
-    echo 'echo "Configuration des permissions..."' >> /var/www/docker/entrypoint.sh && \
-    echo 'chmod -R 777 /var/www/storage' >> /var/www/docker/entrypoint.sh && \
-    echo 'chmod -R 777 /var/www/bootstrap/cache' >> /var/www/docker/entrypoint.sh && \
-    echo 'chown -R www-data:www-data /var/www' >> /var/www/docker/entrypoint.sh && \
-    echo 'cd /var/www && php artisan config:clear' >> /var/www/docker/entrypoint.sh && \
-    echo 'cd /var/www && php artisan view:clear' >> /var/www/docker/entrypoint.sh && \
-    echo 'cd /var/www && php artisan route:clear' >> /var/www/docker/entrypoint.sh && \
-    echo 'cd /var/www && php artisan optimize:clear' >> /var/www/docker/entrypoint.sh && \
-    echo 'echo "====== DÉMARRAGE DE SUPERVISORD ======"' >> /var/www/docker/entrypoint.sh && \
-    echo 'exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' >> /var/www/docker/entrypoint.sh && \
-    chmod +x /var/www/docker/entrypoint.sh
+# Copy the entrypoint script
+COPY docker/entrypoint.sh /var/www/docker/entrypoint.sh
+RUN chmod +x /var/www/docker/entrypoint.sh
 
 # Copie du code source
 COPY . /var/www/
+
+# Ensure entrypoint.sh still has executable permissions after copying files
+RUN chmod +x /var/www/docker/entrypoint.sh && \
+    ls -la /var/www/docker/entrypoint.sh
 
 # Installation des dépendances PHP
 RUN cd /var/www && \
@@ -94,10 +86,14 @@ RUN chmod -R 777 /var/www/storage && \
     chmod -R 777 /var/www/bootstrap/cache && \
     chown -R www-data:www-data /var/www && \
     touch /var/www/storage/logs/laravel.log && \
-    chmod 666 /var/www/storage/logs/laravel.log
+    chmod 666 /var/www/storage/logs/laravel.log && \
+    chmod +x /var/www/docker/entrypoint.sh  # Triple-check permissions
 
 # Exposition du port
 EXPOSE 4004
 
 # Point d'entrée
-ENTRYPOINT ["/var/www/docker/entrypoint.sh"] 
+ENTRYPOINT ["/var/www/docker/entrypoint.sh"]
+
+# Fallback command in case ENTRYPOINT fails
+CMD ["/bin/bash", "-c", "chmod +x /var/www/docker/entrypoint.sh && /var/www/docker/entrypoint.sh"] 
