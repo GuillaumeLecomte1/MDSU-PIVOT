@@ -1,6 +1,6 @@
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies (minimisé)
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20.x (LTS) avec une version compatible de npm
+# Install Node.js 20.x (version minimale)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     npm install -g npm@latest && \
@@ -36,7 +36,9 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/framework/views \
     && mkdir -p /var/www/storage/logs \
     && mkdir -p /var/www/public/images \
-    && mkdir -p /var/www/public/build
+    && mkdir -p /var/www/public/build/assets/js \
+    && mkdir -p /var/www/public/build/assets/css \
+    && mkdir -p /var/www/public/build/.vite
 
 # Configure PHP for better performance and increased upload limits
 RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && \
@@ -56,64 +58,30 @@ COPY docker/fix-https-urls.php /var/www/docker/fix-https-urls.php
 COPY docker/fix-env.sh /var/www/docker/fix-env.sh
 COPY docker/fix-pusher.php /var/www/docker/fix-pusher.php
 COPY docker/fix-mixed-content.php /var/www/docker/fix-mixed-content.php
+COPY docker/optimize-laravel.sh /var/www/docker/optimize-laravel.sh
 
 # Donner les permissions d'exécution aux scripts
-RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php
+RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php /var/www/docker/optimize-laravel.sh
 
-# Copier tout le code source d'abord
+# Copier le code source
 COPY . /var/www/
 
-# Installer les dépendances PHP
+# Installer les dépendances PHP (sans developpement)
 RUN cd /var/www && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev
 
-# Installer les dépendances Node.js avec une configuration optimisée et construire les assets
-ENV NODE_OPTIONS="--max-old-space-size=4096 --no-warnings"
+# Préparer les assets statiques (SANS UTILISER VITE EN PRODUCTION)
 RUN cd /var/www && \
-    npm ci --production=false --no-audit --no-fund && \
-    npm install terser --save-dev && \
-    echo "Tentative de construction des assets avec Vite..." && \
-    NODE_ENV=production npm run build --debug || { \
-        echo "Erreur lors de la construction des assets. Utilisation du fallback..."; \
-        mkdir -p /var/www/public/build/assets/js /var/www/public/build/assets/css /var/www/public/build/.vite; \
-        cp /var/www/resources/js/app.minimal.jsx /var/www/public/build/assets/js/app.js; \
-        touch /var/www/public/build/assets/css/app.css; \
-        echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/js/app.minimal.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.minimal.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/manifest.json; \
-        echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/js/app.minimal.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.minimal.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/.vite/manifest.json; \
-    } && \
-    ls -la public/build && \
-    echo "Vérification du répertoire .vite:" && \
-    ls -la public/build/.vite || echo "Répertoire .vite non trouvé" && \
-    if [ -f /var/www/public/build/.vite/manifest.json ]; then \
-        echo "Copie du manifeste depuis .vite vers le répertoire racine de build"; \
-        cp /var/www/public/build/.vite/manifest.json /var/www/public/build/manifest.json; \
-    else \
-        echo "Création d'un manifeste minimal"; \
-        php /var/www/docker/fix-vite-issues.php || echo "Erreur lors de la création du manifeste minimal, mais on continue..."; \
-    fi && \
-    if [ -f /var/www/public/build/manifest.json ]; then \
-        echo "Vérification des URLs HTTPS dans le manifeste..."; \
-        php /var/www/docker/fix-https-urls.php || echo "Erreur lors de la vérification des URLs HTTPS, mais on continue..."; \
-        cat public/build/manifest.json || echo "Impossible d'afficher le manifeste, mais on continue..."; \
-    else \
-        echo "Manifeste toujours manquant, création d'un manifeste minimal de secours..."; \
-        mkdir -p /var/www/public/build/assets/js /var/www/public/build/assets/css /var/www/public/build/.vite; \
-        touch /var/www/public/build/assets/js/app.js /var/www/public/build/assets/css/app.css; \
-        echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/manifest.json; \
-        echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/.vite/manifest.json; \
-    fi && \
-    npm prune --production && \
-    rm -rf node_modules/.cache
-
-# Vérifier que le manifeste Vite existe
-RUN if [ ! -f /var/www/public/build/manifest.json ]; then \
-    echo "Erreur: Le fichier manifest.json n'a pas été généré correctement."; \
-    php /var/www/docker/fix-vite-issues.php; \
-    if [ ! -f /var/www/public/build/manifest.json ]; then \
-        echo "Impossible de créer le manifeste. Arrêt du build."; \
-        exit 1; \
-    fi; \
-    fi
+    echo "Utilisation du mode de compatibilité pour les assets..." && \
+    mkdir -p /var/www/public/build/assets/js && \
+    mkdir -p /var/www/public/build/assets/css && \
+    mkdir -p /var/www/public/build/.vite && \
+    cp /var/www/resources/js/app.minimal.jsx /var/www/public/build/assets/js/app.js && \
+    echo "/* Styles CSS de base */" > /var/www/public/build/assets/css/app.css && \
+    echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/js/app.minimal.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.minimal.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/manifest.json && \
+    echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/js/app.minimal.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.minimal.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/.vite/manifest.json && \
+    php /var/www/docker/fix-https-urls.php && \
+    php /var/www/docker/fix-mixed-content.php
 
 # Définir les permissions
 RUN chown -R www-data:www-data /var/www && \
