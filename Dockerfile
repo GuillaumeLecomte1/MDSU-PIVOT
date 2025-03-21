@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    libicu-dev \
     zip \
     unzip \
     nginx \
@@ -20,7 +21,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     rm -rf /var/lib/apt/lists/*
 
 # Installation des extensions PHP essentielles
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip mysqli
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip mysqli intl
 
 # Installation de Composer
 COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
