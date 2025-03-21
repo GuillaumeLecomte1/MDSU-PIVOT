@@ -50,7 +50,11 @@ RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && 
 # Configuration de php-fpm
 RUN echo "catch_workers_output = yes" >> /usr/local/etc/php-fpm.d/www.conf && \
     echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo "php_admin_value[error_log] = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf
+    echo "php_admin_value[error_log] = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "listen = /var/run/php-fpm.sock" > /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    echo "listen.owner = www-data" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    echo "listen.group = www-data" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/zz-docker.conf
 
 # Configuration Nginx et Supervisor
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
@@ -66,6 +70,8 @@ RUN echo '#!/bin/bash' > /var/www/docker/entrypoint.sh && \
     echo 'chown -R www-data:www-data /var/www' >> /var/www/docker/entrypoint.sh && \
     echo 'cd /var/www && php artisan config:clear' >> /var/www/docker/entrypoint.sh && \
     echo 'cd /var/www && php artisan view:clear' >> /var/www/docker/entrypoint.sh && \
+    echo 'cd /var/www && php artisan route:clear' >> /var/www/docker/entrypoint.sh && \
+    echo 'cd /var/www && php artisan optimize:clear' >> /var/www/docker/entrypoint.sh && \
     echo 'echo "====== DÉMARRAGE DE SUPERVISORD ======"' >> /var/www/docker/entrypoint.sh && \
     echo 'exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' >> /var/www/docker/entrypoint.sh && \
     chmod +x /var/www/docker/entrypoint.sh
