@@ -15,7 +15,7 @@ sed -i "s/QUEUE_CONNECTION=database/QUEUE_CONNECTION=sync/g" /var/www/.env
 echo "Waiting for MySQL connection..."
 max_attempts=30
 counter=0
-until php -r "try { new PDO('mysql:host=mysql;dbname=pivot', 'pivot', 'pivot'); echo 'Connected to MySQL'; } catch (PDOException \$e) { echo \$e->getMessage(); exit(1); }" 2>/dev/null
+until php -r "try { new PDO('mysql:host=127.0.0.1;dbname=pivot', 'root', '8ocxlumnakezr2wdfcwiijct2rejsgdr'); echo 'Connected to MySQL'; } catch (PDOException \$e) { echo \$e->getMessage(); exit(1); }" 2>/dev/null
 do
   if [ $counter -eq $max_attempts ]; then
     echo "Failed to connect to MySQL after $max_attempts attempts. Continuing anyway..."
