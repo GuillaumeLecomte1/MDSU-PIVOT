@@ -51,8 +51,10 @@ RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && 
 RUN echo "catch_workers_output = yes" >> /usr/local/etc/php-fpm.d/www.conf && \
     echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf && \
     echo "php_admin_value[error_log] = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo "listen = 127.0.0.1:9000" > /usr/local/etc/php-fpm.d/zz-docker.conf && \
-    echo "access.log = /dev/stderr" >> /usr/local/etc/php-fpm.d/zz-docker.conf
+    echo "listen = /var/run/php-fpm.sock" > /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    echo "listen.owner = www-data" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    echo "listen.group = www-data" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/zz-docker.conf
 
 # Configuration Nginx et Supervisor
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
