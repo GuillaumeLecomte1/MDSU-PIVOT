@@ -2,33 +2,81 @@ version: '3.8'
 
 services:
   app:
-    container_name: pivot-app
-    image: ${IMAGE_NAME:-pivot-app}:${IMAGE_TAG:-latest}
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${MYSQL_DATABASE}
+      - DB_USERNAME=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - .:/var/www
+    depends_on:
+      - db
+    ports:
+      - "4004:80"
+    restart: unless-stopped
     labels:
+      - "dokploy.expose=true"
+      - "dokploy.domain=marketplace.guillaume-lcte.fr"
+      - "dokploy.port=80"
       - "traefik.enable=true"
-      - "traefik.http.routers.pivot.rule=Host(`pivot.guillaume-lcte.fr`)"
-      - "traefik.http.routers.pivot.entrypoints=websecure"
-      - "traefik.http.routers.pivot.tls=true"
-      - "traefik.http.routers.pivot.tls.certresolver=letsencrypt"
-      - "traefik.http.services.pivot.loadbalancer.server.port=4004"
-      # Redirection HTTP vers HTTPS
-      - "traefik.http.routers.pivot-http.rule=Host(`pivot.guillaume-lcte.fr`)"
-      - "traefik.http.routers.pivot-http.entrypoints=web"
-      - "traefik.http.routers.pivot-http.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-    networks:
-      - traefik-public
-      - default
-    healthcheck:
-      test: ["CMD", "/var/www/docker/healthcheck.sh"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      - "traefik.http.routers.app.rule=Host(`marketplace.guillaume-lcte.fr`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.service=app-service"
+      - "traefik.http.routers.app.tls=true"
+      - "traefik.http.services.app-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.app-http.rule=Host(`marketplace.guillaume-lcte.fr`)"
+      - "traefik.http.routers.app-http.entrypoints=web"
+      - "traefik.http.routers.app-http.middlewares=app-https-redirect"
+      - "traefik.http.middlewares.app-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.app-https-redirect.redirectscheme.permanent=true"
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2.1
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 100M
+      MEMORY_LIMIT: 512M
+      PMA_ABSOLUTE_URI: "https://phpmyadmin.guillaume-lcte.fr/"
+    ports:
+      - "4001:80"
+    depends_on:
+      - db
+    restart: unless-stopped
+    labels:
+      - "dokploy.expose=true"
+      - "dokploy.domain=phpmyadmin.guillaume-lcte.fr"
+      - "dokploy.port=80"
+      - "traefik.enable=true"
+      - "traefik.http.routers.pma.rule=Host(`phpmyadmin.guillaume-lcte.fr`)"
+      - "traefik.http.routers.pma.entrypoints=websecure"
+      - "traefik.http.routers.pma.service=pma-service"
+      - "traefik.http.routers.pma.tls=true"
+      - "traefik.http.services.pma-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.pma-http.rule=Host(`phpmyadmin.guillaume-lcte.fr`)"
+      - "traefik.http.routers.pma-http.entrypoints=web"
+      - "traefik.http.routers.pma-http.middlewares=pma-https-redirect"
+      - "traefik.http.middlewares.pma-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.pma-https-redirect.redirectscheme.permanent=true"
+
+volumes:
+  db_data:
+    driver: local
 
 networks:
   traefik-public:

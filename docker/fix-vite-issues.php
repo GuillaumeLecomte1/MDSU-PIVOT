@@ -148,13 +148,13 @@ elseif (!file_exists($manifestPath)) {
         echo "Le manifeste existant n'est pas un JSON valide. Correction...\n";
         
         // Créer un manifeste minimal
-        $manifest = [
-            "resources/js/app.jsx" => [
+    $manifest = [
+        "resources/js/app.jsx" => [
                 "file" => "assets/js/app.js",
-                "isEntry" => true,
+            "isEntry" => true,
                 "src" => "resources/js/app.jsx"
-            ],
-            "resources/css/app.css" => [
+        ],
+        "resources/css/app.css" => [
                 "file" => "assets/css/app.css",
                 "isEntry" => true,
                 "src" => "resources/css/app.css"

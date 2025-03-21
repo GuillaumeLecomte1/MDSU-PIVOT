@@ -20,8 +20,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     npm install -g npm@10.2.4 && \
     rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+# Install PHP extensions with mysqli
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip mysqli
 
 # Get Composer
 COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
@@ -38,7 +38,7 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/public/images \
     && mkdir -p /var/www/public/build
 
-# Configurer PHP pour une meilleure performance
+# Configure PHP for better performance and increased upload limits
 RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && \
     echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/uploads.ini && \
     echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/uploads.ini && \
