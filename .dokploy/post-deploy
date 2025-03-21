@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Script exécuté automatiquement après chaque déploiement avec dokploy
+echo "[PIVOT] Script post-déploiement pour corriger les problèmes de logs..."
+
+# Détecter le conteneur en cours d'exécution
+CONTAINER_ID=$(docker ps | grep pivot | awk '{print $1}')
+
+if [ -z "$CONTAINER_ID" ]; then
+  echo "[PIVOT] Erreur: Conteneur pivot non trouvé!"
+  exit 1
+fi
+
+echo "[PIVOT] Conteneur détecté: $CONTAINER_ID"
+
+# Exécuter des commandes dans le conteneur en tant que root
+docker exec -u root $CONTAINER_ID bash -c '
+  echo "[PIVOT] Suppression du répertoire de logs existant..."
+  rm -rf /var/www/storage/logs
+  
+  echo "[PIVOT] Création d'"'"'un répertoire de logs avec permissions complètes..."
+  mkdir -p /var/www/storage/logs
+  chmod -R 777 /var/www/storage/logs
+  chown -R www-data:www-data /var/www/storage/logs
+  
+  echo "[PIVOT] Création d'"'"'un fichier de logs vide avec permissions complètes..."
+  touch /var/www/storage/logs/laravel.log
+  chmod 666 /var/www/storage/logs/laravel.log
+  chown www-data:www-data /var/www/storage/logs/laravel.log
+  
+  echo "[PIVOT] Création d'"'"'un .htaccess pour protéger le répertoire de logs..."
+  echo "Order allow,deny" > /var/www/storage/logs/.htaccess
+  echo "Deny from all" >> /var/www/storage/logs/.htaccess
+  
+  echo "[PIVOT] Vérification des permissions:"
+  ls -la /var/www/storage/logs
+  
+  echo "[PIVOT] Modification forcée du .env..."
+  sed -i "s/LOG_CHANNEL=.*/LOG_CHANNEL=null/g" /var/www/.env 2>/dev/null || echo "LOG_CHANNEL=null" >> /var/www/.env
+  sed -i "s/LOG_LEVEL=.*/LOG_LEVEL=emergency/g" /var/www/.env 2>/dev/null || echo "LOG_LEVEL=emergency" >> /var/www/.env
+  
+  echo "[PIVOT] Vidage des caches..."
+  cd /var/www && php artisan config:clear
+  cd /var/www && php artisan cache:clear
+'
+
+echo "[PIVOT] Script post-déploiement terminé avec succès!" 
