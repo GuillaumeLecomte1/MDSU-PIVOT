@@ -35,6 +35,7 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
     && mkdir -p /var/www/storage/logs \
+    && mkdir -p /var/www/bootstrap/cache \
     && mkdir -p /var/www/public/images \
     && mkdir -p /var/www/public/build/assets/js \
     && mkdir -p /var/www/public/build/assets/css \
@@ -59,9 +60,11 @@ COPY docker/fix-env.sh /var/www/docker/fix-env.sh
 COPY docker/fix-pusher.php /var/www/docker/fix-pusher.php
 COPY docker/fix-mixed-content.php /var/www/docker/fix-mixed-content.php
 COPY docker/optimize-laravel.sh /var/www/docker/optimize-laravel.sh
+COPY docker/entrypoint.sh /var/www/docker/entrypoint.sh
+COPY permissions.sh /var/www/docker/permissions.sh
 
 # Donner les permissions d'exécution aux scripts
-RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php /var/www/docker/optimize-laravel.sh
+RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php /var/www/docker/optimize-laravel.sh /var/www/docker/permissions.sh /var/www/docker/entrypoint.sh
 
 # Copier le code source
 COPY . /var/www/
@@ -83,16 +86,16 @@ RUN cd /var/www && \
     php /var/www/docker/fix-https-urls.php && \
     php /var/www/docker/fix-mixed-content.php
 
-# Définir les permissions
-RUN chown -R www-data:www-data /var/www && \
-    find /var/www/storage -type d -exec chmod 775 {} \; && \
-    find /var/www/storage -type f -exec chmod 664 {} \; && \
-    find /var/www/public -type d -exec chmod 755 {} \; && \
-    find /var/www/public -type f -exec chmod 644 {} \; && \
+# Définir les permissions correctement
+RUN chmod -R 777 /var/www/storage && \
+    chmod -R 777 /var/www/bootstrap/cache && \
+    chown -R www-data:www-data /var/www && \
+    touch /var/www/storage/logs/laravel.log && \
+    chmod 666 /var/www/storage/logs/laravel.log && \
     chmod -R 755 /var/www/public/build
 
 # Exposer le port
 EXPOSE 4004
 
-# Démarrer les services
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
+# Définir l'entrée
+ENTRYPOINT ["/var/www/docker/entrypoint.sh"] 
