@@ -61,10 +61,12 @@ COPY docker/fix-pusher.php /var/www/docker/fix-pusher.php
 COPY docker/fix-mixed-content.php /var/www/docker/fix-mixed-content.php
 COPY docker/optimize-laravel.sh /var/www/docker/optimize-laravel.sh
 COPY docker/entrypoint.sh /var/www/docker/entrypoint.sh
+COPY docker/fix-permissions.sh /var/www/docker/fix-permissions.sh
+COPY docker/logging.php /var/www/docker/logging.php
 COPY permissions.sh /var/www/docker/permissions.sh
 
 # Donner les permissions d'exécution aux scripts
-RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php /var/www/docker/optimize-laravel.sh /var/www/docker/permissions.sh /var/www/docker/entrypoint.sh
+RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php /var/www/docker/optimize-laravel.sh /var/www/docker/permissions.sh /var/www/docker/entrypoint.sh /var/www/docker/fix-permissions.sh
 
 # Copier le code source
 COPY . /var/www/

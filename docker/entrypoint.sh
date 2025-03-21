@@ -1,28 +1,24 @@
 #!/bin/bash
 set -e
 
-# Corriger les permissions au démarrage
-echo "Préparation de l'environnement..."
+echo "====== DÉMARRAGE DU CONTENEUR ======"
 
-# Vérification des répertoires
-mkdir -p /var/www/storage/logs
-mkdir -p /var/www/storage/framework/cache
-mkdir -p /var/www/storage/framework/sessions
-mkdir -p /var/www/storage/framework/views
-mkdir -p /var/www/bootstrap/cache
+# Exécution du script de diagnostic des permissions
+echo "Exécution du diagnostic des permissions..."
+/bin/bash /var/www/docker/fix-permissions.sh
 
-# Permissions de stockage
-chmod -R 777 /var/www/storage
-chmod -R 777 /var/www/bootstrap/cache
+# Configuration des logs pour utiliser stdout au lieu de fichiers
+echo "Configuration des logs Laravel pour utiliser STDOUT..."
+cp -f /var/www/docker/logging.php /var/www/config/logging.php
 
-# Créer le fichier de log s'il n'existe pas
-touch /var/www/storage/logs/laravel.log
-chmod 666 /var/www/storage/logs/laravel.log
+# Vérification que le système est bien configuré
+echo "Vérification finale de la configuration..."
+php -v
+cd /var/www && php artisan --version || true
+cd /var/www && php artisan config:clear || true
+cd /var/www && php artisan cache:clear || true
 
-# Définir www-data comme propriétaire
-chown -R www-data:www-data /var/www
-
-echo "Permissions corrigées au démarrage."
+echo "====== DÉMARRAGE DE SUPERVISORD ======"
 
 # Lancer supervisord
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf 
