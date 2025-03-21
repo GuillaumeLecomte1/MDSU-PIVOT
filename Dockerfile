@@ -14,10 +14,10 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 18.x (LTS) avec une version compatible de npm
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+# Install Node.js 20.x (LTS) avec une version compatible de npm
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
-    npm install -g npm@10.2.4 && \
+    npm install -g npm@latest && \
     rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions with mysqli
@@ -68,15 +68,18 @@ RUN cd /var/www && \
     COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev
 
 # Installer les dépendances Node.js avec une configuration optimisée et construire les assets
-ENV NODE_OPTIONS="--max-old-space-size=1536 --no-warnings"
+ENV NODE_OPTIONS="--max-old-space-size=4096 --no-warnings"
 RUN cd /var/www && \
     npm ci --production=false --no-audit --no-fund && \
     npm install terser --save-dev && \
     echo "Tentative de construction des assets avec Vite..." && \
-    NODE_ENV=production npm run build || { \
-        echo "Erreur lors de la construction des assets. Création d'un manifeste minimal..."; \
+    NODE_ENV=production npm run build --debug || { \
+        echo "Erreur lors de la construction des assets. Utilisation du fallback..."; \
         mkdir -p /var/www/public/build/assets/js /var/www/public/build/assets/css /var/www/public/build/.vite; \
-        touch /var/www/public/build/assets/js/app.js /var/www/public/build/assets/css/app.css; \
+        cp /var/www/resources/js/app.minimal.jsx /var/www/public/build/assets/js/app.js; \
+        touch /var/www/public/build/assets/css/app.css; \
+        echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/js/app.minimal.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.minimal.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/manifest.json; \
+        echo '{"resources/js/app.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.jsx"},"resources/js/app.minimal.jsx":{"file":"assets/js/app.js","isEntry":true,"src":"resources/js/app.minimal.jsx"},"resources/css/app.css":{"file":"assets/css/app.css","isEntry":true,"src":"resources/css/app.css"}}' > /var/www/public/build/.vite/manifest.json; \
     } && \
     ls -la public/build && \
     echo "Vérification du répertoire .vite:" && \

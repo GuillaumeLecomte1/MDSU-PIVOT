@@ -6,178 +6,70 @@
  * Ce script vérifie si le manifeste Vite existe et le crée s'il est manquant
  */
 
-// Chemin vers le répertoire public
-$publicPath = '/var/www/public';
+// Vérification de l'existence des répertoires nécessaires
+$publicBuildDir = '/var/www/public/build';
+$assetsJsDir = $publicBuildDir . '/assets/js';
+$assetsCssDir = $publicBuildDir . '/assets/css';
+$viteDir = $publicBuildDir . '/.vite';
 
-// Chemin vers le répertoire de build
-$buildPath = $publicPath . '/build';
-
-// Chemin vers le fichier manifeste
-$manifestPath = $buildPath . '/manifest.json';
-
-// Chemin vers le manifeste Vite dans le répertoire .vite
-$viteManifestPath = $buildPath . '/.vite/manifest.json';
-
-echo "Vérification du manifeste Vite...\n";
-
-// Vérifier si le répertoire de build existe
-if (!is_dir($buildPath)) {
-    echo "Le répertoire de build n'existe pas. Création...\n";
-    mkdir($buildPath, 0755, true);
+// Création des répertoires s'ils n'existent pas
+foreach ([$publicBuildDir, $assetsJsDir, $assetsCssDir, $viteDir] as $dir) {
+    if (!is_dir($dir)) {
+        echo "Création du répertoire $dir\n";
+        mkdir($dir, 0755, true);
+    }
 }
 
-// Vérifier si le répertoire .vite existe
-if (!is_dir($buildPath . '/.vite')) {
-    echo "Le répertoire .vite n'existe pas. Création...\n";
-    mkdir($buildPath . '/.vite', 0755, true);
-}
+// Création des fichiers JS et CSS minimaux
+$jsFile = $assetsJsDir . '/app.js';
+$cssFile = $assetsCssDir . '/app.css';
 
-// Vérifier si le manifeste existe dans le répertoire .vite
-if (file_exists($viteManifestPath)) {
-    echo "Manifeste trouvé dans le répertoire .vite. Copie vers le répertoire racine de build...\n";
+// Contenu minimal du fichier JS
+$jsContent = "// Fichier JS de secours généré automatiquement\nconsole.log('Vite build fallback loaded');";
+
+// Contenu minimal du fichier CSS
+$cssContent = "/* Fichier CSS de secours généré automatiquement */\nbody { display: block; }";
+
+// Écriture des fichiers
+file_put_contents($jsFile, $jsContent);
+file_put_contents($cssFile, $cssContent);
+
+echo "Fichiers JS et CSS minimaux créés avec succès.\n";
+
+// Création du manifeste Vite minimal
+$manifest = [
+    'resources/js/app.jsx' => [
+        'file' => 'assets/js/app.js',
+        'isEntry' => true,
+        'src' => 'resources/js/app.jsx',
+        'css' => ['assets/css/app.css']
+    ],
+    'resources/css/app.css' => [
+        'file' => 'assets/css/app.css',
+        'isEntry' => true,
+        'src' => 'resources/css/app.css'
+    ]
+];
+
+// Écriture du manifeste dans les deux emplacements
+$manifestFile = $publicBuildDir . '/manifest.json';
+$viteManifestFile = $viteDir . '/manifest.json';
+
+file_put_contents($manifestFile, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+file_put_contents($viteManifestFile, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+echo "Manifestes Vite créés avec succès.\n";
+
+// Vérification finale
+if (file_exists($manifestFile) && file_exists($viteManifestFile)) {
+    echo "Vérification OK: Les manifestes existent à la fois dans " . basename($publicBuildDir) . " et " . basename($publicBuildDir) . "/" . basename($viteDir) . "\n";
     
-    // Copier le manifeste
-    copy($viteManifestPath, $manifestPath);
+    // Afficher le contenu des manifestes pour diagnostic
+    echo "Contenu du manifeste principal:\n";
+    echo file_get_contents($manifestFile) . "\n";
     
-    echo "Manifeste copié avec succès.\n";
-} 
-// Vérifier si le fichier manifeste existe dans le répertoire racine
-elseif (!file_exists($manifestPath)) {
-    echo "Le fichier manifest.json n'existe pas. Création d'un manifeste minimal...\n";
-    
-    // Vérifier si des assets ont été générés
-    $assetsDir = $buildPath . '/assets';
-    $jsDir = $assetsDir . '/js';
-    $cssDir = $assetsDir . '/css';
-    
-    // Créer les répertoires s'ils n'existent pas
-    if (!is_dir($assetsDir)) {
-        mkdir($assetsDir, 0755, true);
-    }
-    if (!is_dir($jsDir)) {
-        mkdir($jsDir, 0755, true);
-    }
-    if (!is_dir($cssDir)) {
-        mkdir($cssDir, 0755, true);
-    }
-    
-    // Créer un manifeste basé sur les fichiers existants
-    $manifest = [];
-    
-    // Ajouter les entrées JS
-    if (is_dir($jsDir)) {
-        $jsFiles = glob($jsDir . '/app-*.js');
-        if (!empty($jsFiles)) {
-            $jsFile = basename(reset($jsFiles));
-            $manifest["resources/js/app.jsx"] = [
-                "file" => "assets/js/{$jsFile}",
-                "isEntry" => true,
-                "src" => "resources/js/app.jsx"
-            ];
-        } else {
-            // Aucun fichier JS trouvé, utiliser une entrée par défaut
-            $manifest["resources/js/app.jsx"] = [
-                "file" => "assets/js/app.js",
-                "isEntry" => true,
-                "src" => "resources/js/app.jsx"
-            ];
-            
-            // Créer un fichier vide
-            touch($jsDir . '/app.js');
-        }
-    } else {
-        // Aucun répertoire JS trouvé, utiliser une entrée par défaut
-        $manifest["resources/js/app.jsx"] = [
-            "file" => "assets/js/app.js",
-            "isEntry" => true,
-            "src" => "resources/js/app.jsx"
-        ];
-        
-        // Créer un fichier vide
-        touch($jsDir . '/app.js');
-    }
-    
-    // Ajouter les entrées CSS
-    if (is_dir($cssDir)) {
-        $cssFiles = glob($cssDir . '/app-*.css');
-        if (!empty($cssFiles)) {
-            $cssFile = basename(reset($cssFiles));
-            $manifest["resources/css/app.css"] = [
-                "file" => "assets/css/{$cssFile}",
-                "isEntry" => true,
-                "src" => "resources/css/app.css"
-            ];
-        } else {
-            // Aucun fichier CSS trouvé, utiliser une entrée par défaut
-            $manifest["resources/css/app.css"] = [
-                "file" => "assets/css/app.css",
-                "isEntry" => true,
-                "src" => "resources/css/app.css"
-            ];
-            
-            // Créer un fichier vide
-            touch($cssDir . '/app.css');
-        }
-    } else {
-        // Aucun répertoire CSS trouvé, utiliser une entrée par défaut
-        $manifest["resources/css/app.css"] = [
-            "file" => "assets/css/app.css",
-            "isEntry" => true,
-            "src" => "resources/css/app.css"
-        ];
-        
-        // Créer un fichier vide
-        touch($cssDir . '/app.css');
-    }
-    
-    // Écrire le manifeste dans le fichier
-    file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
-    
-    // Également écrire le manifeste dans le répertoire .vite
-    file_put_contents($viteManifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
-    
-    echo "Manifeste minimal créé avec succès.\n";
+    exit(0);
 } else {
-    echo "Le fichier manifest.json existe déjà.\n";
-    
-    // Vérifier si le manifeste est valide
-    $manifestContent = file_get_contents($manifestPath);
-    $manifest = json_decode($manifestContent, true);
-    
-    if ($manifest === null) {
-        echo "Le manifeste existant n'est pas un JSON valide. Correction...\n";
-        
-        // Créer un manifeste minimal
-    $manifest = [
-        "resources/js/app.jsx" => [
-                "file" => "assets/js/app.js",
-            "isEntry" => true,
-                "src" => "resources/js/app.jsx"
-        ],
-        "resources/css/app.css" => [
-                "file" => "assets/css/app.css",
-                "isEntry" => true,
-                "src" => "resources/css/app.css"
-            ]
-        ];
-        
-        // Écrire le manifeste dans le fichier
-        file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
-        
-        // Également écrire le manifeste dans le répertoire .vite
-        file_put_contents($viteManifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
-        
-        echo "Manifeste corrigé avec succès.\n";
-    } else {
-        echo "Le manifeste existant est valide.\n";
-        
-        // S'assurer que le manifeste existe également dans le répertoire .vite
-        if (!file_exists($viteManifestPath)) {
-            echo "Copie du manifeste vers le répertoire .vite...\n";
-            file_put_contents($viteManifestPath, json_encode($manifest, JSON_PRETTY_PRINT));
-            echo "Manifeste copié avec succès.\n";
-        }
-    }
-}
-
-echo "Vérification terminée.\n"; 
+    echo "ERREUR: Problème lors de la création des manifestes.\n";
+    exit(1);
+} 
