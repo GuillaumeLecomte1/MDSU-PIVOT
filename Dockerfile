@@ -36,7 +36,8 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/logs \
     && mkdir -p /var/www/bootstrap/cache \
     && mkdir -p /var/www/public/images \
-    && mkdir -p /var/www/public/build/assets
+    && mkdir -p /var/www/public/build/assets \
+    && mkdir -p /var/www/docker
 
 # Configuration PHP pour les performances
 RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && \
