@@ -66,9 +66,11 @@ COPY docker/logging.php /var/www/docker/logging.php
 COPY permissions.sh /var/www/docker/permissions.sh
 COPY docker/post-deploy.sh /var/www/docker/post-deploy.sh
 COPY docker/fix-bootstrap.php /var/www/docker/fix-bootstrap.php
+COPY docker/radical-fix.sh /var/www/docker/radical-fix.sh
+COPY docker/quick-fix.php /var/www/docker/quick-fix.php
 
 # Donner les permissions d'exécution aux scripts
-RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php /var/www/docker/optimize-laravel.sh /var/www/docker/permissions.sh /var/www/docker/entrypoint.sh /var/www/docker/fix-permissions.sh /var/www/docker/post-deploy.sh
+RUN chmod +x /var/www/docker/fix-vite-issues.php /var/www/docker/fix-https-urls.php /var/www/docker/fix-env.sh /var/www/docker/fix-pusher.php /var/www/docker/fix-mixed-content.php /var/www/docker/optimize-laravel.sh /var/www/docker/permissions.sh /var/www/docker/entrypoint.sh /var/www/docker/fix-permissions.sh /var/www/docker/post-deploy.sh /var/www/docker/radical-fix.sh /var/www/docker/quick-fix.php
 
 # Copier le code source
 COPY . /var/www/
