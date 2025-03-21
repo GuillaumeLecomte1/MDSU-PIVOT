@@ -11,7 +11,7 @@ return [
     | one of the channels defined in the "channels" configuration array.
     |
     */
-    'default' => env('LOG_CHANNEL', 'stderr'),
+    'default' => 'stderr',
 
     /*
     |--------------------------------------------------------------------------
@@ -24,7 +24,7 @@ return [
     |
     */
     'deprecations' => [
-        'channel' => env('LOG_DEPRECATIONS_CHANNEL', 'stderr'),
+        'channel' => 'stderr',
         'trace' => false,
     ],
 
@@ -58,7 +58,7 @@ return [
 
         'stderr' => [
             'driver' => 'stderr',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => 'debug',
         ],
 
         'emergency' => [
