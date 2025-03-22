@@ -13,9 +13,14 @@
 
         <!-- Scripts and Styles -->
         @routes
-        <!-- Remplacement des directives Vite par des liens directs vers les assets -->
-        <link href="{{ asset('build/assets/app-A7c1PmXW.css') }}" rel="stylesheet">
-        <script src="{{ asset('build/assets/app-BuuR2CRE.js') }}" defer></script>
+        <link href="/build/app.css" rel="stylesheet">
+
+        <!-- Inertia -->
+        <script src="https://unpkg.com/inertia.js@0.11.1/dist/inertia.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.prod.js"></script>
+        <script src="https://unpkg.com/@inertiajs/inertia-vue3"></script>
+        <script src="/build/app.js" defer></script>
+
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
