@@ -1,18 +1,34 @@
 version: '3.8'
 
+networks:
+  pivot-network:
+    name: pivot-network
+    driver: bridge
+  traefik-network:
+    external: true
+
+volumes:
+  mysql-data:
+    name: pivot-mysql-data
+    driver: local
+
 services:
   app:
-    build:
+    build: 
       context: .
       dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     image: pivot-app:${TAG:-latest}
     container_name: pivot-app
     restart: unless-stopped
+    depends_on:
+      - mysql
     volumes:
       - ./storage/app/public:/var/www/storage/app/public
     environment:
       - APP_ENV=production
-      - APP_DEBUG=false
+      - APP_DEBUG=${APP_DEBUG:-false}
       - DB_CONNECTION=mysql
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -22,6 +38,12 @@ services:
     networks:
       - pivot-network
       - traefik-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pivot.rule=Host(`pivot.guillaume-lcte.fr`)"
@@ -29,6 +51,8 @@ services:
       - "traefik.http.routers.pivot.tls.certresolver=letsencrypt"
       - "traefik.http.services.pivot.loadbalancer.server.port=4004"
       - "traefik.docker.network=traefik-network"
+      - "traefik.http.middlewares.pivot-compress.compress=true"
+      - "traefik.http.routers.pivot.middlewares=pivot-compress"
 
   mysql:
     image: mysql:8.0
@@ -37,17 +61,15 @@ services:
     environment:
       MYSQL_DATABASE: pivot
       MYSQL_ROOT_PASSWORD: 8ocxlumnakezr2wdfcwiijct2rejsgdr
+      MYSQL_ROOT_HOST: '%'
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
       - pivot-network
-
-networks:
-  pivot-network:
-    driver: bridge
-  traefik-network:
-    external: true
-
-volumes:
-  mysql-data:
-    driver: local 
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p8ocxlumnakezr2wdfcwiijct2rejsgdr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s 

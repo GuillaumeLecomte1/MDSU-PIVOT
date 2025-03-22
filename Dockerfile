@@ -1,7 +1,10 @@
-FROM php:8.2-fpm
+FROM php:8.2-fpm AS base
 
-# Installation des dépendances système essentielles
-RUN apt-get update && apt-get install -y \
+# Arguments pour le cache-busting
+ARG BUILDKIT_INLINE_CACHE=1
+
+# Installation des dépendances système en une seule couche
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     libpng-dev \
@@ -17,92 +20,87 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     dnsutils \
     telnet \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-install -j$(nproc) pdo_mysql mbstring exif pcntl bcmath gd zip mysqli intl \
+    && mkdir -p /var/www/storage/app/public \
+    /var/www/storage/framework/cache \
+    /var/www/storage/framework/sessions \
+    /var/www/storage/framework/views \
+    /var/shm/laravel-logs \
+    /var/www/bootstrap/cache \
+    /var/www/public/images \
+    /var/www/public/build/assets \
+    /var/www/docker
+
+# Installation de Node.js
+FROM base AS node
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Installation de Node.js 20.x
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
-
-# Installation des extensions PHP essentielles
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip mysqli intl
-
-# Installation de Composer
+# Installation de Composer et préparation de l'environnement PHP
+FROM node AS composer
 COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
 
-# Définition du répertoire de travail
+# Configuration de PHP et PHP-FPM
+RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_execution_time = 600" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "log_errors = On" > /usr/local/etc/php/conf.d/error-log.ini \
+    && echo "error_log = /dev/stderr" >> /usr/local/etc/php/conf.d/error-log.ini \
+    && echo "catch_workers_output = yes" >> /usr/local/etc/php-fpm.d/www.conf \
+    && echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf \
+    && echo "php_admin_value[error_log] = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf \
+    && echo "listen = 127.0.0.1:9000" > /usr/local/etc/php-fpm.d/zz-docker.conf
+
 WORKDIR /var/www
 
-# Création des répertoires nécessaires
-RUN mkdir -p /var/www/storage/app/public \
-    && mkdir -p /var/www/storage/framework/cache \
-    && mkdir -p /var/www/storage/framework/sessions \
-    && mkdir -p /var/www/storage/framework/views \
-    && mkdir -p /var/shm/laravel-logs \
-    && ln -sf /dev/shm/laravel-logs /var/www/storage/logs \
-    && mkdir -p /var/www/bootstrap/cache \
-    && mkdir -p /var/www/public/images \
-    && mkdir -p /var/www/public/build/assets \
-    && mkdir -p /var/www/docker
-
-# Configuration PHP pour les performances
-RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && \
-    echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/uploads.ini && \
-    echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/uploads.ini && \
-    echo "max_execution_time = 600" >> /usr/local/etc/php/conf.d/uploads.ini && \
-    echo "log_errors = On" > /usr/local/etc/php/conf.d/error-log.ini && \
-    echo "error_log = /dev/stderr" >> /usr/local/etc/php/conf.d/error-log.ini
-
-# Configuration de php-fpm
-RUN echo "catch_workers_output = yes" >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo "php_admin_value[error_log] = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo "listen = 127.0.0.1:9000" > /usr/local/etc/php-fpm.d/zz-docker.conf
-
-# Configuration Nginx et Supervisor
+# Copie des fichiers de configuration
+FROM composer AS config
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Copy the entrypoint script
 COPY docker/entrypoint.sh /var/www/docker/entrypoint.sh
 RUN chmod +x /var/www/docker/entrypoint.sh
 
-# Copie du code source
-COPY . /var/www/
+# Ajout des diagnostics et des scripts de santé
+RUN echo '<?php phpinfo();' > /var/www/public/info.php \
+    && echo '<?php echo json_encode(["status" => "ok", "env" => $_SERVER, "timestamp" => time()]);' > /var/www/public/health-check.php \
+    && ln -sf /dev/shm/laravel-logs /var/www/storage/logs
 
-# Copy production environment file
+# Etape de build de l'application
+FROM config AS builder
+COPY composer.json composer.lock ./
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-autoloader --no-scripts --no-dev
+
+# Copie de l'application
+COPY . .
 COPY docker/env.production /var/www/.env
 
-# Create a custom hosts entry to ensure MySQL resolution
-RUN echo "# Custom hosts entries for network troubleshooting" > /etc/hosts.custom
+# Installation des dépendances et optimisation
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev \
+    && php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache \
+    && php -l public/index.php \
+    && php -l bootstrap/app.php
 
-# Add a custom health check script
-RUN echo '<?php phpinfo();' > /var/www/public/info.php && \
-    echo '<?php echo json_encode(["status" => "ok", "env" => $_SERVER, "timestamp" => time()]);' > /var/www/public/health-check.php
+# Étape finale
+FROM builder AS final
 
-# Ensure entrypoint.sh still has executable permissions after copying files
-RUN chmod +x /var/www/docker/entrypoint.sh && \
-    ls -la /var/www/docker/entrypoint.sh
+# Configuration des permissions
+RUN chmod -R 777 /var/www/storage \
+    && chmod -R 777 /var/www/bootstrap/cache \
+    && chmod -R 777 /dev/shm/laravel-logs \
+    && chown -R www-data:www-data /var/www \
+    && chown -R www-data:www-data /dev/shm/laravel-logs \
+    && touch /dev/shm/laravel-logs/laravel.log \
+    && chmod 666 /dev/shm/laravel-logs/laravel.log \
+    && chmod +x /var/www/docker/entrypoint.sh
 
-# Installation des dépendances PHP
-RUN cd /var/www && \
-    COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev
-
-# Vérification du code source avant déploiement
-RUN cd /var/www && \
-    php artisan route:list --no-ansi > /dev/null || echo "Vérification des routes terminée" && \
-    php -l public/index.php && \
-    php -l bootstrap/app.php
-
-# Configuration des permissions des répertoires critiques
-RUN chmod -R 777 /var/www/storage && \
-    chmod -R 777 /var/www/bootstrap/cache && \
-    chmod -R 777 /dev/shm/laravel-logs && \
-    chown -R www-data:www-data /var/www && \
-    chown -R www-data:www-data /dev/shm/laravel-logs && \
-    touch /dev/shm/laravel-logs/laravel.log && \
-    chmod 666 /dev/shm/laravel-logs/laravel.log && \
-    chmod +x /var/www/docker/entrypoint.sh  # Triple-check permissions
+# Nettoyage pour réduire la taille de l'image
+RUN rm -rf /var/www/node_modules \
+    && find /var/www -name ".git*" -type f -delete
 
 # Exposition du port
 EXPOSE 4004
@@ -110,5 +108,5 @@ EXPOSE 4004
 # Point d'entrée
 ENTRYPOINT ["/var/www/docker/entrypoint.sh"]
 
-# Fallback command in case ENTRYPOINT fails
+# Commande de secours en cas d'échec d'ENTRYPOINT
 CMD ["/bin/bash", "-c", "chmod +x /var/www/docker/entrypoint.sh && /var/www/docker/entrypoint.sh"] 
