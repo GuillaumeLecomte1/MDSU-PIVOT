@@ -8,70 +8,110 @@ ini_set('error_log', 'php://stderr');
 
 // Logger de diagnostic simple sans dépendances
 function pivot_log($message, $type = 'INDEX') {
-    $timestamp = date('Y-m-d H:i:s');
-    error_log("[$timestamp] [$type] $message");
+    error_log("[$type] $message");
 }
 
-// Capture d'erreurs fatales
-register_shutdown_function(function() {
+// Vérifier si on est en mode diagnostic
+if (isset($_GET['diag'])) {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'timestamp' => date('Y-m-d H:i:s'),
+        'php_version' => phpversion(),
+        'memory_limit' => ini_get('memory_limit'),
+        'max_execution_time' => ini_get('max_execution_time'),
+        'server' => $_SERVER,
+        'env' => getenv(),
+    ], JSON_PRETTY_PRINT);
+    exit;
+}
+
+// Enregistrer les erreurs fatales
+register_shutdown_function(function () {
     $error = error_get_last();
     if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        pivot_log("FATAL ERROR: {$error['message']} in {$error['file']} on line {$error['line']}", 'FATAL');
-        // Message d'erreur convivial
-        if (!headers_sent()) {
-            header('HTTP/1.1 500 Internal Server Error');
-            echo "<h1>Une erreur est survenue</h1>";
-            echo "<p>Le serveur a rencontré une erreur interne. Veuillez réessayer plus tard.</p>";
-        }
+        pivot_log('ERREUR FATALE: ' . $error['message'] . ' dans ' . $error['file'] . ' ligne ' . $error['line'], 'FATAL');
     }
 });
 
-pivot_log("Démarrage de l'application");
-
-// Gestionnaire d'exceptions
-set_exception_handler(function($e) {
-    pivot_log("EXCEPTION: {$e->getMessage()} in {$e->getFile()} on line {$e->getLine()}", 'EXCEPTION');
-});
-
-// Vérification des répertoires essentiels
-$storageDirs = [
-    __DIR__.'/../storage/logs',
-    __DIR__.'/../storage/framework/sessions',
-    __DIR__.'/../storage/framework/views',
-    __DIR__.'/../storage/framework/cache',
-    __DIR__.'/../bootstrap/cache',
-];
-
-foreach ($storageDirs as $dir) {
-    if (!is_dir($dir)) {
-        @mkdir($dir, 0777, true);
-    }
-    @chmod($dir, 0777);
-}
-
-// Déterminer si l'application est en mode maintenance
-if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
-    require $maintenance;
-}
-
-// Chargement de l'application
-require __DIR__.'/../vendor/autoload.php';
-
-$app = require_once __DIR__.'/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-
-// Traitement de la requête avec gestion des erreurs
 try {
+    pivot_log('Démarrage de l\'application');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Check If The Application Is Under Maintenance
+    |--------------------------------------------------------------------------
+    |
+    | If the application is in maintenance / demo mode via the "down" command
+    | we will load this file so that any pre-rendered content can be shown
+    | instead of starting the framework, which could cause an exception.
+    |
+    */
+
+    if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+        require $maintenance;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Register The Auto Loader
+    |--------------------------------------------------------------------------
+    |
+    | Composer provides a convenient, automatically generated class loader for
+    | this application. We just need to utilize it! We'll simply require it
+    | into the script here so we don't need to manually load our classes.
+    |
+    */
+
+    pivot_log('Chargement de l\'autoloader');
+    require __DIR__.'/../vendor/autoload.php';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Run The Application
+    |--------------------------------------------------------------------------
+    |
+    | Once we have the application, we can handle the incoming request using
+    | the application's HTTP kernel. Then, we will send the response back
+    | to this client's browser, allowing them to enjoy our application.
+    |
+    */
+
+    pivot_log('Chargement du bootstrap');
+    $app = require_once __DIR__.'/../bootstrap/app.php';
+
+    pivot_log('Création du kernel');
+    $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+    pivot_log('Traitement de la requête');
     $response = $kernel->handle(
         $request = Illuminate\Http\Request::capture()
     );
+
+    pivot_log('Envoi de la réponse');
     $response->send();
+
+    pivot_log('Terminaison de la requête');
     $kernel->terminate($request, $response);
-} catch (\Throwable $e) {
-    pivot_log("ERREUR DE TRAITEMENT: {$e->getMessage()}", 'ERROR');
-    if (!headers_sent()) {
-        header('HTTP/1.1 500 Internal Server Error');
-        echo "<h1>Une erreur est survenue</h1>";
-        echo "<p>Le serveur a rencontré une erreur interne. Veuillez réessayer plus tard.</p>";
+} catch (Throwable $e) {
+    pivot_log('EXCEPTION: ' . $e->getMessage() . ' dans ' . $e->getFile() . ' ligne ' . $e->getLine(), 'ERROR');
+    
+    if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    } else {
+        echo "<h1>Erreur interne du serveur</h1>";
+        echo "<p>Message: " . htmlspecialchars($e->getMessage()) . "</p>";
+        
+        if (getenv('APP_DEBUG') == 'true') {
+            echo "<p>Fichier: " . htmlspecialchars($e->getFile()) . " à la ligne " . $e->getLine() . "</p>";
+            echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+        }
     }
+    
+    exit(1);
 }
