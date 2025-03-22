@@ -133,6 +133,12 @@ fi
 log_info "====== NETTOYAGE DU CACHE ======"
 cd /var/www && php artisan optimize:clear
 
+# Mise à jour des paramètres d'URL et d'assets
+log_info "====== MISE À JOUR DES PARAMÈTRES D'URL ======"
+sed -i "s|APP_URL=.*|APP_URL=http://pivot.guillaume-lcte.fr|g" /var/www/.env
+sed -i "s|ASSET_URL=.*|ASSET_URL=http://pivot.guillaume-lcte.fr|g" /var/www/.env
+log_success "URLs mises à jour en HTTP pour éviter les redirections HTTPS"
+
 # Create health check file
 log_info "Creating health check file"
 echo "OK" > /var/www/public/health
