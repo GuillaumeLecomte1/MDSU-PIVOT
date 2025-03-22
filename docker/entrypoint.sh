@@ -27,22 +27,17 @@ trap 'handle_error $LINENO' ERR
 
 # Début du script
 log_info "====== DÉMARRAGE DU CONTENEUR ======"
-log_info "Configuration des permissions..."
 
 # S'assurer que les répertoires de logs existent
 mkdir -p /tmp/laravel-logs
 
-# Configuration des permissions en parallèle pour être plus rapide
-(chmod -R 777 /var/www/storage) &
-(chmod -R 777 /var/www/bootstrap/cache) &
-(chmod -R 777 /tmp/laravel-logs) &
-wait
-
-# Définition de la propriété des fichiers
+# Configuration des permissions
+log_info "Configuration des permissions..."
+chmod -R 777 /var/www/storage
+chmod -R 777 /var/www/bootstrap/cache
+chmod -R 777 /tmp/laravel-logs
 chown -R www-data:www-data /var/www
 chown -R www-data:www-data /tmp/laravel-logs
-
-# S'assurer que le fichier de log existe
 touch /tmp/laravel-logs/laravel.log
 chmod 666 /tmp/laravel-logs/laravel.log
 
@@ -83,13 +78,12 @@ fi
 sed -i "s/CACHE_STORE=database/CACHE_STORE=file/g" /var/www/.env
 sed -i "s/QUEUE_CONNECTION=database/QUEUE_CONNECTION=sync/g" /var/www/.env
 
-# Informations de connexion à la base de données
-log_info "====== INFORMATIONS DE CONNEXION BASE DE DONNÉES ======"
+# Informations de base de données
+log_info "====== INFORMATIONS DE BASE DE DONNÉES ======"
 DB_HOST=$(grep DB_HOST /var/www/.env | cut -d= -f2)
 DB_PORT=$(grep DB_PORT /var/www/.env | cut -d= -f2)
 DB_NAME=$(grep DB_DATABASE /var/www/.env | cut -d= -f2)
 DB_USER=$(grep DB_USERNAME /var/www/.env | cut -d= -f2)
-DB_PASS=$(grep DB_PASSWORD /var/www/.env | cut -d= -f2)
 
 log_info "Database Host: $DB_HOST"
 log_info "Database Port: $DB_PORT"
@@ -146,33 +140,32 @@ if ! composer show | grep -q "laravel/breeze"; then
     composer require --no-interaction laravel/breeze
 fi
 
-# Nettoyage du cache
-log_info "====== NETTOYAGE DU CACHE ======"
-cd /var/www && php artisan config:clear
-cd /var/www && php artisan view:clear
-cd /var/www && php artisan route:clear
-cd /var/www && php artisan optimize:clear
+# Créer les composants Blade s'ils n'existent pas
+log_info "====== VÉRIFICATION DES COMPOSANTS BLADE ======"
+COMPONENTS_DIR="/var/www/resources/views/components"
 
-# Vérification des routes
-log_info "====== VÉRIFICATION DES ROUTES ======"
-cd /var/www && php artisan route:list --no-ansi
-
-# Exécuter les migrations pour la base de données MySQL si spécifié et que la base de données est disponible
-if [ "$RUN_MIGRATIONS" = "true" ] && [ "$connected" = true ]; then
-    log_info "====== EXÉCUTION DES MIGRATIONS ======"
-    cd /var/www && php artisan migrate --force
+if [ ! -f "$COMPONENTS_DIR/input-label.blade.php" ]; then
+    log_info "Création des composants Blade manquants..."
+    echo '<label {{ $attributes->merge(["class" => "block font-medium text-sm text-gray-700"]) }}>{{ $slot }}</label>' > $COMPONENTS_DIR/input-label.blade.php
+    echo '<input {{ $attributes->merge(["class" => "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"]) }}>' > $COMPONENTS_DIR/text-input.blade.php
+    echo '<input type="checkbox" {!! $attributes->merge(["class" => "rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"]) !!}>' > $COMPONENTS_DIR/checkbox.blade.php
+    echo '<button {{ $attributes->merge(["type" => "submit", "class" => "inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"]) }}>{{ $slot }}</button>' > $COMPONENTS_DIR/primary-button.blade.php
+    echo '<div {{ $attributes->merge(["class" => "text-sm text-red-600 space-y-1"]) }}>{{ $slot }}</div>' > $COMPONENTS_DIR/input-error.blade.php
+    echo '<div {{ $attributes->merge(["class" => "p-4 text-sm text-gray-600"]) }}>{{ $slot }}</div>' > $COMPONENTS_DIR/auth-session-status.blade.php
+    chown -R www-data:www-data $COMPONENTS_DIR
+    chmod -R 644 $COMPONENTS_DIR/*.blade.php
 fi
 
-# Créer un fichier de diagnostic
+# Nettoyage du cache
+log_info "====== NETTOYAGE DU CACHE ======"
+cd /var/www && php artisan optimize:clear
+
+# Création d'un fichier de diagnostic
 log_info "====== CRÉATION DU FICHIER DE DIAGNOSTIC ======"
 cat > /var/www/public/server-info.php << 'EOL'
 <?php
 header('Content-Type: application/json');
 
-// Start timer
-$startTime = microtime(true);
-
-// Server info
 $serverInfo = [
     'timestamp' => date('Y-m-d H:i:s'),
     'php_version' => phpversion(),
@@ -180,91 +173,29 @@ $serverInfo = [
     'environment' => [
         'APP_ENV' => getenv('APP_ENV'),
         'APP_DEBUG' => getenv('APP_DEBUG'),
-        'APP_URL' => getenv('APP_URL'),
-    ],
-    'server' => [
-        'SERVER_SOFTWARE' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown',
-        'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-        'HTTP_HOST' => $_SERVER['HTTP_HOST'] ?? 'unknown',
-    ],
-    'memory_usage' => [
-        'current' => memory_get_usage(true),
-        'peak' => memory_get_peak_usage(true),
+        'APP_URL' => getenv('APP_URL')
     ],
     'database' => [
         'DB_CONNECTION' => getenv('DB_CONNECTION'),
         'DB_HOST' => getenv('DB_HOST'),
         'DB_PORT' => getenv('DB_PORT'),
-        'DB_DATABASE' => getenv('DB_DATABASE'),
+        'DB_DATABASE' => getenv('DB_DATABASE')
     ],
-    'storage' => [
-        'permissions' => [
-            'storage_dir' => substr(sprintf('%o', fileperms('/var/www/storage')), -4),
-            'bootstrap_cache' => substr(sprintf('%o', fileperms('/var/www/bootstrap/cache')), -4),
-        ]
+    'file_permissions' => [
+        'storage_dir' => substr(sprintf('%o', fileperms('/var/www/storage')), -4),
+        'bootstrap_cache' => substr(sprintf('%o', fileperms('/var/www/bootstrap/cache')), -4)
     ],
     'components' => [
-        'input-label' => file_exists('/var/www/resources/views/components/input-label.blade.php'),
-        'breeze_installed' => class_exists('Laravel\Breeze\BreezeServiceProvider')
+        'input-label_exists' => file_exists('/var/www/resources/views/components/input-label.blade.php')
     ]
 ];
-
-// Test database connection
-try {
-    $startDb = microtime(true);
-    $pdo = new PDO(
-        'mysql:host='.getenv('DB_HOST').';dbname='.getenv('DB_DATABASE'),
-        getenv('DB_USERNAME'),
-        getenv('DB_PASSWORD'),
-        [
-            PDO::ATTR_TIMEOUT => 5,
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-        ]
-    );
-    $query = $pdo->query('SELECT 1');
-    $serverInfo['database']['connection_test'] = 'success';
-    $serverInfo['database']['connection_time_ms'] = round((microtime(true) - $startDb) * 1000, 2);
-    
-    // Get tables count if connection succeeds
-    $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-    $serverInfo['database']['tables_count'] = count($tables);
-} catch (Exception $e) {
-    $serverInfo['database']['connection_test'] = 'failed';
-    $serverInfo['database']['error'] = $e->getMessage();
-}
-
-// Network tests
-$serverInfo['network_tests'] = [];
-
-// Test MySQL connection with hostname
-$host = getenv('DB_HOST');
-$port = getenv('DB_PORT');
-$startConn = microtime(true);
-$conn = @fsockopen($host, $port, $errno, $errstr, 5);
-if ($conn) {
-    $serverInfo['network_tests']['mysql_tcp'] = [
-        'status' => 'success',
-        'time_ms' => round((microtime(true) - $startConn) * 1000, 2)
-    ];
-    fclose($conn);
-} else {
-    $serverInfo['network_tests']['mysql_tcp'] = [
-        'status' => 'failed',
-        'error' => "$errstr ($errno)"
-    ];
-}
-
-// Include response time
-$serverInfo['response_time_ms'] = round((microtime(true) - $startTime) * 1000, 2);
 
 echo json_encode($serverInfo, JSON_PRETTY_PRINT);
 EOL
 chmod 644 /var/www/public/server-info.php
 
 # Créer un fichier de vérification de l'état
-cat > /var/www/public/health << 'EOL'
-OK
-EOL
+echo "OK" > /var/www/public/health
 chmod 644 /var/www/public/health
 
 log_success "====== DÉMARRAGE DE SUPERVISORD ======"
