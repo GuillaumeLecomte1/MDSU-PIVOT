@@ -14,32 +14,61 @@
         <!-- Scripts and Styles -->
         @routes
         <link href="/build/app.css" rel="stylesheet">
-        <script src="/build/app.js" defer></script>
         
-        <!-- Essayer de charger les scripts Inertia.js à partir du CDN si disponible -->
-        <script src="https://unpkg.com/@inertiajs/inertia@0.11.1/dist/index.global.js" defer></script>
-        <script src="https://unpkg.com/@inertiajs/inertia-vue3@0.6.0/dist/index.global.js" defer></script>
-        <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.prod.js" defer></script>
+        <!-- CDNs pour React et Inertia -->
+        <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/@inertiajs/inertia@0.11.1/dist/index.global.js"></script>
+        <script src="https://unpkg.com/@inertiajs/inertia-react@0.8.1/dist/index.global.js"></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        
+        <!-- Application script -->
+        <script src="/build/app.js" defer></script>
 
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
         @inertia
 
-        <div id="app-loading" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255,255,255,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+        <div id="app-loading" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255,255,255,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center;">
             <div style="text-align: center; padding: 1rem; background-color: white; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">Chargement...</div>
                 <div>Veuillez patienter pendant le chargement de l'application.</div>
             </div>
         </div>
         
-        <script>
+        <!-- Minimal React component if Inertia fails -->
+        <div id="fallback-app" style="display: none; max-width: 800px; margin: 2rem auto; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: white;"></div>
+        
+        <script type="text/babel">
             // Supprime l'indicateur de chargement après 3 secondes
             document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(function() {
                     var loadingElement = document.getElementById('app-loading');
                     if (loadingElement) {
                         loadingElement.style.display = 'none';
+                    }
+                    
+                    // Si Inertia n'a pas encore rendu l'application, afficher un composant de secours
+                    if (!document.querySelector('[data-page]')) {
+                        const fallbackElement = document.getElementById('fallback-app');
+                        if (fallbackElement) {
+                            fallbackElement.style.display = 'block';
+                            // Rendu React basique
+                            const FallbackComponent = () => {
+                                return (
+                                    <div>
+                                        <h1 style={{fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem'}}>Application PIVOT</h1>
+                                        <p style={{marginBottom: '1rem'}}>L'application Inertia.js n'a pas pu se charger correctement.</p>
+                                        <a href="/login" style={{display: 'inline-block', padding: '0.5rem 1rem', backgroundColor: '#4F46E5', color: 'white', borderRadius: '0.25rem', textDecoration: 'none'}}>
+                                            Accéder à la page de connexion
+                                        </a>
+                                    </div>
+                                );
+                            };
+                            
+                            ReactDOM.render(<FallbackComponent />, fallbackElement);
+                        }
                     }
                 }, 3000);
             });
