@@ -13,8 +13,9 @@
 
         <!-- Scripts and Styles -->
         @routes
-        @viteReactRefresh
-        @vite(['resources/js/app.jsx'])
+        <!-- Remplacement des directives Vite par des liens directs vers les assets -->
+        <link href="{{ asset('build/assets/app-A7c1PmXW.css') }}" rel="stylesheet">
+        <script src="{{ asset('build/assets/app-BuuR2CRE.js') }}" defer></script>
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
