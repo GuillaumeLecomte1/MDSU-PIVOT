@@ -69,7 +69,8 @@ RUN mkdir -p /var/www/storage/app/public \
     /var/www/public/images \
     /var/www/public/build/assets \
     /var/www/docker \
-    /var/www/storage/logs
+    /var/www/storage/logs \
+    /var/www/resources/views/components
 
 # Copie des fichiers de configuration
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
@@ -119,7 +120,15 @@ RUN chmod -R 777 /var/www/storage \
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --no-dev --optimize
 
 # Installer les composants Blade manquants (pour résoudre l'erreur input-label)
-RUN composer require --no-interaction laravel/breeze
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer require --no-interaction laravel/breeze
+
+# Créer manuellement les composants Blade requis
+RUN echo '<label {{ $attributes->merge(["class" => "block font-medium text-sm text-gray-700"]) }}>{{ $slot }}</label>' > /var/www/resources/views/components/input-label.blade.php && \
+    echo '<input {{ $attributes->merge(["class" => "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"]) }}>' > /var/www/resources/views/components/text-input.blade.php && \
+    echo '<input type="checkbox" {!! $attributes->merge(["class" => "rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"]) !!}>' > /var/www/resources/views/components/checkbox.blade.php && \
+    echo '<button {{ $attributes->merge(["type" => "submit", "class" => "inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"]) }}>{{ $slot }}</button>' > /var/www/resources/views/components/primary-button.blade.php && \
+    echo '<div {{ $attributes->merge(["class" => "text-sm text-red-600 space-y-1"]) }}>{{ $slot }}</div>' > /var/www/resources/views/components/input-error.blade.php && \
+    echo '<div {{ $attributes->merge(["class" => "p-4 text-sm text-gray-600"]) }}>{{ $slot }}</div>' > /var/www/resources/views/components/auth-session-status.blade.php
 
 # Vérifier la syntaxe PHP avant d'exécuter les commandes Artisan
 RUN echo "Vérification de la syntaxe PHP..." && \
@@ -132,8 +141,7 @@ RUN if [ "$SKIP_ARTISAN_COMMANDS" = "false" ]; then \
         php artisan view:clear || true && \
         php artisan route:clear || true && \
         php artisan optimize:clear || true && \
-        php artisan config:cache || true && \
-        php artisan view:cache || true; \
+        php artisan config:cache || true; \
     else \
         echo "Commandes Artisan ignorées."; \
     fi
