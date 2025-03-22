@@ -32,20 +32,24 @@ NODE_VERSION="20"
 CACHE_ENABLED=1
 PRUNE_IMAGES=0
 VERBOSE=0
+SKIP_ARTISAN_COMMANDS=false
+CHECK_PHP_SYNTAX_ONLY=false
 
 # Aide
 show_help() {
   echo -e "${YELLOW}Options disponibles:${NC}"
-  echo -e "  --help                Affiche l'aide"
-  echo -e "  --push                Pousse l'image vers le registre Docker"
-  echo -e "  --remote-deploy       Déploie sur le serveur distant"
-  echo -e "  --server=HOST         Spécifie le serveur de déploiement (défaut: ${SERVER_HOST})"
-  echo -e "  --env=ENV             Spécifie l'environnement (défaut: ${APP_ENV})"
-  echo -e "  --debug               Active le mode debug"
-  echo -e "  --node-version=VER    Spécifie la version de Node.js (défaut: ${NODE_VERSION})"
-  echo -e "  --no-cache            Désactive le cache Docker"
-  echo -e "  --prune               Nettoie les images Docker non utilisées"
-  echo -e "  --verbose             Affiche plus de détails"
+  echo -e "  --help                  Affiche l'aide"
+  echo -e "  --push                  Pousse l'image vers le registre Docker"
+  echo -e "  --remote-deploy         Déploie sur le serveur distant"
+  echo -e "  --server=HOST           Spécifie le serveur de déploiement (défaut: ${SERVER_HOST})"
+  echo -e "  --env=ENV               Spécifie l'environnement (défaut: ${APP_ENV})"
+  echo -e "  --debug                 Active le mode debug"
+  echo -e "  --node-version=VER      Spécifie la version de Node.js (défaut: ${NODE_VERSION})"
+  echo -e "  --no-cache              Désactive le cache Docker"
+  echo -e "  --prune                 Nettoie les images Docker non utilisées"
+  echo -e "  --verbose               Affiche plus de détails"
+  echo -e "  --skip-artisan          Ignore les commandes Artisan pendant le build"
+  echo -e "  --syntax-only           Vérifie uniquement la syntaxe PHP sans exécuter les commandes Artisan"
   exit 0
 }
 
@@ -91,6 +95,15 @@ for arg in "$@"; do
       VERBOSE=1
       shift
       ;;
+    --skip-artisan)
+      SKIP_ARTISAN_COMMANDS=true
+      shift
+      ;;
+    --syntax-only)
+      CHECK_PHP_SYNTAX_ONLY=true
+      SKIP_ARTISAN_COMMANDS=true
+      shift
+      ;;
   esac
 done
 
@@ -111,12 +124,18 @@ print_header "Construction de l'image Docker"
 echo -e "${YELLOW}Environnement: ${NC}${APP_ENV}"
 echo -e "${YELLOW}Debug: ${NC}${APP_DEBUG}"
 echo -e "${YELLOW}Node.js: ${NC}${NODE_VERSION}"
+echo -e "${YELLOW}Ignorer les commandes Artisan: ${NC}${SKIP_ARTISAN_COMMANDS}"
+
+if [ "$CHECK_PHP_SYNTAX_ONLY" = "true" ]; then
+  echo -e "${YELLOW}Mode vérification syntaxe uniquement${NC}"
+fi
 
 DOCKER_BUILDKIT=$BUILDKIT_ENABLED docker build $BUILD_OPTS \
   --build-arg BUILDKIT_INLINE_CACHE=$CACHE_ENABLED \
   --build-arg APP_ENV=$APP_ENV \
   --build-arg NODE_VERSION=$NODE_VERSION \
   --build-arg APP_DEBUG=$APP_DEBUG \
+  --build-arg SKIP_ARTISAN_COMMANDS=$SKIP_ARTISAN_COMMANDS \
   --tag pivot-app:${VERSION} \
   --tag pivot-app:latest \
   .
@@ -147,7 +166,7 @@ if [ $PUSH_IMAGE -eq 1 ]; then
 fi
 
 # 4. Déploiement distant
-if [ $REMOTE_DEPLOY -eq 1 ]; then
+if [ $REMOTE_DEPLOY -eq 1 ] && [ "$CHECK_PHP_SYNTAX_ONLY" != "true" ]; then
   print_header "Déploiement sur le serveur distant ${SERVER_HOST}"
   
   # Préparation du docker-compose.yml avec les variables d'environnement
@@ -166,7 +185,7 @@ if [ $REMOTE_DEPLOY -eq 1 ]; then
   echo -e "${YELLOW}Exécution des commandes sur le serveur distant...${NC}"
   ssh $SERVER_HOST "cd /tmp && \
     echo 'Vérification des volumes et réseaux...' && \
-    docker network create pivot-network || true && \
+    docker network create pivot-network 2>/dev/null || true && \
     echo 'Arrêt des conteneurs existants...' && \
     docker-compose down && \
     echo 'Démarrage des nouveaux conteneurs...' && \
@@ -182,6 +201,8 @@ if [ $REMOTE_DEPLOY -eq 1 ]; then
   fi
   
   echo -e "${GREEN}Déploiement terminé avec succès!${NC}"
+elif [ "$CHECK_PHP_SYNTAX_ONLY" = "true" ]; then
+  print_header "Mode vérification de syntaxe uniquement - déploiement ignoré"
 fi
 
 print_header "Processus terminé"
@@ -189,4 +210,5 @@ print_header "Processus terminé"
 # Afficher des informations utiles
 echo -e "${YELLOW}Pour tester localement: ${NC}docker-compose up -d"
 echo -e "${YELLOW}Pour déployer: ${NC}./deploy.sh --remote-deploy"
-echo -e "${YELLOW}Pour déboguer: ${NC}./deploy.sh --env=development --debug" 
+echo -e "${YELLOW}Pour déboguer: ${NC}./deploy.sh --env=development --debug"
+echo -e "${YELLOW}Pour vérifier la syntaxe PHP uniquement: ${NC}./deploy.sh --syntax-only" 

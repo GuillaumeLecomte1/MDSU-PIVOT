@@ -10,9 +10,11 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', 'php://stderr');
 
-// Logger simple
-function bootstrap_log($message) {
-    error_log("[BOOTSTRAP] $message");
+// Logger simple - vérifier si la fonction n'existe pas déjà avant de la déclarer
+if (!function_exists('bootstrap_log')) {
+    function bootstrap_log($message) {
+        error_log("[BOOTSTRAP] $message");
+    }
 }
 
 bootstrap_log("Démarrage de l'application");

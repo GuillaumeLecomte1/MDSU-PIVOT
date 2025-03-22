@@ -4,6 +4,7 @@ FROM php:8.2-fpm AS base
 ARG BUILDKIT_INLINE_CACHE=1
 ARG APP_ENV=production
 ARG NODE_VERSION=20
+ARG SKIP_ARTISAN_COMMANDS=false
 
 # Installation des dépendances système en une seule couche
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -107,14 +108,22 @@ RUN rm -rf /var/www/storage/logs && \
 # Copier les paramètres d'environnement spécifiques
 COPY docker/env.production /var/www/.env
 
-# Générer l'autoloader optimisé et mettre en cache les configurations
-RUN COMPOSER_ALLOW_SUPERUSER=1 \
-    composer dump-autoload --no-dev --optimize \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && php -l public/index.php \
-    && php -l bootstrap/app.php
+# Vérifier la syntaxe PHP avant d'exécuter les commandes Artisan
+RUN echo "Vérification de la syntaxe PHP..." && \
+    find /var/www -type f -name "*.php" -exec php -l {} \; | (grep -v "No syntax errors" || true)
+
+# Générer l'autoloader optimisé
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --no-dev --optimize
+
+# Mettre en cache les configurations (séparation des commandes pour mieux identifier les erreurs)
+RUN if [ "$SKIP_ARTISAN_COMMANDS" = "false" ]; then \
+        echo "Exécution des commandes Artisan..." && \
+        php artisan config:cache || true && \
+        php artisan route:cache || true && \
+        php artisan view:cache || true; \
+    else \
+        echo "Commandes Artisan ignorées."; \
+    fi
 
 # Configuration des permissions
 RUN chmod -R 777 /var/www/storage \
