@@ -13,6 +13,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     supervisor \
+    iputils-ping \
+    net-tools \
+    dnsutils \
+    telnet \
     && rm -rf /var/lib/apt/lists/*
 
 # Installation de Node.js 20.x
@@ -34,7 +38,8 @@ RUN mkdir -p /var/www/storage/app/public \
     && mkdir -p /var/www/storage/framework/cache \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
-    && mkdir -p /var/www/storage/logs \
+    && mkdir -p /var/shm/laravel-logs \
+    && ln -sf /dev/shm/laravel-logs /var/www/storage/logs \
     && mkdir -p /var/www/bootstrap/cache \
     && mkdir -p /var/www/public/images \
     && mkdir -p /var/www/public/build/assets \
@@ -68,6 +73,13 @@ COPY . /var/www/
 # Copy production environment file
 COPY docker/env.production /var/www/.env
 
+# Create a custom hosts entry to ensure MySQL resolution
+RUN echo "# Custom hosts entries for network troubleshooting" > /etc/hosts.custom
+
+# Add a custom health check script
+RUN echo '<?php phpinfo();' > /var/www/public/info.php && \
+    echo '<?php echo json_encode(["status" => "ok", "env" => $_SERVER, "timestamp" => time()]);' > /var/www/public/health-check.php
+
 # Ensure entrypoint.sh still has executable permissions after copying files
 RUN chmod +x /var/www/docker/entrypoint.sh && \
     ls -la /var/www/docker/entrypoint.sh
@@ -85,9 +97,11 @@ RUN cd /var/www && \
 # Configuration des permissions des répertoires critiques
 RUN chmod -R 777 /var/www/storage && \
     chmod -R 777 /var/www/bootstrap/cache && \
+    chmod -R 777 /dev/shm/laravel-logs && \
     chown -R www-data:www-data /var/www && \
-    touch /var/www/storage/logs/laravel.log && \
-    chmod 666 /var/www/storage/logs/laravel.log && \
+    chown -R www-data:www-data /dev/shm/laravel-logs && \
+    touch /dev/shm/laravel-logs/laravel.log && \
+    chmod 666 /dev/shm/laravel-logs/laravel.log && \
     chmod +x /var/www/docker/entrypoint.sh  # Triple-check permissions
 
 # Exposition du port
