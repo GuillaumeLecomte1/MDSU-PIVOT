@@ -84,6 +84,7 @@ DB_HOST=$(grep DB_HOST /var/www/.env | cut -d= -f2)
 DB_PORT=$(grep DB_PORT /var/www/.env | cut -d= -f2)
 DB_NAME=$(grep DB_DATABASE /var/www/.env | cut -d= -f2)
 DB_USER=$(grep DB_USERNAME /var/www/.env | cut -d= -f2)
+DB_PASS=$(grep DB_PASSWORD /var/www/.env | cut -d= -f2)
 
 log_info "Database Host: $DB_HOST"
 log_info "Database Port: $DB_PORT"
@@ -102,10 +103,13 @@ max_attempts=30
 counter=0
 connected=false
 
+# Afficher les informations de débogage
+log_info "Attempting to connect with: mysql:host=$DB_HOST;dbname=$DB_NAME user=$DB_USER"
+
 until php -r "
 try {
     \$db = new PDO(
-        'mysql:host=$DB_HOST;dbname=$DB_NAME', 
+        'mysql:host=\"$DB_HOST\";dbname=\"$DB_NAME\"', 
         '$DB_USER', 
         '$DB_PASS'
     );
@@ -131,13 +135,10 @@ done
 if [ $counter -lt $max_attempts ]; then
     log_success "Successfully connected to MySQL database"
     connected=true
-fi
-
-# Vérifier si les packages essentiels sont installés
-log_info "====== VÉRIFICATION DES PACKAGES ======"
-if ! composer show | grep -q "laravel/breeze"; then
-    log_info "Installation du package laravel/breeze..."
-    composer require --no-interaction laravel/breeze
+else
+    log_warning "Could not connect to MySQL, but continuing with startup"
+    # Mettre APP_DEBUG à true pour voir les erreurs
+    sed -i "s/APP_DEBUG=false/APP_DEBUG=true/g" /var/www/.env
 fi
 
 # Créer les composants Blade s'ils n'existent pas
@@ -189,6 +190,19 @@ $serverInfo = [
         'input-label_exists' => file_exists('/var/www/resources/views/components/input-label.blade.php')
     ]
 ];
+
+// Test de la connexion MySQL
+try {
+    $pdo = new PDO(
+        'mysql:host='.getenv('DB_HOST').';dbname='.getenv('DB_DATABASE'),
+        getenv('DB_USERNAME'),
+        getenv('DB_PASSWORD')
+    );
+    $serverInfo['database']['connection_test'] = 'success';
+} catch (PDOException $e) {
+    $serverInfo['database']['connection_test'] = 'failed';
+    $serverInfo['database']['error'] = $e->getMessage();
+}
 
 echo json_encode($serverInfo, JSON_PRETTY_PRINT);
 EOL
