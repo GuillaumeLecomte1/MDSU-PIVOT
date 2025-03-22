@@ -48,31 +48,10 @@ if [ ! -L /var/www/storage/logs ] || [ "$(readlink /var/www/storage/logs)" != "/
     ln -sf /tmp/laravel-logs /var/www/storage/logs
 fi
 
-# Diagnostics réseau
-log_info "====== DIAGNOSTIC RÉSEAU ======"
-
-# Test DNS pour MySQL
-if command -v dig &> /dev/null; then
-    log_info "Performing DNS lookup for MySQL:"
-    dig mysql +short || log_warning "DNS lookup failed"
-fi
-
-# Test getent pour MySQL
-if command -v getent &> /dev/null; then
-    log_info "Looking up hosts for MySQL:"
-    getent hosts mysql || log_warning "Host lookup failed"
-fi
-
-# Ajouter l'hôte MySQL à /etc/hosts si nécessaire
-if ! grep -q "mysql" /etc/hosts; then
-    log_info "Adding MySQL to /etc/hosts..."
-    echo "# Ensuring MySQL connectivity" >> /etc/hosts
-    
-    # Tenter de résoudre l'IP depuis le réseau Docker
-    MYSQL_IP=$(getent hosts mysql | awk '{ print $1 }') || MYSQL_IP="10.0.1.50"
-    echo "${MYSQL_IP} mysql" >> /etc/hosts
-    log_success "Added ${MYSQL_IP} as mysql to /etc/hosts"
-fi
+# Forcer la valeur de DB_HOST dans le fichier .env
+log_info "====== MISE À JOUR DES PARAMETRES DB ======"
+sed -i "s/DB_HOST=.*/DB_HOST=personnel-phpmyadmin-hj0arz-db-1/g" /var/www/.env
+log_success "DB_HOST mis à jour vers personnel-phpmyadmin-hj0arz-db-1"
 
 # Configuration du cache basée sur les fichiers au lieu de la base de données
 sed -i "s/CACHE_STORE=database/CACHE_STORE=file/g" /var/www/.env
@@ -91,12 +70,6 @@ log_info "Database Port: $DB_PORT"
 log_info "Database Name: $DB_NAME"
 log_info "Database User: $DB_USER"
 
-# S'assurer que MySQL est accessible
-if command -v telnet &> /dev/null; then
-    log_info "Testing MySQL connectivity with telnet..."
-    timeout 5 telnet $DB_HOST $DB_PORT || log_warning "Could not connect to MySQL with telnet, continuing anyway..."
-fi
-
 # Attendre que MySQL soit prêt
 log_info "Waiting for MySQL connection..."
 max_attempts=30
@@ -109,8 +82,8 @@ log_info "Attempting to connect with: mysql:host=$DB_HOST;dbname=$DB_NAME user=$
 until php -r "
 try {
     \$db = new PDO(
-        'mysql:host=\"$DB_HOST\";dbname=\"$DB_NAME\"', 
-        '$DB_USER', 
+        'mysql:host=$DB_HOST;dbname=$DB_NAME',
+        '$DB_USER',
         '$DB_PASS'
     );
     \$db->setAttribute(PDO::ATTR_TIMEOUT, 5);
@@ -127,7 +100,6 @@ do
     break
   fi
   log_warning "MySQL connection attempt $((counter+1))/$max_attempts failed. Retrying in 2 seconds..."
-
   counter=$((counter+1))
   sleep 2
 done
@@ -170,39 +142,10 @@ header('Content-Type: application/json');
 $serverInfo = [
     'timestamp' => date('Y-m-d H:i:s'),
     'php_version' => phpversion(),
-    'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown',
-    'environment' => [
-        'APP_ENV' => getenv('APP_ENV'),
-        'APP_DEBUG' => getenv('APP_DEBUG'),
-        'APP_URL' => getenv('APP_URL')
-    ],
-    'database' => [
-        'DB_CONNECTION' => getenv('DB_CONNECTION'),
-        'DB_HOST' => getenv('DB_HOST'),
-        'DB_PORT' => getenv('DB_PORT'),
-        'DB_DATABASE' => getenv('DB_DATABASE')
-    ],
-    'file_permissions' => [
-        'storage_dir' => substr(sprintf('%o', fileperms('/var/www/storage')), -4),
-        'bootstrap_cache' => substr(sprintf('%o', fileperms('/var/www/bootstrap/cache')), -4)
-    ],
-    'components' => [
-        'input-label_exists' => file_exists('/var/www/resources/views/components/input-label.blade.php')
-    ]
+    'memory_limit' => ini_get('memory_limit'),
+    'max_execution_time' => ini_get('max_execution_time'),
+    'server' => $_SERVER
 ];
-
-// Test de la connexion MySQL
-try {
-    $pdo = new PDO(
-        'mysql:host='.getenv('DB_HOST').';dbname='.getenv('DB_DATABASE'),
-        getenv('DB_USERNAME'),
-        getenv('DB_PASSWORD')
-    );
-    $serverInfo['database']['connection_test'] = 'success';
-} catch (PDOException $e) {
-    $serverInfo['database']['connection_test'] = 'failed';
-    $serverInfo['database']['error'] = $e->getMessage();
-}
 
 echo json_encode($serverInfo, JSON_PRETTY_PRINT);
 EOL
@@ -213,4 +156,4 @@ echo "OK" > /var/www/public/health
 chmod 644 /var/www/public/health
 
 log_success "====== DÉMARRAGE DE SUPERVISORD ======"
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
