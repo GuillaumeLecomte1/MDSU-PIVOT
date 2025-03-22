@@ -133,7 +133,13 @@ fi
 log_info "====== NETTOYAGE DU CACHE ======"
 cd /var/www && php artisan optimize:clear
 
-# Création d'un fichier de diagnostic
+# Create health check file
+log_info "Creating health check file"
+echo "OK" > /var/www/public/health
+chmod 644 /var/www/public/health
+log_success "Health check file created"
+
+# Create diagnostic file
 log_info "====== CRÉATION DU FICHIER DE DIAGNOSTIC ======"
 cat > /var/www/public/server-info.php << 'EOL'
 <?php
@@ -150,10 +156,6 @@ $serverInfo = [
 echo json_encode($serverInfo, JSON_PRETTY_PRINT);
 EOL
 chmod 644 /var/www/public/server-info.php
-
-# Créer un fichier de vérification de l'état
-echo "OK" > /var/www/public/health
-chmod 644 /var/www/public/health
 
 log_success "====== DÉMARRAGE DE SUPERVISORD ======"
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
