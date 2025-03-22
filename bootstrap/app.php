@@ -25,11 +25,13 @@ $storageDirs = [
     __DIR__.'/../storage/framework/sessions',
     __DIR__.'/../storage/framework/views',
     __DIR__.'/../storage/framework/cache',
+    __DIR__.'/../bootstrap/cache',
 ];
 
 foreach ($storageDirs as $dir) {
     if (!is_dir($dir)) {
         @mkdir($dir, 0777, true);
+        bootstrap_log("Création du répertoire: $dir");
     }
     @chmod($dir, 0777);
 }
@@ -48,10 +50,18 @@ try {
             health: '/up',
         )
         ->withMiddleware(function (Middleware $middleware) {
-            $middleware->web(append: [
-                \App\Http\Middleware\HandleInertiaRequests::class,
-                \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-            ]);
+            // Vérifier si le middleware existe avant de l'ajouter
+            $webMiddleware = [];
+            
+            if (class_exists(\App\Http\Middleware\HandleInertiaRequests::class)) {
+                $webMiddleware[] = \App\Http\Middleware\HandleInertiaRequests::class;
+            }
+            
+            if (class_exists(\Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class)) {
+                $webMiddleware[] = \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class;
+            }
+            
+            $middleware->web(append: $webMiddleware);
         })
         ->withExceptions(function (Exceptions $exceptions) {
             // Configuration par défaut des exceptions

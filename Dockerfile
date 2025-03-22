@@ -57,21 +57,19 @@ RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini \
     && echo "php_admin_value[error_log] = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf \
     && echo "listen = 127.0.0.1:9000" > /usr/local/etc/php-fpm.d/zz-docker.conf
 
-# Préparation de la structure de répertoires
+WORKDIR /var/www
+
+# Préparation de la structure de répertoires avec les logs dans /tmp plutôt que /dev/shm
 RUN mkdir -p /var/www/storage/app/public \
     /var/www/storage/framework/cache \
     /var/www/storage/framework/sessions \
     /var/www/storage/framework/views \
-    /var/shm/laravel-logs \
+    /tmp/laravel-logs \
     /var/www/bootstrap/cache \
     /var/www/public/images \
     /var/www/public/build/assets \
-    /var/www/docker
-
-# Créer explicitement storage/logs comme un répertoire (sera remplacé par un symlink plus tard)
-RUN mkdir -p /var/www/storage/logs
-
-WORKDIR /var/www
+    /var/www/docker \
+    /var/www/storage/logs
 
 # Copie des fichiers de configuration
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
@@ -101,45 +99,49 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 \
 # Copier le code source
 COPY --chown=www-data:www-data . .
 
-# Supprimer le répertoire storage/logs existant pour le remplacer par un symlink
+# Remplacer les logs par un symlink vers /tmp au lieu de /dev/shm
 RUN rm -rf /var/www/storage/logs && \
-    ln -sf /var/shm/laravel-logs /var/www/storage/logs
+    ln -sf /tmp/laravel-logs /var/www/storage/logs
 
 # Copier les paramètres d'environnement spécifiques
 COPY docker/env.production /var/www/.env
+
+# Configuration des permissions d'abord pour éviter les erreurs
+RUN chmod -R 777 /var/www/storage \
+    && chmod -R 777 /var/www/bootstrap/cache \
+    && chmod -R 777 /tmp/laravel-logs \
+    && chown -R www-data:www-data /var/www \
+    && chown -R www-data:www-data /tmp/laravel-logs \
+    && touch /tmp/laravel-logs/laravel.log \
+    && chmod 666 /tmp/laravel-logs/laravel.log
+
+# Générer l'autoloader optimisé
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --no-dev --optimize
+
+# Installer les composants Blade manquants (pour résoudre l'erreur input-label)
+RUN composer require --no-interaction laravel/breeze
 
 # Vérifier la syntaxe PHP avant d'exécuter les commandes Artisan
 RUN echo "Vérification de la syntaxe PHP..." && \
     find /var/www -type f -name "*.php" -exec php -l {} \; | (grep -v "No syntax errors" || true)
 
-# Générer l'autoloader optimisé
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --no-dev --optimize
-
 # Mettre en cache les configurations (séparation des commandes pour mieux identifier les erreurs)
 RUN if [ "$SKIP_ARTISAN_COMMANDS" = "false" ]; then \
         echo "Exécution des commandes Artisan..." && \
+        php artisan config:clear || true && \
+        php artisan view:clear || true && \
+        php artisan route:clear || true && \
+        php artisan optimize:clear || true && \
         php artisan config:cache || true && \
-        php artisan route:cache || true && \
         php artisan view:cache || true; \
     else \
         echo "Commandes Artisan ignorées."; \
     fi
 
-# Configuration des permissions
-RUN chmod -R 777 /var/www/storage \
-    && chmod -R 777 /var/www/bootstrap/cache \
-    && chmod -R 777 /dev/shm/laravel-logs \
-    && chown -R www-data:www-data /var/www \
-    && chown -R www-data:www-data /dev/shm/laravel-logs \
-    && touch /dev/shm/laravel-logs/laravel.log \
-    && chmod 666 /dev/shm/laravel-logs/laravel.log \
-    && chmod +x /var/www/docker/entrypoint.sh
-
 # Nettoyage pour réduire la taille de l'image
 RUN rm -rf /var/www/node_modules \
     /var/www/.git \
     /var/www/.github \
-    /var/www/docker/env.* \
     && find /var/www -name ".git*" -type f -delete \
     && composer clear-cache
 

@@ -29,19 +29,29 @@ trap 'handle_error $LINENO' ERR
 log_info "====== DÉMARRAGE DU CONTENEUR ======"
 log_info "Configuration des permissions..."
 
+# S'assurer que les répertoires de logs existent
+mkdir -p /tmp/laravel-logs
+
 # Configuration des permissions en parallèle pour être plus rapide
 (chmod -R 777 /var/www/storage) &
 (chmod -R 777 /var/www/bootstrap/cache) &
-(chmod -R 777 /dev/shm/laravel-logs) &
+(chmod -R 777 /tmp/laravel-logs) &
 wait
 
 # Définition de la propriété des fichiers
 chown -R www-data:www-data /var/www
-chown -R www-data:www-data /dev/shm/laravel-logs
+chown -R www-data:www-data /tmp/laravel-logs
 
 # S'assurer que le fichier de log existe
-touch /dev/shm/laravel-logs/laravel.log
-chmod 666 /dev/shm/laravel-logs/laravel.log
+touch /tmp/laravel-logs/laravel.log
+chmod 666 /tmp/laravel-logs/laravel.log
+
+# S'assurer que le symlink des logs est correct
+if [ ! -L /var/www/storage/logs ] || [ "$(readlink /var/www/storage/logs)" != "/tmp/laravel-logs" ]; then
+    log_info "Recréation du symlink pour les logs..."
+    rm -rf /var/www/storage/logs
+    ln -sf /tmp/laravel-logs /var/www/storage/logs
+fi
 
 # Diagnostics réseau
 log_info "====== DIAGNOSTIC RÉSEAU ======"
@@ -129,6 +139,13 @@ if [ $counter -lt $max_attempts ]; then
     connected=true
 fi
 
+# Vérifier si les packages essentiels sont installés
+log_info "====== VÉRIFICATION DES PACKAGES ======"
+if ! composer show | grep -q "laravel/breeze"; then
+    log_info "Installation du package laravel/breeze..."
+    composer require --no-interaction laravel/breeze
+fi
+
 # Nettoyage du cache
 log_info "====== NETTOYAGE DU CACHE ======"
 cd /var/www && php artisan config:clear
@@ -185,6 +202,10 @@ $serverInfo = [
             'storage_dir' => substr(sprintf('%o', fileperms('/var/www/storage')), -4),
             'bootstrap_cache' => substr(sprintf('%o', fileperms('/var/www/bootstrap/cache')), -4),
         ]
+    ],
+    'components' => [
+        'input-label' => file_exists('/var/www/resources/views/components/input-label.blade.php'),
+        'breeze_installed' => class_exists('Laravel\Breeze\BreezeServiceProvider')
     ]
 ];
 
