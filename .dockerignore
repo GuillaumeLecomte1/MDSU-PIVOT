@@ -109,3 +109,8 @@ Thumbs.db
 !vite.config.js
 !resources/js
 !resources/css
+
+# New additions
+node_modules
+vendor
+storage/logs
