@@ -8,6 +8,16 @@ import { usePage } from '@inertiajs/react';
 const DEFAULT_IMAGE = '/images/placeholder.jpg';
 
 /**
+ * Vérifie si une URL est absolue
+ * @param {string} url - URL à vérifier
+ * @returns {boolean} - True si l'URL est absolue
+ */
+export function isAbsoluteUrl(url) {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
+}
+
+/**
  * Obtient l'URL correcte pour une image
  * @param {string} path - Chemin de l'image
  * @returns {string} - URL complète de l'image
@@ -70,16 +80,7 @@ export const handleImageError = (e) => {
     e.target.onerror = null; // Évite les boucles infinies
 };
 
-/**
- * Vérifie si une URL est absolue
- * @param {string} url - URL à vérifier
- * @returns {boolean} - True si l'URL est absolue
- */
-export function isAbsoluteUrl(url) {
-    if (!url) return false;
-    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
-}
-
+// Export par défaut pour compatibilité avec le code existant
 export default {
     getImageUrl,
     getStorageImageUrl,
