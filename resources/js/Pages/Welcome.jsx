@@ -3,29 +3,26 @@ import MainLayout from '@/Layouts/MainLayout';
 import StatisticBox from '@/Components/StatisticBox';
 import CategoryCard from '@/Components/CategoryCard';
 import BlogCard from '@/Components/BlogCard';
-import ProductCard from '@/Components/Products/ProductCard';
+import FixedProductCard from '@/Components/Products/FixedProductCard';
 
-// Import de l'utilitaire d'images
-import { getImageUrl } from '@/Utils/ImageHelper';
+// Direct image imports
+import CardAccueil from '/storage/app/public/imagesAccueil/imageAccueil1.png';
+import CalqueLogo from '/storage/app/public/imagesAccueil/Calque_1.svg';
+import DernierArrivage from '/storage/app/public/imagesAccueil/dernierArrivage.png';
+import APropos from '/storage/app/public/imagesAccueil/aPropos.png';
+import Blog1 from '/storage/app/public/imagesAccueil/blog1.png';
+import Blog2 from '/storage/app/public/imagesAccueil/blog2.png';
+
+// Import error handler from ImageHelper
+import { handleImageError } from '@/Utils/ImageHelper';
 
 export default function Welcome({ latestProducts, popularProducts, categories }) {
-    // Définir les URLs des images en utilisant l'utilitaire
-    const imageUrls = {
-        imageAccueil1: getImageUrl('storage/imagesAccueil/imageAccueil1.png'),
-        calqueLogo: getImageUrl('storage/imagesAccueil/Calque_1.svg'),
-        dernierArrivage: getImageUrl('storage/imagesAccueil/dernierArrivage.png'),
-        aPropos: getImageUrl('storage/imagesAccueil/aPropos.png'),
-        blog1: getImageUrl('storage/imagesAccueil/blog1.png'),
-        blog2: getImageUrl('storage/imagesAccueil/blog2.png'),
-    };
-    
     return (
         <MainLayout>
             <Head title="Accueil" />
             <div className="px-24 rounded-lg">
                 {/* Hero Section */}
                 <section className="py-8 ">
-                    {/* <div className=""> */}
                     <div className="bg-[#E7E7E7] p-12 rounded-lg">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                             <div>
@@ -73,23 +70,18 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                             <div className="relative">
                                 <img
-                                    src={imageUrls.imageAccueil1}
+                                    src={CardAccueil}
                                     alt="Hero"
                                     className="rounded-lg shadow-lg w-full h-[540px] object-cover"
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = getImageUrl('images/placeholder.jpg');
-                                    }}
+                                    onError={handleImageError}
                                 />
                             </div>
                         </div>
-                    {/* </div> */}
-                </div>
-            </section>
+                    </div>
+                </section>
 
-            {/* Ressourceries Section */}
-            <section className="py-8 ">
-                {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> */}
+                {/* Ressourceries Section */}
+                <section className="py-8 ">
                     <div className="flex justify-between items-center mb-4">
                         <div>
                             <h2 className="text-3xl font-bold text-gray-900">Les ressourceries digitalisées</h2>
@@ -110,24 +102,19 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             <div key={i} className="w-32 h-32 flex items-center justify-center">
                                 <div className="text-4xl font-bold text-gray-200">
                                     <img 
-                                        src={imageUrls.calqueLogo} 
+                                        src={CalqueLogo} 
                                         alt="Logo" 
                                         className="w-24 h-24 fill-gray-400"
-                                        onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.src = getImageUrl('images/placeholder.jpg');
-                                        }}
+                                        onError={handleImageError}
                                     />
                                 </div>
                             </div>
                         ))}
                     </div>
-                {/* </div> */}
-            </section>
+                </section>
 
-            {/* Featured Products */}
-            <section className="py-8 ">
-                {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> */}
+                {/* Featured Products */}
+                <section className="py-8 ">
                     <div className="grid grid-cols-12 gap-8">
                         <div className="col-span-3">
                             <h2 className="text-[28px] font-bold mb-2">
@@ -152,16 +139,15 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </Link>
                         </div>
                         <div className="col-span-9 grid grid-cols-3 gap-6">
-                            {popularProducts.slice(0, 3).map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                            {popularProducts.slice(0, 3).map((product, index) => (
+                                <FixedProductCard key={product.id} product={product} index={index} />
                             ))}
                         </div>
                     </div>
-                {/* </div> */}
-            </section>
+                </section>
 
-            {/* Categories Grid */}
-            <section className="py-8 ">
+                {/* Categories Grid */}
+                <section className="py-8 ">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <CategoryCard
                             title="Art de la table"
@@ -212,10 +198,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             href={route('categories.index')}
                         />
                     </div>
-            </section>
+                </section>
 
-            {/* Latest Products */}
-            <section className="py-8 ">
+                {/* Latest Products */}
+                <section className="py-8 ">
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h2 className="text-3xl font-bold text-gray-900">Les derniers arrivages</h2>
@@ -233,24 +219,21 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                     </div>
 
                     <div className="grid grid-cols-12 gap-6">
-                        {/* Product Grid - 8 columns */}
+                        {/* Product Grid - 6 columns */}
                         <div className="col-span-6 grid grid-cols-2 gap-6">
-                            {latestProducts.slice(0, 4).map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                            {latestProducts.slice(0, 4).map((product, index) => (
+                                <FixedProductCard key={product.id} product={product} index={index + 3} />
                             ))}
                         </div>
 
-                        {/* Promo Card - 4 columns */}
+                        {/* Promo Card - 6 columns */}
                         <div className="col-span-6 relative">
                             <div className="h-full rounded-lg overflow-hidden relative">
                                 <img 
-                                    src={imageUrls.dernierArrivage} 
+                                    src={DernierArrivage} 
                                     alt="Pluie de couleurs" 
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = getImageUrl('images/placeholder.jpg');
-                                    }}
+                                    onError={handleImageError}
                                 />
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="bg-[#F2F2F2] rounded-lg p-8 mx-8 w-[80%]">
@@ -270,21 +253,18 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                         </div>
                     </div>
-            </section>
+                </section>
 
-            {/* About Section */}
-            <section className="py-12 ">
+                {/* About Section */}
+                <section className="py-12 ">
                     <div className="grid grid-cols-12 gap-24">
                         {/* Left side with image and stats */}
                         <div className="col-span-5 relative">
                             <img
-                                src={imageUrls.aPropos}
+                                src={APropos}
                                 alt="Qui sommes-nous"
                                 className="w-full h-[600px] object-cover rounded-lg"
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = getImageUrl('images/placeholder.jpg');
-                                }}
+                                onError={handleImageError}
                             />
                             {/* Stats overlaid on image */}
                             <div className="absolute top-[15%] right-[-15%] bg-white rounded-lg p-8 shadow-lg z-10">
@@ -317,10 +297,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </Link>
                         </div>
                     </div>
-            </section>
+                </section>
 
-            {/* Blog Section */}
-            <section className="py-12 ">
+                {/* Blog Section */}
+                <section className="py-12 ">
                     <div className="flex justify-between items-start mb-12">
                         <div>
                             <h2 className="text-[40px] font-bold text-gray-900 mb-3">L'actu' ressourcé</h2>
@@ -344,13 +324,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         {/* First main article */}
                         <div>
                             <img
-                                src={imageUrls.blog1}
+                                src={Blog1}
                                 alt="Comment meubler son intérieur"
                                 className="w-full aspect-[4/3] object-cover rounded-lg mb-6"
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = getImageUrl('images/placeholder.jpg');
-                                }}
+                                onError={handleImageError}
                             />
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-gray-500 text-sm">24/08/2024</span>
@@ -367,13 +344,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         {/* Second main article */}
                         <div>
                             <img
-                                src={imageUrls.blog2}
+                                src={Blog2}
                                 alt="Focus ressourcerie"
                                 className="w-full aspect-[4/3] object-cover rounded-lg mb-6"
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = getImageUrl('images/placeholder.jpg');
-                                }}
+                                onError={handleImageError}
                             />
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-gray-500 text-sm">24/08/2024</span>
@@ -427,10 +401,10 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                         </div>
                     </div>
-            </section>
+                </section>
 
-            {/* Newsletter Section */}
-            <section className="py-16 ">
+                {/* Newsletter Section */}
+                <section className="py-16 ">
                     <div className="bg-[#F1FBF4] rounded-2xl py-16 px-8">
                         <div className="max-w-3xl mx-auto text-center">
                             <h2 className="text-[40px] font-bold text-gray-900 mb-6">La sélection du mois</h2>
@@ -450,7 +424,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                         </div>
                     </div>
-            </section>
+                </section>
             </div>
         </MainLayout>
     );

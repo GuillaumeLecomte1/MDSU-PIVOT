@@ -27,8 +27,47 @@ php artisan key:generate --force
 echo "✅ Clé d'application générée"
 
 # Lien symbolique pour le stockage
-php artisan storage:link --force
-echo "✅ Lien symbolique créé"
+echo "Création du lien symbolique pour le stockage..."
+mkdir -p /var/www/storage/app/public
+if [ ! -L /var/www/public/storage ]; then
+    php artisan storage:link --force
+    echo "✅ Lien symbolique créé"
+else
+    echo "✅ Lien symbolique existe déjà"
+fi
+
+# Vérifier les dossiers d'images importants
+echo "Vérification des dossiers d'images..."
+# Dossiers principaux
+mkdir -p /var/www/storage/app/public/imagesAccueil
+mkdir -p /var/www/storage/app/public/images/products
+mkdir -p /var/www/storage/app/public/images/categories
+mkdir -p /var/www/storage/app/public/images/users
+
+# Sous-dossiers produits
+mkdir -p /var/www/storage/app/public/images/products/thumbnails
+mkdir -p /var/www/storage/app/public/images/products/large
+
+# Sous-dossiers catégories
+mkdir -p /var/www/storage/app/public/images/categories/icons
+mkdir -p /var/www/storage/app/public/images/categories/banners
+
+# Sous-dossiers utilisateurs
+mkdir -p /var/www/storage/app/public/images/users/avatars
+mkdir -p /var/www/storage/app/public/images/users/covers
+
+# Autres dossiers d'images
+mkdir -p /var/www/storage/app/public/images/banners
+mkdir -p /var/www/storage/app/public/images/promotions
+mkdir -p /var/www/storage/app/public/images/blog
+mkdir -p /var/www/storage/app/public/images/blog/thumbnails
+mkdir -p /var/www/storage/app/public/images/logos
+mkdir -p /var/www/storage/app/public/images/icons
+mkdir -p /var/www/storage/app/public/images/backgrounds
+
+# Définir les permissions
+chmod -R 777 /var/www/storage/app/public
+echo "✅ Dossiers d'images configurés"
 
 # Fix les assets
 echo "Création des assets de fallback..."
