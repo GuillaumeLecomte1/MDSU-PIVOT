@@ -49,15 +49,16 @@
         }
         @endphp
 
+        @routes
+
         @if(app()->environment('local'))
+            @viteReactRefresh
             @vite(['resources/css/app.css', 'resources/js/app.jsx'])
         @else
             <link rel="stylesheet" href="{{ asset_path('resources/css/app.css') }}">
             <script src="{{ asset_path('resources/js/app.jsx') }}" defer></script>
         @endif
 
-        @routes
-        @viteReactRefresh
         @inertiaHead
     </head>
     <body class="font-sans antialiased">

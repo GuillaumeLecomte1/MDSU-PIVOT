@@ -99,7 +99,7 @@ RUN chmod +x /var/www/docker/entrypoint.sh
 RUN echo '<?php phpinfo();' > /var/www/public/info.php \
     && echo '<?php echo json_encode(["status" => "ok", "timestamp" => time()]);' > /var/www/public/health-check.php
 
-# Create fix-assets script
+# Copy fix-assets script
 COPY --chmod=644 docker/fix-assets.php /var/www/public/fix-assets.php
 
 # Copy dependencies first for better caching
@@ -174,8 +174,44 @@ RUN cp -f /var/www/public/build/manifest.json /var/www/public/assets/manifest.js
     }' > /var/www/public/assets/manifest.json
 
 # Create htaccess files for fallback
-COPY docker/build-assets.htaccess /var/www/public/build/assets/.htaccess
-COPY docker/assets.htaccess /var/www/public/assets/.htaccess
+RUN echo '<IfModule mod_headers.c>\n\
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"\n\
+    Header set Pragma "no-cache"\n\
+    Header set Expires "0"\n\
+</IfModule>\n\
+\n\
+<IfModule mod_rewrite.c>\n\
+    RewriteEngine On\n\
+    \n\
+    # D'\''abord essayer la version non-hashée\n\
+    RewriteCond %{REQUEST_FILENAME} !-f\n\
+    RewriteCond %{REQUEST_FILENAME} !-d\n\
+    RewriteRule ^([^/]+)/([^/]+)-[a-zA-Z0-9]+\.([^.]+)$ /$1/$2.$3 [L]\n\
+    \n\
+    # Ensuite essayer l'\''autre répertoire\n\
+    RewriteCond %{REQUEST_FILENAME} !-f\n\
+    RewriteCond %{REQUEST_FILENAME} !-d\n\
+    RewriteRule ^(.*)$ /assets/$1 [L,QSA]\n\
+</IfModule>' > /var/www/public/build/assets/.htaccess && \
+    echo '<IfModule mod_headers.c>\n\
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"\n\
+    Header set Pragma "no-cache"\n\
+    Header set Expires "0"\n\
+</IfModule>\n\
+\n\
+<IfModule mod_rewrite.c>\n\
+    RewriteEngine On\n\
+    \n\
+    # D'\''abord essayer la version non-hashée\n\
+    RewriteCond %{REQUEST_FILENAME} !-f\n\
+    RewriteCond %{REQUEST_FILENAME} !-d\n\
+    RewriteRule ^([^/]+)/([^/]+)-[a-zA-Z0-9]+\.([^.]+)$ /$1/$2.$3 [L]\n\
+    \n\
+    # Ensuite essayer l'\''autre répertoire\n\
+    RewriteCond %{REQUEST_FILENAME} !-f\n\
+    RewriteCond %{REQUEST_FILENAME} !-d\n\
+    RewriteRule ^(.*)$ /build/assets/$1 [L,QSA]\n\
+</IfModule>' > /var/www/public/assets/.htaccess
 
 # Set permissions
 RUN chmod -R 777 /var/www/storage \
@@ -198,6 +234,54 @@ RUN echo '<label {{ $attributes->merge(["class" => "block font-medium text-sm te
     echo '<button {{ $attributes->merge(["type" => "submit", "class" => "inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"]) }}>{{ $slot }}</button>' > /var/www/resources/views/components/primary-button.blade.php && \
     echo '<div {{ $attributes->merge(["class" => "text-sm text-red-600 space-y-1"]) }}>{{ $slot }}</div>' > /var/www/resources/views/components/input-error.blade.php && \
     echo '<div {{ $attributes->merge(["class" => "p-4 text-sm text-gray-600"]) }}>{{ $slot }}</div>' > /var/www/resources/views/components/auth-session-status.blade.php
+
+# Create asset-helper.php
+RUN echo '<?php\n\
+/**\n\
+ * Script pour servir des assets manquants\n\
+ */\n\
+\n\
+// Déterminer quel asset est demandé\n\
+$requestUri = $_SERVER["REQUEST_URI"];\n\
+$extension = pathinfo($requestUri, PATHINFO_EXTENSION);\n\
+\n\
+// Types MIME pour les extensions courantes\n\
+$mimeTypes = [\n\
+    "js" => "application/javascript",\n\
+    "css" => "text/css",\n\
+    "png" => "image/png",\n\
+    "jpg" => "image/jpeg",\n\
+    "jpeg" => "image/jpeg",\n\
+    "svg" => "image/svg+xml",\n\
+    "gif" => "image/gif",\n\
+    "woff" => "font/woff",\n\
+    "woff2" => "font/woff2",\n\
+    "ttf" => "font/ttf",\n\
+    "eot" => "application/vnd.ms-fontobject",\n\
+];\n\
+\n\
+// Définir le type MIME\n\
+if (isset($mimeTypes[$extension])) {\n\
+    header("Content-Type: " . $mimeTypes[$extension]);\n\
+}\n\
+\n\
+// Désactiver le cache pour le développement\n\
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");\n\
+header("Pragma: no-cache");\n\
+header("Expires: 0");\n\
+\n\
+// Générer un contenu minimal selon le type de fichier\n\
+if ($extension === "js") {\n\
+    echo "console.log(\"Fallback asset generated for: \" + \\"' . $requestUri . '\\");";\n\
+} elseif ($extension === "css") {\n\
+    echo "/* Fallback CSS generated for ' . $requestUri . ' */\\n";\n\
+    echo "body { font-family: system-ui, sans-serif; }\\n";\n\
+} else {\n\
+    // Pour les autres types de fichiers, renvoyer une erreur 404\n\
+    header("HTTP/1.0 404 Not Found");\n\
+    echo "Asset not found: ' . $requestUri . '";\n\
+}\n\
+' > /var/www/public/asset-helper.php
 
 # Cleanup
 RUN rm -rf /var/www/.git \

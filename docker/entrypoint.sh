@@ -1,76 +1,110 @@
 #!/bin/bash
 set -e
 
-# Paramètres par défaut pour l'environnement
-export APP_ENV=${APP_ENV:-production}
-export APP_DEBUG=${APP_DEBUG:-false}
-
 echo "====== INITIALISATION DE L'APPLICATION ======"
 
-# Copier le fichier d'environnement s'il n'existe pas
-if [ ! -f .env ]; then
-    echo "Création du fichier .env..."
-    cp .env.example .env
+# Vérifier que l'application est au bon endroit
+if [ ! -f "/var/www/artisan" ]; then
+    echo "❌ ERREUR: Fichier artisan non trouvé. Le répertoire de travail est incorrect."
+    exit 1
+fi
+
+# Vérifier la présence du fichier .env
+if [ ! -f /var/www/.env ]; then
+    echo "Création du fichier .env à partir de .env.example..."
+    cp /var/www/.env.example /var/www/.env
     echo "✅ Fichier .env créé"
 fi
 
-# Générer la clé d'application si nécessaire
-php artisan key:generate --force
-echo "✅ Clé d'application générée"
-
-# Optimisations pour la production
-if [ "$APP_ENV" = "production" ]; then
-    echo "Application des optimisations pour la production..."
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
-    echo "✅ Optimisations appliquées"
+# Générer une clé si nécessaire
+if ! grep -q "^APP_KEY=" /var/www/.env || grep -q "^APP_KEY=$" /var/www/.env; then
+    echo "Génération de la clé d'application..."
+    php artisan key:generate --force
+    echo "✅ Clé d'application générée"
 fi
 
-# Permissions
-echo "Correction des permissions..."
-chown -R www-data:www-data /var/www/
-chmod -R 755 /var/www/storage
-echo "✅ Permissions corrigées"
+# Vérifier/corriger les permissions
+echo "Configuration des permissions..."
+chmod -R 755 /var/www/public
+chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+chown -R www-data:www-data /var/www
+echo "✅ Permissions configurées"
 
-# Créer un lien symbolique pour le stockage si nécessaire
-echo "Création du lien symbolique pour le stockage..."
-php artisan storage:link
-echo "✅ Lien symbolique créé"
+# Créer le lien symbolique pour le stockage si nécessaire
+if [ ! -L /var/www/public/storage ]; then
+    echo "Création du lien symbolique pour le stockage..."
+    php artisan storage:link
+    echo "✅ Lien symbolique créé"
+fi
 
-# Préparation des assets
-echo "Préparation des assets..."
-mkdir -p /var/www/public/build /var/www/public/assets
-php /var/www/public/fix-assets.php > /var/www/storage/logs/fix-assets.log
-echo "✅ Assets préparés"
+# Créer/vérifier les répertoires d'assets
+echo "Vérification des répertoires d'assets..."
+mkdir -p /var/www/public/build/assets/js
+mkdir -p /var/www/public/build/assets/css
+mkdir -p /var/www/public/assets/js
+mkdir -p /var/www/public/assets/css
+echo "✅ Répertoires d'assets vérifiés"
 
-# Migrations de la base de données (uniquement si DB_HOST est défini)
-if [ -n "$DB_HOST" ]; then
-    echo "Attente de la connexion à la base de données..."
-    # Attendre que la base de données soit prête
-    sleep 5
-    
-    # Tentatives de connexion à la base de données
-    MAX_TRIES=10
-    TRIES=0
-    until php artisan migrate:status > /dev/null 2>&1 || [ $TRIES -eq $MAX_TRIES ]; do
-        echo "Tentative $((TRIES+1))/$MAX_TRIES de connexion à la base de données..."
-        sleep 5
-        TRIES=$((TRIES+1))
-    done
-    
-    if [ $TRIES -eq $MAX_TRIES ]; then
-        echo "⚠️ Impossible de se connecter à la base de données après $MAX_TRIES tentatives"
+# Exécuter le script de correction des assets
+echo "Exécution du script de correction des assets..."
+php /var/www/public/fix-assets.php > /var/www/storage/logs/fix-assets.log 2>&1
+echo "✅ Script de correction exécuté (voir /var/www/storage/logs/fix-assets.log pour les détails)"
+
+# Optimisations Laravel pour la production
+echo "Application des optimisations Laravel..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+echo "✅ Optimisations appliquées"
+
+# Exécuter les migrations si la base de données est configurée
+if grep -q "^DB_HOST=" /var/www/.env && grep -q "^DB_DATABASE=" /var/www/.env; then
+    DB_HOST=$(grep "^DB_HOST=" /var/www/.env | cut -d'=' -f2)
+    if [ -n "$DB_HOST" ]; then
+        echo "Tentative de connexion à la base de données $DB_HOST..."
+        # Attendre que la base de données soit prête (max 60 secondes)
+        MAX_TRIES=12
+        COUNTER=0
+        
+        until php -r "
+        try {
+            \$dbhost = '$DB_HOST';
+            \$dbname = '$(grep "^DB_DATABASE=" /var/www/.env | cut -d'=' -f2)';
+            \$dbuser = '$(grep "^DB_USERNAME=" /var/www/.env | cut -d'=' -f2)';
+            \$dbpass = '$(grep "^DB_PASSWORD=" /var/www/.env | cut -d'=' -f2)';
+            
+            \$dsn = \"mysql:host=\$dbhost;dbname=\$dbname\";
+            \$conn = new PDO(\$dsn, \$dbuser, \$dbpass);
+            \$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            echo 'Connection successful!';
+            exit(0);
+        } catch(PDOException \$e) {
+            echo 'Connection failed: ' . \$e->getMessage();
+            exit(1);
+        }
+        " 2>/dev/null; do
+            if [ $COUNTER -eq $MAX_TRIES ]; then
+                echo "⚠️ Impossible de se connecter à la base de données après $MAX_TRIES tentatives."
+                echo "⚠️ Les migrations ne seront pas exécutées."
+                break
+            fi
+            echo "Tentative $((COUNTER+1))/$MAX_TRIES - Nouvelle tentative dans 5 secondes..."
+            COUNTER=$((COUNTER+1))
+            sleep 5
+        done
+        
+        if [ $COUNTER -lt $MAX_TRIES ]; then
+            echo "Exécution des migrations..."
+            php artisan migrate --force
+            echo "✅ Migrations exécutées"
+        fi
     else
-        echo "Exécution des migrations..."
-        php artisan migrate --force
-        echo "✅ Migrations exécutées"
+        echo "⚠️ Hôte de base de données non défini. Les migrations ne seront pas exécutées."
     fi
 else
-    echo "⚠️ Migrations ignorées (DB_HOST non défini)"
+    echo "⚠️ Configuration de base de données incomplète. Les migrations ne seront pas exécutées."
 fi
 
 echo "====== DÉMARRAGE DU SERVEUR WEB ======"
-
-# Exécuter la commande transmise
+# Exécuter la commande transmise (généralement apache2-foreground ou supervisord)
 exec "$@"
