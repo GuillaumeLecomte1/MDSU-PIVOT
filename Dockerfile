@@ -11,20 +11,28 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Set working directory
 WORKDIR /var/www
 
-# Install dependencies and utilities in a single layer to reduce image size
+# Install dependencies - make sure to install ALL required libraries for PHP extensions
 RUN apt-get update && apt-get install -y \
     git curl zip unzip \
     libpng-dev libonig-dev libxml2-dev libzip-dev libicu-dev \
-    libjpeg62-turbo-dev libjpeg-dev libfreetype6-dev \
+    libjpeg-dev libfreetype6-dev libxpm-dev \
+    libwebp-dev libjpeg62-turbo-dev libpng-dev \
+    pkg-config \
     nginx supervisor \
     nodejs npm \
-    && rm -rf /var/lib/apt/lists/* 
+    && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions in a single layer to reduce build time and image size
-RUN docker-php-ext-configure gd --with-jpeg --with-freetype && \
-    docker-php-ext-configure intl && \
-    docker-php-ext-install -j$(nproc) \
-    pdo_mysql mbstring exif pcntl bcmath gd zip intl
+# Install PHP extensions one by one to ensure proper installation
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath
+
+# Install GD with proper JPEG support
+RUN docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd
+
+# Install remaining extensions
+RUN docker-php-ext-install zip intl
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
