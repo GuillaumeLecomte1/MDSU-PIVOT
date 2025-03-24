@@ -17,14 +17,28 @@ RUN apt-get update && apt-get install -y \
     libpng-dev libonig-dev libxml2-dev libzip-dev libicu-dev \
     nginx supervisor \
     nodejs npm \
-    && rm -rf /var/lib/apt/lists/* \
-    # Install PHP extensions
-    && docker-php-ext-configure intl \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
-    # Install Composer
-    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    # Create directories
-    && mkdir -p /var/www/storage/app/public \
+    && rm -rf /var/lib/apt/lists/* 
+
+# Install PHP extensions using the docker-php-ext-install script more reliably
+# Use separate RUN commands for problematic extensions to avoid build failures
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath
+
+# Install GD extension separately
+RUN docker-php-ext-configure gd --with-jpeg && \
+    docker-php-ext-install -j$(nproc) gd
+
+# Install ZIP extension separately
+RUN docker-php-ext-install zip
+
+# Install intl extension separately
+RUN docker-php-ext-configure intl && \
+    docker-php-ext-install intl
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Create required directories
+RUN mkdir -p /var/www/storage/app/public \
     /var/www/storage/framework/cache \
     /var/www/storage/framework/sessions \
     /var/www/storage/framework/views \
@@ -46,7 +60,8 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader
 
 # Copy package.json files
-COPY package.json package-lock.json vite.config.js ./
+COPY package.json package-lock.json ./
+COPY vite.config.js* ./
 
 # Install JS dependencies (for production builds only, no dev dependencies)
 RUN npm ci --omit=dev
