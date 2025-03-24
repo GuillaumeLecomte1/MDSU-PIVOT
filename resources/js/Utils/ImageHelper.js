@@ -61,26 +61,14 @@ export function getStorageImageUrl(path) {
 }
 
 /**
- * Gère les erreurs de chargement d'image
- * @param {Event} event - Événement d'erreur
+ * Gestionnaire d'erreur pour les images
+ * Remplace l'image par un placeholder en cas d'erreur
  */
-export function handleImageError(event) {
-    try {
-        // Essayer d'obtenir l'URL de base depuis les props Inertia
-        const { asset_url } = usePage().props;
-        if (asset_url) {
-            const baseUrl = asset_url.endsWith('/') ? asset_url.slice(0, -1) : asset_url;
-            event.target.src = `${baseUrl}${DEFAULT_IMAGE}`;
-        } else {
-            event.target.src = DEFAULT_IMAGE;
-        }
-    } catch (error) {
-        // Fallback à une URL relative en cas d'erreur
-        event.target.src = DEFAULT_IMAGE;
-    }
-    
-    event.target.onerror = null; // Évite les boucles infinies
-}
+export const handleImageError = (e) => {
+    console.warn(`Image non trouvée: ${e.target.src}`);
+    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KIDxnPgogIDx0aXRsZT5MYXllciAxPC90aXRsZT4KICA8cmVjdCBpZD0ic3ZnXzEiIGhlaWdodD0iNTAwIiB3aWR0aD0iNTAwIiB5PSIwIiB4PSIwIiBzdHJva2Utd2lkdGg9IjAiIHN0cm9rZT0iIzAwMCIgZmlsbD0iI2YwZjBmMCIvPgogIDxsaW5lIHN0cm9rZS1saW5lY2FwPSJ1bmRlZmluZWQiIHN0cm9rZS1saW5lam9pbj0idW5kZWZpbmVkIiBpZD0ic3ZnXzIiIHkyPSI1MDAiIHgyPSI1MDAiIHkxPSIwIiB4MT0iMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2U9IiNjY2NjY2MiIGZpbGw9Im5vbmUiLz4KICA8bGluZSBzdHJva2UtbGluZWNhcD0idW5kZWZpbmVkIiBzdHJva2UtbGluZWpvaW49InVuZGVmaW5lZCIgaWQ9InN2Z18zIiB5Mj0iNTAwIiB4Mj0iMCIgeTE9IjAiIHgxPSI1MDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlPSIjY2NjY2NjIiBmaWxsPSJub25lIi8+CiAgPHRleHQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgdGV4dC1hbmNob3I9InN0YXJ0IiBmb250LWZhbWlseT0iSGVsdmV0aWNhLCBBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgaWQ9InN2Z180IiB5PSIyNTAiIHg9IjE1MCIgc3Ryb2tlLXdpZHRoPSIwIiBzdHJva2U9IiMwMDAiIGZpbGw9IiM5OTk5OTkiPkltYWdlIG5vbiB0cm91dsOpZTwvdGV4dD4KIDwvZz4KPC9zdmc+';
+    e.target.onerror = null; // Évite les boucles infinies
+};
 
 /**
  * Vérifie si une URL est absolue
