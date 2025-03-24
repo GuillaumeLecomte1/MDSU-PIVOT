@@ -6,12 +6,12 @@ import BlogCard from '@/Components/BlogCard';
 import FixedProductCard from '@/Components/Products/FixedProductCard';
 
 // Direct image imports
-import CardAccueil from '/storage/app/public/imagesAccueil/imageAccueil1.png';
-import CalqueLogo from '/storage/app/public/imagesAccueil/Calque_1.svg';
-import DernierArrivage from '/storage/app/public/imagesAccueil/dernierArrivage.png';
-import APropos from '/storage/app/public/imagesAccueil/aPropos.png';
-import Blog1 from '/storage/app/public/imagesAccueil/blog1.png';
-import Blog2 from '/storage/app/public/imagesAccueil/blog2.png';
+import CardAccueil from '/imagesAccueil/imageAccueil1.png';
+import CalqueLogo from '/imagesAccueil/Calque_1.svg';
+import DernierArrivage from '/imagesAccueil/dernierArrivage.png';
+import APropos from '/imagesAccueil/aPropos.png';
+import Blog1 from '/imagesAccueil/blog1.png';
+import Blog2 from '/imagesAccueil/blog2.png';
 
 // Import error handler from ImageHelper
 import { handleImageError } from '@/Utils/ImageHelper';

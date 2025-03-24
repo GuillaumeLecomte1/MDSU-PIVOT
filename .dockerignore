@@ -114,3 +114,42 @@ Thumbs.db
 node_modules
 vendor
 storage/logs
+
+# Exclusions essentielles
+/node_modules
+/vendor
+/.git
+/.github
+/.env
+/.env.*
+
+# Caches et logs
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/bootstrap/cache/*
+/.phpunit.cache
+/.vscode
+/.idea
+/.fleet
+/.phpstorm.cache
+
+# Ne pas ignorer ces fichiers essentiels
+!.gitkeep
+!public/index.php
+!public/favicon.ico
+!artisan
+!vite.config.js
+!resources/js
+!resources/css
+!public/build
+!public/imagesAccueil
+!storage/app/public/imagesAccueil
+
+# IMPORTANT: Ne plus exclure les fichiers images
+# *.jpg
+# *.jpeg
+# *.png
+# *.gif
+# *.svg
