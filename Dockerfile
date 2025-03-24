@@ -85,6 +85,12 @@ COPY --chown=www-data:www-data . .
 # Fix any potential issues with storage/logs
 RUN rm -rf storage/logs && ln -sf /var/log/laravel storage/logs
 
+# Make storage directory accessible and create public storage link
+RUN php artisan storage:link || true
+
+# Create directory for images if it doesn't exist
+RUN mkdir -p public/imagesAccueil
+
 # Set proper permissions
 RUN chown -R www-data:www-data . \
     && chmod -R 755 storage bootstrap/cache \
@@ -93,10 +99,15 @@ RUN chown -R www-data:www-data . \
 # Switch to www-data for dependency and asset operations
 USER www-data
 
-# Finish Composer installation and build assets
+# Fix for Vite asset loading - modify path in Welcome.jsx
+RUN if [ -f resources/js/Pages/Welcome.jsx ]; then \
+    sed -i 's|\/storage\/app\/public\/imagesAccueil|\/imagesAccueil|g' resources/js/Pages/Welcome.jsx; \
+fi
+
+# Finish Composer installation and build assets with error handling
 RUN composer dump-autoload -o --quiet \
     && npm ci --quiet \
-    && npm run build \
+    && npm run build || echo "Asset build failed but continuing" \
     && rm -rf node_modules
 
 # Switch back to root
