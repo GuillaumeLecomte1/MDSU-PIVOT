@@ -14,6 +14,16 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Redirect asset requests to correct location if not found
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_URI} ^/build/assets/(.*)$
+    RewriteRule ^build/assets/(.*)$ /assets/$1 [L,QSA]
+
+    # Check if assets exist in the assets directory
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_URI} ^/assets/(.*)$
+    RewriteRule ^assets/(.*)$ /public/build/assets/$1 [L,QSA]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f

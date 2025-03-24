@@ -20,6 +20,34 @@ if (window.location.protocol === 'https:') {
     };
 }
 
+// Détecter si on est en production ou en développement
+const isProduction = import.meta.env.PROD;
+
+// Adapter les chemins d'assets si nécessaire
+if (isProduction) {
+    // Récupérer le tag link et ajuster le chemin si nécessaire
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && (href.includes('/build/') || href.includes('/assets/'))) {
+            const fixedHref = href.replace('/build/assets/', '/assets/');
+            if (fixedHref !== href) {
+                link.setAttribute('href', fixedHref);
+            }
+        }
+    });
+    
+    // Récupérer les tags script et ajuster le chemin si nécessaire
+    document.querySelectorAll('script[src]').forEach(script => {
+        const src = script.getAttribute('src');
+        if (src && (src.includes('/build/') || src.includes('/assets/'))) {
+            const fixedSrc = src.replace('/build/assets/', '/assets/');
+            if (fixedSrc !== src) {
+                script.setAttribute('src', fixedSrc);
+            }
+        }
+    });
+}
+
 // Afficher des informations de débogage
 console.log('Inertia Setup - Auth:', window.auth || {});
 console.log('Inertia Setup - User:', window.auth?.user || null);

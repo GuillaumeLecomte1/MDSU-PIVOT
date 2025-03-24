@@ -9,6 +9,7 @@ export default defineConfig(({ command, mode }) => {
     const isProduction = mode === 'production';
     
     return {
+        base: isProduction ? '/assets/' : '/',
         plugins: [
             laravel({
                 input: [
@@ -17,7 +18,7 @@ export default defineConfig(({ command, mode }) => {
                     'resources/css/app.css'
                 ],
                 refresh: true,
-                buildDirectory: 'build',
+                buildDirectory: 'assets',
                 https: true,
             }),
             react(),
@@ -25,24 +26,43 @@ export default defineConfig(({ command, mode }) => {
                 name: 'copy-manifest',
                 closeBundle() {
                     try {
-                        const viteManifestPath = path.resolve(__dirname, 'public/build/.vite/manifest.json');
-                        const targetManifestPath = path.resolve(__dirname, 'public/build/manifest.json');
+                        const viteManifestPath = path.resolve(__dirname, 'public/assets/.vite/manifest.json');
+                        const targetManifestPath = path.resolve(__dirname, 'public/assets/manifest.json');
                         
                         if (fs.existsSync(viteManifestPath)) {
-                            console.log('Copie du manifeste Vite vers le répertoire racine de build...');
+                            console.log('Copie du manifeste Vite vers le répertoire racine de assets...');
                             fs.copyFileSync(viteManifestPath, targetManifestPath);
                             console.log('Manifeste copié avec succès!');
+                            
+                            // Créer un lien symbolique de build vers assets
+                            const buildDir = path.resolve(__dirname, 'public/build');
+                            const assetsDir = path.resolve(__dirname, 'public/assets');
+                            
+                            if (!fs.existsSync(buildDir)) {
+                                try {
+                                    if (process.platform === 'win32') {
+                                        // Pour Windows, on crée un junction pour simuler un lien symbolique
+                                        require('child_process').execSync(`mklink /J "${buildDir}" "${assetsDir}"`);
+                                    } else {
+                                        // Pour Unix/Linux
+                                        fs.symlinkSync(assetsDir, buildDir, 'dir');
+                                    }
+                                    console.log('Lien symbolique créé de build vers assets');
+                                } catch (linkError) {
+                                    console.error('Erreur lors de la création du lien symbolique:', linkError);
+                                }
+                            }
                         } else {
                             console.log('Manifeste Vite non trouvé à:', viteManifestPath);
                             // Création d'un manifeste minimal si nécessaire
                             const minimalManifest = {
                                 "resources/js/app.jsx": {
-                                    "file": "assets/js/app-[hash].js",
+                                    "file": "js/app.js",
                                     "isEntry": true,
                                     "src": "resources/js/app.jsx"
                                 },
                                 "resources/css/app.css": {
-                                    "file": "assets/css/app-[hash].css",
+                                    "file": "css/app.css",
                                     "isEntry": true,
                                     "src": "resources/css/app.css"
                                 }
@@ -63,7 +83,7 @@ export default defineConfig(({ command, mode }) => {
             }
         ],
         build: {
-            outDir: 'public/build',
+            outDir: 'public/assets',
             emptyOutDir: true,
             manifest: true,
             minify: isProduction ? 'esbuild' : false,
@@ -85,9 +105,9 @@ export default defineConfig(({ command, mode }) => {
                             '@inertiajs/react'
                         ],
                     } : undefined,
-                    assetFileNames: 'assets/[ext]/[name]-[hash][extname]',
-                    chunkFileNames: 'assets/js/[name]-[hash].js',
-                    entryFileNames: 'assets/js/[name]-[hash].js',
+                    assetFileNames: 'css/[name]-[hash][extname]',
+                    chunkFileNames: 'js/[name]-[hash].js',
+                    entryFileNames: 'js/[name]-[hash].js',
                 },
             },
             terserOptions: {
