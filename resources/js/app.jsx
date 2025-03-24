@@ -6,7 +6,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import axios from 'axios';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Pivot';
 
 // Forcer HTTPS pour toutes les requêtes
 if (window.location.protocol === 'https:') {
@@ -53,14 +53,27 @@ console.log('Inertia Setup - Auth:', window.auth || {});
 console.log('Inertia Setup - User:', window.auth?.user || null);
 console.log('Inertia Setup - Permissions:', window.auth?.permissions || {});
 
+// Fonction pour résoudre les problèmes d'assets en production
+function fixAssetUrl(url) {
+    // Vérifier si l'URL contient déjà /build/ ou /assets/
+    if (url && typeof url === 'string' && !url.startsWith('/build/') && !url.startsWith('/assets/')) {
+        // En production, ajouter /build/ devant les chemins d'assets
+        if (import.meta.env.PROD) {
+            return `/build/${url.startsWith('/') ? url.substring(1) : url}`;
+        }
+    }
+    return url;
+}
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) =>
-        resolvePageComponent(
-            `./Pages/${name}.jsx`,
-            import.meta.glob('./Pages/**/*.jsx'),
-        ),
+    resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
     setup({ el, App, props }) {
+        const root = createRoot(el);
+        
+        // Ajouter une fonction d'assistance pour les assets aux props globales
+        props.fixAssetUrl = fixAssetUrl;
+        
         // Debug logs
         const pageProps = props.initialPage.props;
         console.log('Inertia Setup - Auth:', pageProps.auth);
@@ -74,7 +87,6 @@ createInertiaApp({
         }
         axios.defaults.withCredentials = true;
 
-        const root = createRoot(el);
         root.render(<App {...props} />);
     },
     progress: {
