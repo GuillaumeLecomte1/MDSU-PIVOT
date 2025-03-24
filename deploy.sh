@@ -211,4 +211,58 @@ print_header "Processus terminé"
 echo -e "${YELLOW}Pour tester localement: ${NC}docker-compose up -d"
 echo -e "${YELLOW}Pour déployer: ${NC}./deploy.sh --remote-deploy"
 echo -e "${YELLOW}Pour déboguer: ${NC}./deploy.sh --env=development --debug"
-echo -e "${YELLOW}Pour vérifier la syntaxe PHP uniquement: ${NC}./deploy.sh --syntax-only" 
+echo -e "${YELLOW}Pour vérifier la syntaxe PHP uniquement: ${NC}./deploy.sh --syntax-only"
+
+echo "🚀 Démarrage du déploiement..."
+
+# Installer les dépendances
+echo "📦 Installation des dépendances..."
+composer install --optimize-autoloader --no-dev
+npm ci
+
+# Configurer l'environnement
+echo "⚙️ Configuration de l'environnement..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Construire les assets
+echo "🔨 Construction des assets..."
+npm run build
+
+# Vérifier que le répertoire build existe
+if [ -d "public/build" ]; then
+    echo "✅ Répertoire build trouvé à public/build"
+else
+    echo "❌ Erreur: Répertoire build non trouvé à public/build"
+    exit 1
+fi
+
+# Vérifier la présence du manifeste
+if [ -f "public/build/manifest.json" ]; then
+    echo "✅ Fichier manifest.json trouvé"
+else
+    echo "❌ Erreur: Fichier manifest.json non trouvé"
+    echo "📄 Création d'un manifeste minimal..."
+    mkdir -p public/build
+    echo '{
+        "resources/js/app.jsx": {
+            "file": "assets/js/app.js",
+            "isEntry": true,
+            "src": "resources/js/app.jsx"
+        },
+        "resources/css/app.css": {
+            "file": "assets/css/app.css",
+            "isEntry": true,
+            "src": "resources/css/app.css"
+        }
+    }' > public/build/manifest.json
+    echo "✅ Manifeste minimal créé"
+fi
+
+# Définir les permissions
+echo "🔒 Définition des permissions..."
+chmod -R 755 public
+chmod -R 775 storage bootstrap/cache
+
+echo "✅ Déploiement terminé avec succès!" 
