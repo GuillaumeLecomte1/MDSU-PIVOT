@@ -33,6 +33,64 @@ register_shutdown_function(function () {
     }
 });
 
+// Gestionnaire pour les requêtes d'assets manquantes
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$isAssetRequest = preg_match('/\/(build\/assets|assets)\/(js|css)\/([a-zA-Z0-9_-]+)-([a-zA-Z0-9]+)\.(js|css)$/', $requestUri, $matches);
+
+if ($isAssetRequest) {
+    $basePath = $matches[1]; // build/assets ou assets
+    $type = $matches[2];     // js ou css
+    $name = $matches[3];     // nom du fichier (ex: app, vendor)
+    $hash = $matches[4];     // hash (ex: CjAB3oxN)
+    $ext = $matches[5];      // extension (js ou css)
+    
+    // Chemins alternatifs à essayer
+    $possiblePaths = [
+        __DIR__ . "/{$basePath}/{$type}/{$name}-{$hash}.{$ext}",
+        __DIR__ . "/{$basePath}/{$type}/{$name}.{$ext}",
+        __DIR__ . "/assets/{$type}/{$name}-{$hash}.{$ext}",
+        __DIR__ . "/assets/{$type}/{$name}.{$ext}",
+        __DIR__ . "/build/assets/{$type}/{$name}-{$hash}.{$ext}",
+        __DIR__ . "/build/assets/{$type}/{$name}.{$ext}"
+    ];
+    
+    foreach ($possiblePaths as $path) {
+        if (file_exists($path)) {
+            // Définir le type MIME
+            $mime = ($ext === 'js') ? 'application/javascript' : 'text/css';
+            header("Content-Type: {$mime}");
+            header("X-Content-Source: asset-fallback");
+            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+            readfile($path);
+            exit;
+        }
+    }
+    
+    // Si aucun fichier n'est trouvé, créons-en un minimal
+    $assetDir = __DIR__ . "/{$basePath}/{$type}";
+    if (!is_dir($assetDir)) {
+        mkdir($assetDir, 0755, true);
+    }
+    
+    $targetFile = "{$assetDir}/{$name}-{$hash}.{$ext}";
+    
+    if ($ext === 'js') {
+        $content = "console.log('Fallback {$name} JS bundle generated on-the-fly');";
+    } else {
+        $content = "/* Fallback {$name} CSS file generated on-the-fly */\nbody { font-family: sans-serif; }\n";
+    }
+    
+    file_put_contents($targetFile, $content);
+    
+    // Servir le fichier créé
+    $mime = ($ext === 'js') ? 'application/javascript' : 'text/css';
+    header("Content-Type: {$mime}");
+    header("X-Content-Source: generated-fallback");
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    echo $content;
+    exit;
+}
+
 try {
     pivot_log('Démarrage de l\'application');
 

@@ -3,19 +3,19 @@ set -e
 
 # Fonctions d'aide pour le formattage
 function log_info() {
-    echo -e "\e[34m[INFO]\e[0m $1"
+    echo -e "\033[0;34m[INFO]\033[0m $1"
 }
 
 function log_success() {
-    echo -e "\e[32m[SUCCESS]\e[0m $1"
+    echo -e "\033[0;32m[SUCCESS]\033[0m $1"
 }
 
 function log_warning() {
-    echo -e "\e[33m[WARNING]\e[0m $1"
+    echo -e "\033[0;33m[WARNING]\033[0m $1"
 }
 
 function log_error() {
-    echo -e "\e[31m[ERROR]\e[0m $1"
+    echo -e "\033[0;31m[ERROR]\033[0m $1"
 }
 
 # Gestion des erreurs
@@ -26,7 +26,9 @@ function handle_error() {
 trap 'handle_error $LINENO' ERR
 
 # Début du script
-log_info "====== DÉMARRAGE DU CONTENEUR ======"
+log_info "====== DÉMARRAGE DU CONTENEUR PIVOT ======"
+log_info "Date: $(date)"
+log_info "Environnement: $APP_ENV"
 
 # S'assurer que les répertoires de logs existent
 mkdir -p /tmp/laravel-logs
@@ -147,21 +149,129 @@ log_success "Health check file created"
 
 # Create diagnostic file
 log_info "====== CRÉATION DU FICHIER DE DIAGNOSTIC ======"
-cat > /var/www/public/server-info.php << 'EOL'
+cat > /var/www/public/server-info.php << EOL
 <?php
-header('Content-Type: application/json');
-
-$serverInfo = [
-    'timestamp' => date('Y-m-d H:i:s'),
+\$server = [
+    'hostname' => gethostname(),
+    'ip' => \$_SERVER['SERVER_ADDR'] ?? 'unknown',
+    'date' => date('Y-m-d H:i:s'),
     'php_version' => phpversion(),
+    'software' => \$_SERVER['SERVER_SOFTWARE'] ?? 'unknown',
+    'memory_usage' => memory_get_usage(true),
     'memory_limit' => ini_get('memory_limit'),
-    'max_execution_time' => ini_get('max_execution_time'),
-    'server' => $_SERVER
+    'disk_free' => disk_free_space('/'),
+    'disk_total' => disk_total_space('/'),
+    'disk_usage' => round((disk_total_space('/') - disk_free_space('/')) / disk_total_space('/') * 100, 2) . '%',
+    'server_load' => sys_getloadavg(),
+    'uptime' => exec('uptime -p')
 ];
 
-echo json_encode($serverInfo, JSON_PRETTY_PRINT);
+header('Content-Type: application/json');
+echo json_encode(\$server, JSON_PRETTY_PRINT);
 EOL
 chmod 644 /var/www/public/server-info.php
+
+# Vérification de la structure des répertoires
+log_info "Vérification des répertoires..."
+mkdir -p /var/www/storage/app/public \
+    /var/www/storage/framework/cache \
+    /var/www/storage/framework/sessions \
+    /var/www/storage/framework/views \
+    /var/www/bootstrap/cache \
+    /var/www/public/build/assets/js \
+    /var/www/public/build/assets/css \
+    /var/www/public/assets/js \
+    /var/www/public/assets/css
+
+# Génération des fichiers d'assets minimaux en cas d'absence
+if [ ! -f /var/www/public/build/assets/js/app-gZAm2HJZ.js ]; then
+    log_info "Génération de fichiers assets minimaux..."
+    echo "console.log('Fallback app JS bundle generated in Docker');" > /var/www/public/build/assets/js/app-gZAm2HJZ.js
+    echo "console.log('Fallback vendor JS bundle');" > /var/www/public/build/assets/js/vendor-CLLTD4I8.js
+    echo "/* Fallback CSS file */" > /var/www/public/build/assets/css/app-CjAB3oxN.css
+    
+    # Versions sans hash
+    cp /var/www/public/build/assets/js/app-gZAm2HJZ.js /var/www/public/build/assets/js/app.js
+    cp /var/www/public/build/assets/js/vendor-CLLTD4I8.js /var/www/public/build/assets/js/vendor.js
+    cp /var/www/public/build/assets/css/app-CjAB3oxN.css /var/www/public/build/assets/css/app.css
+    
+    # Copier également dans le répertoire assets
+    mkdir -p /var/www/public/assets/js /var/www/public/assets/css
+    cp /var/www/public/build/assets/js/app-gZAm2HJZ.js /var/www/public/assets/js/
+    cp /var/www/public/build/assets/js/vendor-CLLTD4I8.js /var/www/public/assets/js/
+    cp /var/www/public/build/assets/css/app-CjAB3oxN.css /var/www/public/assets/css/
+    cp /var/www/public/build/assets/js/app.js /var/www/public/assets/js/
+    cp /var/www/public/build/assets/js/vendor.js /var/www/public/assets/js/
+    cp /var/www/public/build/assets/css/app.css /var/www/public/assets/css/
+fi
+
+# Vérification/création du manifest.json
+if [ ! -f /var/www/public/build/manifest.json ]; then
+    log_info "Création d'un manifest.json minimal..."
+    cat > /var/www/public/build/manifest.json << EOL
+{
+    "resources/js/app.jsx": {
+        "file": "js/app-gZAm2HJZ.js",
+        "isEntry": true,
+        "src": "resources/js/app.jsx"
+    },
+    "resources/css/app.css": {
+        "file": "css/app-CjAB3oxN.css",
+        "isEntry": true,
+        "src": "resources/css/app.css"
+    }
+}
+EOL
+    cp /var/www/public/build/manifest.json /var/www/public/assets/manifest.json
+fi
+
+# Création des .htaccess pour la gestion des assets
+log_info "Création des fichiers .htaccess pour les assets..."
+cat > /var/www/public/build/assets/.htaccess << EOL
+<IfModule mod_headers.c>
+    Header set Cache-Control "max-age=31536000, public"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect to assets directory if file not found
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /assets/\$1 [L,QSA]
+</IfModule>
+EOL
+
+cat > /var/www/public/assets/.htaccess << EOL
+<IfModule mod_headers.c>
+    Header set Cache-Control "max-age=31536000, public"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect to build/assets directory if file not found
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /build/assets/\$1 [L,QSA]
+</IfModule>
+EOL
+
+# Optimisations Laravel en production
+log_info "Configuration de Laravel pour la production..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Création des liens symboliques pour storage
+log_info "Création des liens symboliques..."
+php artisan storage:link
+
+# Définir les permissions
+log_info "Définition des permissions..."
+chmod -R 755 /var/www/public
+chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+chown -R www-data:www-data /var/www
 
 log_success "====== DÉMARRAGE DE SUPERVISORD ======"
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
