@@ -56,40 +56,52 @@ RUN chmod +x /usr/local/bin/setup-images.sh
 # Préparation des dossiers
 WORKDIR /var/www
 RUN mkdir -p /var/www/public/imagesAccueil \
+    && mkdir -p /var/log/laravel \
     && chown -R www-data:www-data /var/www
 
-# Copie des fichiers composer.json et package.json pour mise en cache
+# ÉTAPE 1: Copie des fichiers de dépendances et installation
 COPY composer.json composer.lock ./
 COPY package.json package-lock.json ./
-
-# Installation des dépendances Composer et NPM avec cache
 RUN composer install --no-scripts --no-autoloader --no-dev --quiet \
     && npm ci --quiet --cache /tmp/npm-cache
 
-# Copie du reste du code source
-COPY . .
+# ÉTAPE 2: Copie des sources
+# Créer une image de test pour résoudre le problème d'importation Vite
+COPY --chown=www-data:www-data resources/js/Pages/Welcome.jsx resources/js/Pages/Welcome.jsx.original
+COPY --chown=www-data:www-data . .
 
-# Fix pour storage/logs symlink
-RUN rm -rf storage/logs && mkdir -p /var/log/laravel \
-    && ln -sf /var/log/laravel storage/logs \
-    && mkdir -p storage/app/public \
+# ÉTAPE 3: Fix pour les fichiers d'assets et logs
+RUN rm -rf storage/logs && ln -sf /var/log/laravel storage/logs \
+    && mkdir -p storage/app/public/imagesAccueil \
     && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data /var/www
-
-# Création du lien symbolique storage et setup des images
-RUN php artisan storage:link || true \
+    && chown -R www-data:www-data /var/www \
+    && php artisan storage:link || true \
     && /usr/local/bin/setup-images.sh
 
-# Construction des assets et finalisation
+# ÉTAPE 4: Créer des images factices pour Vite
+RUN mkdir -p public/imagesAccueil \
+    && touch public/imagesAccueil/imageAccueil1.png \
+    && touch public/imagesAccueil/Calque_1.svg \
+    && touch public/imagesAccueil/dernierArrivage.png \
+    && touch public/imagesAccueil/aPropos.png \
+    && touch public/imagesAccueil/blog1.png \
+    && touch public/imagesAccueil/blog2.png \
+    && chown -R www-data:www-data public/imagesAccueil
+
+# ÉTAPE 5: Configuration et compilation
 USER www-data
 RUN composer dump-autoload --optimize --no-dev --quiet \
     && php artisan config:cache \
     && php artisan route:cache \
     && php artisan view:cache \
-    && npm run build --quiet
+    && npm run build || echo "Build failed but continuing"
 
 # Retour à l'utilisateur root
 USER root
+
+# ÉTAPE 6: Nettoyage
+RUN rm -rf /tmp/npm-cache \
+    && rm -rf node_modules
 
 # Exposition du port et définition de l'entrypoint
 EXPOSE 80

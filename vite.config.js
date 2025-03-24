@@ -13,9 +13,16 @@ export default defineConfig({
                 'resources/js/app.jsx',
             ],
             refresh: true,
+            publicDirectory: 'public',
         }),
         react(),
     ],
+    resolve: {
+        alias: {
+            '/imagesAccueil': '/public/imagesAccueil',
+            '/public': '/public',
+        }
+    },
     build: {
         manifest: true,
         outDir: 'public/build',
@@ -25,6 +32,11 @@ export default defineConfig({
                 entryFileNames: `assets/js/[name].js`,
                 chunkFileNames: `assets/js/[name].js`,
                 assetFileNames: `assets/[ext]/[name].[ext]`,
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        return 'vendor';
+                    }
+                }
             },
         },
     },

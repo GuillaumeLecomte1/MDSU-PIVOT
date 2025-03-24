@@ -5,13 +5,13 @@ import CategoryCard from '@/Components/CategoryCard';
 import BlogCard from '@/Components/BlogCard';
 import FixedProductCard from '@/Components/Products/FixedProductCard';
 
-// Direct image imports
-import CardAccueil from '/imagesAccueil/imageAccueil1.png';
-import CalqueLogo from '/imagesAccueil/Calque_1.svg';
-import DernierArrivage from '/imagesAccueil/dernierArrivage.png';
-import APropos from '/imagesAccueil/aPropos.png';
-import Blog1 from '/imagesAccueil/blog1.png';
-import Blog2 from '/imagesAccueil/blog2.png';
+// Direct image imports - Chemin compatible avec tous les environnements
+import CardAccueil from '../../../public/imagesAccueil/imageAccueil1.png';
+import CalqueLogo from '../../../public/imagesAccueil/Calque_1.svg';
+import DernierArrivage from '../../../public/imagesAccueil/dernierArrivage.png';
+import APropos from '../../../public/imagesAccueil/aPropos.png';
+import Blog1 from '../../../public/imagesAccueil/blog1.png';
+import Blog2 from '../../../public/imagesAccueil/blog2.png';
 
 // Import error handler from ImageHelper
 import { handleImageError } from '@/Utils/ImageHelper';
