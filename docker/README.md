@@ -1,40 +1,71 @@
-# Docker Setup for Laravel with Vite
+# Configuration Docker pour l'application Pivot
 
-This directory contains the Docker configuration files for the Laravel application with Vite.
+Ce dossier contient tous les fichiers nécessaires pour déployer l'application Laravel avec Inertia.js et React en utilisant Docker.
 
-## Files
+## Fichiers principaux
 
-- `Dockerfile`: Multi-stage build for the Laravel application with Vite
-- `nginx.conf`: Nginx configuration for serving the Laravel application
-- `php-fpm.conf`: PHP-FPM configuration
-- `supervisord.conf`: Supervisor configuration for managing Nginx and PHP-FPM processes
+- `Dockerfile` : Configuration multi-étape pour construire l'image Docker optimisée
+- `entrypoint.sh` : Script d'initialisation exécuté au démarrage du conteneur
+- `apache.conf` : Configuration du serveur web Apache
+- `php.ini` : Configuration PHP optimisée
+- `fix-assets.php` : Script de correction des assets pour résoudre les problèmes 404
 
-## Building the Docker Image
+## Comment ça fonctionne
 
-```bash
-docker build -t marketplace-app --build-arg PORT=4002 .
+1. La construction de l'image se fait en deux étapes:
+   - Une étape de build où les dépendances sont installées et les assets compilés
+   - Une étape finale avec uniquement les fichiers nécessaires pour la production
+
+2. Au démarrage du conteneur, le script `entrypoint.sh` exécute:
+   - Génération de la clé d'application
+   - Optimisations Laravel pour la production
+   - Création des liens symboliques pour le stockage
+   - Corrections des permissions
+   - Exécution du script `fix-assets.php` pour générer les assets manquants
+   - Migrations de base de données (si configurées)
+
+3. Le script `fix-assets.php` garantit que tous les assets nécessaires sont présents:
+   - Création des répertoires `build/assets` et `assets`
+   - Génération de fichiers JavaScript et CSS de secours
+   - Création de versions non-hashées des fichiers assets
+   - Configuration des fichiers `.htaccess` pour la redirection des assets
+
+## Comment déployer
+
+1. Construisez l'image Docker:
+   ```
+   docker build -t pivot -f docker/Dockerfile .
+   ```
+
+2. Exécutez le conteneur:
+   ```
+   docker run -p 8000:80 -e DB_HOST=your_db_host -e DB_USER=user -e DB_PASSWORD=password -e DB_DATABASE=database pivot
+   ```
+
+## Variables d'environnement
+
+- `APP_ENV` : Environnement d'application (production, development, testing)
+- `APP_DEBUG` : Activer le débogage (true/false)
+- `DB_HOST` : Hôte de la base de données
+- `DB_PORT` : Port de la base de données
+- `DB_DATABASE` : Nom de la base de données
+- `DB_USERNAME` : Nom d'utilisateur de la base de données
+- `DB_PASSWORD` : Mot de passe de la base de données
+
+## Résolution des problèmes courants
+
+### Assets 404
+Si vous rencontrez des erreurs 404 pour les assets CSS/JS, accédez à `/fix-assets.php` dans votre navigateur. Ce script générera des fichiers de secours et les configurations nécessaires.
+
+### Erreurs de base de données
+Assurez-vous que les variables d'environnement pour la base de données sont correctement définies et que la base de données est accessible depuis le conteneur.
+
+### Problèmes de permissions
+Si vous rencontrez des problèmes de permissions, connectez-vous au conteneur et exécutez:
+```
+chmod -R 755 /var/www/storage
+chown -R www-data:www-data /var/www
 ```
 
-## Running the Docker Container
-
-```bash
-docker run -p 4002:4002 -e APP_ENV=production -e APP_KEY=your-app-key marketplace-app
-```
-
-## Environment Variables
-
-Make sure to set the following environment variables:
-
-- `APP_ENV`: The application environment (e.g., production)
-- `APP_KEY`: The application key (generate with `php artisan key:generate`)
-- `DB_HOST`: The database host
-- `DB_PORT`: The database port
-- `DB_DATABASE`: The database name
-- `DB_USERNAME`: The database username
-- `DB_PASSWORD`: The database password
-
-## Notes
-
-- The Docker image uses PHP 8.2 and Node.js 18
-- The application is served on the port specified by the `PORT` build argument (default: 80)
-- The application is built with Vite and the assets are copied to the `/var/www/public/build` directory 
+### Vérification de l'état
+Un fichier de diagnostic est disponible à `/server-info.php` pour vérifier l'état du serveur. 
