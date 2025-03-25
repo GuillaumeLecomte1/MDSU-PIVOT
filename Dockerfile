@@ -47,8 +47,15 @@ RUN mkdir -p storage/framework/{sessions,views,cache} && \
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Exposer le port 80
-EXPOSE 80
+# Configuration Traefik pour le routage
+LABEL traefik.enable=true \
+      traefik.http.routers.pivot.rule=Host(`pivot.guillaume-lcte.fr`) \
+      traefik.http.routers.pivot.entrypoints=web,websecure \
+      traefik.http.routers.pivot.tls.certresolver=letsencrypt \
+      traefik.http.services.pivot.loadbalancer.server.port=4004
+
+# Exposer le port 4004
+EXPOSE 4004
 
 # Définir le point d'entrée
 ENTRYPOINT ["/entrypoint.sh"]
