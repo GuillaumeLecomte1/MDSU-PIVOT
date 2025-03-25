@@ -1,94 +1,96 @@
 #!/bin/bash
 set -e
 
-echo "====== INITIALISATION DE L'APPLICATION ======"
+# Fonction pour les logs (avec timestamps)
+log() {
+    echo "[$(date +%Y-%m-%d\ %H:%M:%S)] $1"
+}
 
-# Vérifier que le répertoire de travail est correct
-if [ ! -f "/var/www/artisan" ]; then
-    echo "❌ ERROR: artisan file not found. Working directory is incorrect."
-    exit 1
-fi
+# Fonction pour vérifier la connexion à la base de données (optimisée)
+wait_for_db() {
+    log "Vérification de la connexion à la base de données..."
+    
+    # Extraire les variables d'environnement pour la connexion à la BD
+    DB_HOST=$(grep DB_HOST .env | cut -d '=' -f2)
+    DB_PORT=$(grep DB_PORT .env | cut -d '=' -f2)
+    DB_DATABASE=$(grep DB_DATABASE .env | cut -d '=' -f2)
+    DB_USERNAME=$(grep DB_USERNAME .env | cut -d '=' -f2)
+    DB_PASSWORD=$(grep DB_PASSWORD .env | cut -d '=' -f2)
+    
+    max_tries=15
+    tries=0
+    
+    # Utiliser une commande PHP simple pour tester la connexion
+    while ! php -r "try { \$pdo = new PDO('mysql:host=${DB_HOST};port=${DB_PORT};dbname=${DB_DATABASE}', '${DB_USERNAME}', '${DB_PASSWORD}'); echo 'OK'; } catch (\Exception \$e) { exit(1); }" 2>/dev/null; do
+        tries=$((tries + 1))
+        if [ $tries -gt $max_tries ]; then
+            log "AVERTISSEMENT: Impossible de se connecter à la base de données après $max_tries tentatives. Continuons quand même..."
+            return
+        fi
+        log "Tentative $tries/$max_tries - Base de données non disponible, nouvelle tentative dans 2 secondes..."
+        sleep 2
+    done
+    
+    log "Connexion à la base de données établie!"
+}
 
-# Répertoires de logs
-mkdir -p /tmp/laravel-logs
-chmod -R 777 /tmp/laravel-logs
-chown -R www-data:www-data /tmp/laravel-logs
+# Fonction pour configurer les permissions (simplifiée)
+setup_permissions() {
+    log "Configuration des permissions..."
+    chown -R www-data:www-data /var/www/storage
+    chmod -R 775 /var/www/storage
+    chown -R www-data:www-data /var/www/bootstrap/cache
+    chmod -R 775 /var/www/bootstrap/cache
+}
 
-# Permissions
-echo "Configuration des permissions..."
-chmod -R 755 /var/www/public
-chmod -R 775 /var/www/storage
-chmod -R 775 /var/www/bootstrap/cache
-chown -R www-data:www-data /var/www
-echo "✅ Permissions configurées"
-
-# Générer la clé si nécessaire
-php artisan key:generate --force
-echo "✅ Clé d'application générée"
-
-# Lien symbolique pour le stockage
-echo "Création du lien symbolique pour le stockage..."
-mkdir -p /var/www/storage/app/public
-if [ ! -L /var/www/public/storage ]; then
-    php artisan storage:link --force
-    echo "✅ Lien symbolique créé"
-else
-    echo "✅ Lien symbolique existe déjà"
-fi
-
-# Vérifier les dossiers d'images importants
-echo "Vérification des dossiers d'images..."
-# Dossiers principaux
-mkdir -p /var/www/storage/app/public/imagesAccueil
-mkdir -p /var/www/storage/app/public/images/products
-mkdir -p /var/www/storage/app/public/images/categories
-mkdir -p /var/www/storage/app/public/images/users
-
-# Sous-dossiers produits
-mkdir -p /var/www/storage/app/public/images/products/thumbnails
-mkdir -p /var/www/storage/app/public/images/products/large
-
-# Sous-dossiers catégories
-mkdir -p /var/www/storage/app/public/images/categories/icons
-mkdir -p /var/www/storage/app/public/images/categories/banners
-
-# Sous-dossiers utilisateurs
-mkdir -p /var/www/storage/app/public/images/users/avatars
-mkdir -p /var/www/storage/app/public/images/users/covers
-
-# Autres dossiers d'images
-mkdir -p /var/www/storage/app/public/images/banners
-mkdir -p /var/www/storage/app/public/images/promotions
-mkdir -p /var/www/storage/app/public/images/blog
-mkdir -p /var/www/storage/app/public/images/blog/thumbnails
-mkdir -p /var/www/storage/app/public/images/logos
-mkdir -p /var/www/storage/app/public/images/icons
-mkdir -p /var/www/storage/app/public/images/backgrounds
-
-# Définir les permissions
-chmod -R 777 /var/www/storage/app/public
-echo "✅ Dossiers d'images configurés"
-
-# Fix les assets
-echo "Création des assets de fallback..."
-php /var/www/public/fix-assets.php > /tmp/laravel-logs/fix-assets.log 2>&1
-echo "✅ Assets de fallback créés"
-
-# Optimisations Laravel
-echo "Application des optimisations Laravel..."
-php artisan optimize
-php artisan view:cache
-echo "✅ Optimisations appliquées"
-
-# Exécuter les migrations si la base de données est configurée
-if grep -q "^DB_HOST=" /var/www/.env; then
-    DB_HOST=$(grep "^DB_HOST=" /var/www/.env | cut -d'=' -f2)
-    if [ -n "$DB_HOST" ]; then
-        echo "Attente de la base de données..."
-        php artisan migrate --force
-        echo "✅ Migrations exécutées"
+# Fonction pour exécuter les migrations uniquement si nécessaire
+run_migrations() {
+    log "Vérification des migrations..."
+    
+    # D'abord, vérifier si nous pouvons nous connecter à la base de données
+    if ! php -r "try { new PDO('mysql:host=${DB_HOST};port=${DB_PORT};dbname=${DB_DATABASE}', '${DB_USERNAME}', '${DB_PASSWORD}'); } catch (\Exception \$e) { exit(1); }" 2>/dev/null; then
+        log "Base de données non disponible, migrations ignorées"
+        return
     fi
-fi
+    
+    # Vérifier si des migrations sont en attente
+    if php artisan migrate:status | grep -q "down"; then
+        log "Migrations trouvées, exécution..."
+        php artisan migrate --force
+        log "Migrations terminées"
+    else
+        log "Aucune migration nécessaire"
+    fi
+}
 
-echo "====== DÉMARRAGE DES SERVICES ======"
-exec "$@"
+# Fonction pour vérifier ou générer le lien symbolique de stockage
+ensure_storage_link() {
+    if [ ! -L /var/www/public/storage ]; then
+        log "Création du lien symbolique pour le stockage..."
+        php artisan storage:link
+    fi
+}
+
+# Fonction principale
+main() {
+    log "Démarrage de l'application..."
+    
+    # Configurer les permissions
+    setup_permissions
+    
+    # S'assurer que le lien symbolique existe
+    ensure_storage_link
+    
+    # Vérifier la connexion à la base de données (non bloquant)
+    wait_for_db
+    
+    # Exécuter les migrations si nécessaire
+    run_migrations
+    
+    # Démarrage de l'application (sans recréer les caches)
+    log "Lancement des services..."
+    exec "$@"
+}
+
+# Exécution du script principal
+main "$@"
