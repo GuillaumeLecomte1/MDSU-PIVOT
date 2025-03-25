@@ -5,7 +5,6 @@ echo "🚀 Starting Laravel application with Inertia.js and React..."
 cd /var/www
 
 # Show current PHP configuration
-echo "🔍 PHP proc_open availability: $(php -r 'echo function_exists("proc_open") ? "Enabled" : "Disabled";')"
 echo "🔍 PHP memory limit: $(php -r 'echo ini_get("memory_limit");')"
 
 # Create a static 500 error page
@@ -51,10 +50,6 @@ else
     echo "✅ .env file found"
 fi
 
-# Run package discovery safely
-echo "📦 Running package discovery..."
-php -d memory_limit=-1 -d allow_url_fopen=On -d proc_open.enable=On artisan package:discover || echo "⚠️ Package discovery failed, continuing..."
-
 # Patch the Laravel Vite class to fix the "src" field issue
 echo "🔧 Patching Laravel Vite class to handle missing 'src' field..."
 VITE_PHP_PATH="/var/www/vendor/laravel/framework/src/Illuminate/Foundation/Vite.php"
@@ -74,15 +69,14 @@ else
     echo "⚠️ Could not find Laravel Vite.php at $VITE_PHP_PATH"
 fi
 
-# Fix the Vite manifest issue
-echo "🔍 Checking and fixing Vite manifest..."
-if [ ! -f public/build/manifest.json ] || ! grep -q "\"src\":" public/build/manifest.json 2>/dev/null; then
-    echo "⚠️ Vite manifest missing or invalid, creating proper manifest with src field"
+# Verify Vite assets
+echo "🔍 Verifying Vite assets..."
+if [ ! -f public/build/manifest.json ]; then
+    echo "⚠️ Missing manifest.json, creating fallback..."
     mkdir -p public/build/assets
     
-    # Create proper manifest with required "src" and "isEntry" fields
-    cat > public/build/manifest.json << 'EOF'
-{
+    # Create a basic manifest with src fields
+    echo '{
     "resources/css/app.css": {
         "file": "assets/app.css",
         "src": "resources/css/app.css",
@@ -93,33 +87,12 @@ if [ ! -f public/build/manifest.json ] || ! grep -q "\"src\":" public/build/mani
         "src": "resources/js/app.jsx",
         "isEntry": true
     }
-}
-EOF
+}' > public/build/manifest.json
     
-    # Create fallback CSS and JS files if needed
-    if [ ! -s public/build/assets/app.css ]; then
-        echo "/* Fallback CSS */" > public/build/assets/app.css
-    fi
-    
-    if [ ! -s public/build/assets/app.js ]; then
-        echo "/* Fallback JS */" > public/build/assets/app.js
-    fi
-    
-    echo "✅ Fixed Vite manifest structure with required 'src' field"
-else
-    echo "✅ Valid Vite manifest found with 'src' field"
+    # Create empty assets if needed
+    touch public/build/assets/app.css
+    touch public/build/assets/app.js
 fi
-
-# Replace the @vite directive in blade files with direct asset references
-echo "🔧 Updating Blade templates to avoid Vite errors..."
-blade_files=$(find resources/views -type f -name "*.blade.php")
-for file in $blade_files; do
-    # Check if the file contains @vite directive
-    if grep -q "@vite" "$file"; then
-        echo "⚠️ Replacing Vite directive in $file"
-        sed -i 's/@vite(\[[^]]*\])/<script src="{{ asset('\''build\/assets\/app.js'\'') }}"><\/script><link rel="stylesheet" href="{{ asset('\''build\/assets\/app.css'\'') }}">/' "$file"
-    fi
-done
 
 # Create storage link if it doesn't exist
 if [ ! -L public/storage ]; then

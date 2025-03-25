@@ -26,6 +26,11 @@ if [ -d "vendor/nunomaduro/larastan" ] && [ -d "vendor/larastan/larastan" ]; the
     echo "Consider removing nunomaduro/larastan from composer.json, it's deprecated"
 fi
 
+# Pre-build Vite assets to avoid issues in Docker
+echo "🔨 Pre-building Vite assets locally..."
+chmod +x prebuild-assets.sh
+./prebuild-assets.sh
+
 # Stop running containers
 echo "🛑 Stopping running containers..."
 docker-compose down || true
@@ -51,15 +56,14 @@ echo "Your application should be available at: http://pivot.guillaume-lcte.fr"
 echo ""
 echo "If you still encounter issues, you can try the following:"
 echo ""
-echo "1. Fix proc_open by running:"
-echo "   docker-compose exec app sh -c 'echo \"allow_url_fopen = On\" > /usr/local/etc/php/conf.d/fix-proc.ini'"
-echo "   docker-compose exec app sh -c 'echo \"proc_open.enable = On\" >> /usr/local/etc/php/conf.d/fix-proc.ini'"
+echo "1. Verify the Vite assets are working by checking:"
+echo "   docker-compose exec app ls -la /var/www/public/build"
 echo ""
-echo "2. Manually patch the Vite.php file:"
+echo "2. Manually fix the Vite.php file if needed:"
 echo "   docker-compose exec app sh -c 'sed -i \"s/\\\$path = \\\$chunk[\\\'\\\''src\\\'\\\''];/if (isset(\\\$chunk[\\\'\\\''src\\\'\\\''])) { \\\$path = \\\$chunk[\\\'\\\''src\\\'\\\'\']; } else { \\\$path = \\\$file; }/\" /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Vite.php'"
 echo ""
-echo "3. Restart container after applying fixes:"
-echo "   docker-compose restart app"
+echo "3. Manually clear the Laravel caches:"
+echo "   docker-compose exec app php -d memory_limit=-1 artisan optimize:clear"
 echo ""
 echo "Additional debugging commands:"
 echo "docker-compose logs -f app     # Follow container logs"

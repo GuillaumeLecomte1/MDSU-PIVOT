@@ -18,6 +18,7 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
 ENV PHP_OPCACHE_SAVE_COMMENTS=1
 ENV VITE_MANIFEST_PATH=/var/www/public/build/manifest.json
 ENV NGINX_PORT=${PORT}
+ENV DISABLE_FUNCTIONS="proc_open"
 
 # Installation des dépendances système
 RUN apk add --no-cache \
@@ -40,20 +41,13 @@ RUN apk add --no-cache \
     oniguruma-dev \
     libxml2-dev \
     freetype-dev \
-    libjpeg-turbo-dev \
-    # Node.js and npm
-    nodejs \
-    npm
+    libjpeg-turbo-dev
 
-# Fix php-fpm user and enable proc_open
+# Fix php-fpm user and set proper PHP configuration
 RUN usermod -u ${UID} www-data && \
     groupmod -g ${GID} www-data && \
-    # Enable proc_open for Composer and Laravel
-    echo "Building PHP with proc_open enabled" && \
-    # Create a custom php.ini that enables proc_open
-    echo "allow_url_fopen = On" > /usr/local/etc/php/conf.d/docker-php-enable-proc.ini && \
-    echo "proc_open.enable = On" >> /usr/local/etc/php/conf.d/docker-php-enable-proc.ini && \
-    echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/docker-php-enable-proc.ini
+    # Enable needed PHP functions
+    echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/docker-php-memory.ini
 
 # Installation et configuration de PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
@@ -69,12 +63,6 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
     gd \
     xml && \
     docker-php-ext-enable opcache
-
-# Utilisation de npm pour installer Node.js plus récent
-RUN npm install -g n && \
-    n ${NODE_VERSION} && \
-    hash -r && \
-    npm install -g npm@latest cross-env
 
 # Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -93,40 +81,25 @@ WORKDIR /var/www
 RUN mkdir -p /var/www && \
     chown -R www-data:www-data /var/www
 
-# Copy package.json and vite.config.js first
-COPY package.json package-lock.json vite.config.js ./
-
-# Make sure the vite.config.js is properly configured
-RUN sed -i 's/minify: false/minify: true/' vite.config.js && \
-    sed -i 's/sourcemap: false/sourcemap: false/' vite.config.js && \
-    sed -i 's/terserOptions: undefined/terserOptions: { compress: true, mangle: true }/' vite.config.js
-
-# Install Node.js dependencies
-RUN npm ci --no-audit --no-fund
-
-# Copie des fichiers nécessaires pour Composer
-COPY composer.json composer.lock ./
-
 # Create required directories first
 RUN mkdir -p bootstrap/cache storage/framework/{sessions,views,cache} && \
     chmod -R 775 storage bootstrap/cache && \
     chown -R www-data:www-data storage bootstrap/cache
 
+# Copie des fichiers nécessaires pour Composer
+COPY composer.json composer.lock ./
+
 # Installation des dépendances PHP sans scripts
 RUN php -d memory_limit=-1 /usr/bin/composer install --no-scripts --no-autoloader --ignore-platform-reqs
+
+# Copy pre-built Vite assets
+COPY public/build /var/www/public/build
 
 # Copie de l'ensemble du code source de l'application
 COPY . .
 
-# Finalize Composer installation 
+# Finalize Composer installation
 RUN php -d memory_limit=-1 /usr/bin/composer dump-autoload --optimize || true
-
-# Modify the build script to use installed global cross-env
-RUN sed -i 's/"build": "cross-env/"build": "\/usr\/local\/bin\/cross-env/' package.json || true
-
-# Build the frontend assets
-RUN NODE_ENV=production NODE_OPTIONS="--max-old-space-size=4096" \
-    /usr/local/bin/cross-env NODE_OPTIONS=--max-old-space-size=4096 npx vite build --emptyOutDir || echo "Vite build failed, will use fallback"
 
 # Ensure Vite manifest has the proper format with 'src' field
 RUN if [ ! -f "public/build/manifest.json" ] || ! grep -q "\"src\":" public/build/manifest.json 2>/dev/null; then \
