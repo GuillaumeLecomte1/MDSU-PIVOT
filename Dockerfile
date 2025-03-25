@@ -3,6 +3,8 @@ FROM php:8.2-fpm AS base
 LABEL maintainer="Pivot Marketplace <contact@pivot.fr>"
 
 ENV DEBIAN_FRONTEND=noninteractive
+# Set default queue to sync for reliability during deployment
+ENV QUEUE_CONNECTION=sync
 
 # 1. Installation des dépendances système et extensions PHP en une seule étape
 RUN apt-get update && apt-get install -y \
@@ -69,14 +71,22 @@ RUN /usr/local/bin/check-components.sh \
     echo "export function isAbsoluteUrl(url) { if (!url) return false; return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//'); }" >> /var/www/resources/js/Utils/ImageHelper.js
 
 # 9. Optimisation Laravel en une seule étape (éviter les bootstraps multiples)
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+RUN php artisan migrate --force || echo "Migrations failed - will be handled at runtime" \
+    && php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
 
 # 10. Compilation des assets et nettoyage
 RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build || echo "Asset build failed, but continuing" \
     && rm -rf /tmp/npm-cache \
     && rm -rf node_modules
 
+# 11. Créer un script d'initialisation pour gérer les migrations au démarrage
+RUN echo '#!/bin/bash\n\
+php artisan migrate --force\n\
+exec "$@"\n' > /usr/local/bin/docker-entrypoint.sh \
+&& chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE 80
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
