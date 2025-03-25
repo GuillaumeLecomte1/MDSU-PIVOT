@@ -17,13 +17,17 @@ else
     echo "✅ Fichier .env trouvé"
 fi
 
-# Vérifier si les assets frontend sont présents, sinon utiliser les assets de secours
-if [ ! -s public/build/assets/app.css ] || [ ! -s public/build/assets/app.js ]; then
-    echo "⚠️ Assets frontend manquants, utilisation des assets de secours"
+# Vérifier si les assets frontend sont présents
+echo "🔍 Vérification des assets frontend..."
+if [ ! -s public/build/manifest.json ] || [ ! -s public/build/assets/app.js ] || [ ! -s public/build/assets/app.css ]; then
+    echo "⚠️ Assets frontend manquants ou invalides, création des assets de secours"
     mkdir -p public/build/assets
-    cp -f fallback-assets/placeholder-css.css public/build/assets/app.css || true
-    cp -f fallback-assets/placeholder-js.js public/build/assets/app.js || true
     echo '{"resources/css/app.css":{"file":"assets/app.css"},"resources/js/app.jsx":{"file":"assets/app.js"}}' > public/build/manifest.json
+    echo '/* Fallback CSS */' > public/build/assets/app.css
+    echo '/* Fallback JS */' > public/build/assets/app.js
+    
+    # Modifier le template Blade pour éviter l'erreur Vite
+    sed -i 's/@vite(\[.*\])/<script src="{{ asset(\x27build\/assets\/app.js\x27) }}"><\/script><link rel="stylesheet" href="{{ asset(\x27build\/assets\/app.css\x27) }}">/' resources/views/app.blade.php
 else
     echo "✅ Assets frontend trouvés"
 fi
@@ -64,13 +68,15 @@ fi
 echo "🗄️ Exécution des migrations de base de données"
 php artisan migrate --force || echo "⚠️ Échec des migrations, continuation..."
 
-# Optimisations avec gestion d'erreur
-echo "⚡ Optimisation de l'application pour la production"
+# Nettoyer tous les caches d'abord
+echo "🧹 Nettoyage des caches..."
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 php artisan cache:clear || true
 
+# Optimisations avec gestion d'erreur
+echo "⚡ Optimisation de l'application pour la production"
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
@@ -81,6 +87,16 @@ echo "🔒 Définition des permissions"
 find storage bootstrap/cache -type d -exec chmod 775 {} \; || true
 find storage bootstrap/cache -type f -exec chmod 664 {} \; || true
 chown -R www-data:www-data storage bootstrap/cache || true
+
+# Vérifier une dernière fois que les vues compilées sont correctes
+echo "🔍 Vérification des vues compilées..."
+if grep -q "Vite" storage/framework/views/*.php; then
+    echo "⚠️ Références Vite trouvées dans les vues compilées, nettoyage..."
+    php artisan view:clear || true
+    # Forcer la recompilation des vues sans Vite
+    sed -i 's/@vite(\[.*\])/<script src="{{ asset(\x27build\/assets\/app.js\x27) }}"><\/script><link rel="stylesheet" href="{{ asset(\x27build\/assets\/app.css\x27) }}">/' resources/views/app.blade.php
+    php artisan view:cache || true
+fi
 
 # Démarrer supervisor pour gérer les processus
 echo "🚦 Démarrage des services (nginx, php-fpm)"

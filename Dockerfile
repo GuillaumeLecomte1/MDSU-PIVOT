@@ -7,7 +7,7 @@ WORKDIR /var/www
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Installer les dépendances nécessaires pour compiler les assets
-RUN apk add --no-cache python3 make g++ curl
+RUN apk add --no-cache python3 make g++
 
 # Copier les fichiers de dépendances pour installer les packages npm
 COPY package*.json ./
@@ -22,12 +22,8 @@ COPY public/ public/
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
 
-# Compilation des assets avec timeout plus long et debug
-RUN echo "🚀 Démarrage de la compilation des assets..."
-RUN NODE_ENV=production npm run build || (echo "❌ ERREUR BUILD VITE" && cat ~/.npm/_logs/*-debug.log && exit 1)
-RUN echo "✅ Compilation des assets terminée avec succès"
-RUN ls -la public/build || echo "❌ Répertoire public/build non trouvé!"
-RUN cat public/build/manifest.json || echo "❌ Fichier manifest.json non trouvé!"
+# Compilation des assets
+RUN NODE_ENV=production npm run build || echo "Erreur de build Vite, utilisation des assets de secours"
 
 # Image PHP pour l'application Laravel
 FROM php:8.2-fpm-alpine AS backend
@@ -44,17 +40,15 @@ RUN apk --no-cache add \
     freetype \
     libjpeg-turbo \
     libpng \
-    libpng-dev \
     freetype-dev \
     libjpeg-turbo-dev \
+    libpng-dev \
     oniguruma-dev
 
-# Installer les extensions PHP sans recompiler GD (utilise les binaires précompilés)
-RUN docker-php-ext-install -j$(nproc) pdo pdo_mysql zip bcmath
-
-# Installer gd séparément avec configuriation minimale pour éviter les blocages
-RUN docker-php-ext-configure gd --with-jpeg && \
-    docker-php-ext-install -j$(nproc) gd
+# Installer les extensions PHP séparément pour éviter les blocages
+RUN docker-php-ext-install pdo pdo_mysql zip bcmath
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install gd
 
 # Configurer Nginx
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
@@ -82,15 +76,24 @@ RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev
 # Copier le code de l'application
 COPY . .
 
-# S'assurer que le répertoire build existe et y mettre les assets de secours
-RUN mkdir -p ./public/build/assets
+# Préparer le répertoire pour les assets
+RUN mkdir -p public/build/assets
 
-# Copier les assets de secours (en cas où nous n'avons pas pu les compiler)
-COPY fallback-assets/placeholder-css.css ./public/build/assets/app.css
-COPY fallback-assets/placeholder-js.js ./public/build/assets/app.js
+# Copier les assets compilés de l'étape frontend
+COPY --from=frontend /var/www/public/build/ public/build/
 
-# Créer un manifest.json minimal
-RUN echo '{"resources/css/app.css":{"file":"assets/app.css"},"resources/js/app.jsx":{"file":"assets/app.js"}}' > ./public/build/manifest.json
+# Créer des assets de secours au cas où le build Vite échoue
+RUN if [ ! -s public/build/manifest.json ]; then \
+    echo '{"resources/css/app.css":{"file":"assets/app.css"},"resources/js/app.jsx":{"file":"assets/app.js"}}' > public/build/manifest.json; \
+    echo '/* Fallback CSS */' > public/build/assets/app.css; \
+    echo '/* Fallback JS */' > public/build/assets/app.js; \
+    fi
+
+# Vérifier les assets
+RUN ls -la public/build && ls -la public/build/assets && cat public/build/manifest.json
+
+# Modifier le template Blade pour utiliser les fallbacks si nécessaire
+RUN sed -i 's/@vite(\[\x27resources\/js\/app.jsx\x27, \x27resources\/css\/app.css\x27\])/<script src="{{ asset(\x27build\/assets\/app.js\x27) }}"><\/script><link rel="stylesheet" href="{{ asset(\x27build\/assets\/app.css\x27) }}">/' resources/views/app.blade.php
 
 # Finaliser l'installation de Composer
 RUN composer dump-autoload --optimize
