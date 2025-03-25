@@ -35,8 +35,7 @@ RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev
 COPY . .
 
 # Finaliser l'installation de Composer
-RUN composer dump-autoload --optimize && \
-    composer run-script post-install-cmd --no-dev
+RUN composer dump-autoload --optimize
 
 # Créer les répertoires nécessaires et définir les permissions
 RUN mkdir -p storage/framework/{sessions,views,cache} && \
