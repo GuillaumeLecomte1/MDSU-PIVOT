@@ -79,7 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard route
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard/Index');
-    })->name('dashboard');
+    })->name('client.dashboard');
 
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

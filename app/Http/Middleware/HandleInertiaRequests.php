@@ -41,13 +41,13 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $cart = session()->get('cart', []);
         
-        // Debug logs
-        Log::info('HandleInertiaRequests - share method', [
-            'user' => $user,
-            'is_authenticated' => $request->user() !== null,
-            'session_id' => $request->session()->getId(),
-            'session_data' => $request->session()->all(),
-        ]);
+        // Debug logs - en commentant temporairement ces logs qui peuvent causer des erreurs
+        // Log::info('HandleInertiaRequests - share method', [
+        //     'user' => $user,
+        //     'is_authenticated' => $request->user() !== null,
+        //     'session_id' => $request->session()->getId(),
+        //     'session_data' => $request->session()->all(),
+        // ]);
 
         $sharedData = array_merge(parent::share($request), [
             'auth' => [
@@ -71,11 +71,11 @@ class HandleInertiaRequests extends Middleware
             'cartCount' => array_sum($cart),
         ]);
 
-        // Debug logs for shared data
-        Log::info('HandleInertiaRequests - shared data', [
-            'auth' => $sharedData['auth'],
-            'csrf_token' => $sharedData['csrf_token'],
-        ]);
+        // Commentons aussi ce log
+        // Log::info('HandleInertiaRequests - shared data', [
+        //     'auth' => $sharedData['auth'],
+        //     'csrf_token' => $sharedData['csrf_token'],
+        // ]);
 
         return $sharedData;
     }

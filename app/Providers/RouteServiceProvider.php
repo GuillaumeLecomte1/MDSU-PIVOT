@@ -60,6 +60,6 @@ class RouteServiceProvider extends ServiceProvider
         }
 
         // Default to client dashboard or home
-        return route('dashboard');
+        return route('client.dashboard');
     }
 }
