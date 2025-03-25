@@ -18,16 +18,16 @@ export function isAbsoluteUrl(url) {
 }
 
 /**
- * Images par défaut pour différentes catégories
+ * Images par défaut pour différentes catégories (en format SVG pour meilleure compatibilité)
  */
 const DEFAULT_IMAGES = {
-    product: '/images/default/product.png',
-    category: '/images/default/category.png',
-    user: '/images/default/user.png',
-    banner: '/images/default/banner.png',
-    logo: '/images/default/logo.png',
-    thumbnail: '/images/default/thumbnail.png',
-    fallback: '/images/default/placeholder.png',
+    product: '/images/default/product.svg',
+    category: '/images/default/category.svg',
+    user: '/images/default/user.svg',
+    banner: '/images/default/banner.svg',
+    logo: '/images/default/logo.svg',
+    thumbnail: '/images/default/thumbnail.svg',
+    fallback: '/images/default/placeholder.svg',
 };
 
 /**
@@ -65,9 +65,6 @@ export function getImageUrl(path, type = 'fallback', size = null) {
         return path;
     }
 
-    // Traiter les chemins relatifs
-    let basePath = '';
-    
     // Gérer les différents types d'images
     if (path.startsWith('/')) {
         // Chemin absolu par rapport à la racine publique
@@ -96,11 +93,26 @@ export function getImageUrl(path, type = 'fallback', size = null) {
 /**
  * Obtient l'URL pour une image stockée dans le répertoire storage
  * @param {string} path - Chemin de l'image dans storage
+ * @param {string} type - Type d'image (product, category, etc.)
  * @returns {string} - URL complète de l'image
  */
-export function getStorageImageUrl(path) {
-    if (!path) return DEFAULT_IMAGE;
-    return getImageUrl(`storage/${path}`);
+export function getStorageImageUrl(path, type = 'fallback') {
+    if (!path) return DEFAULT_IMAGES[type] || DEFAULT_IMAGES.fallback;
+    return `/storage/${path}`;
+}
+
+/**
+ * Vérifier de manière préventive si une image existe
+ * @param {string} url - URL de l'image à vérifier
+ * @returns {Promise<boolean>} - Promise qui résout à true si l'image existe
+ */
+export function checkImageExists(url) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = url;
+    });
 }
 
 /**
@@ -151,4 +163,5 @@ export default {
     isAbsoluteUrl,
     Image,
     DEFAULT_IMAGES,
+    checkImageExists,
 }; 

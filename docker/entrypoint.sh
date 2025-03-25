@@ -128,30 +128,47 @@ setup_default_images() {
     DEFAULT_IMAGES_DIR="/var/www/public/images/default"
     mkdir -p $DEFAULT_IMAGES_DIR
     
-    # Générer une image SVG placeholder de base si elle n'existe pas déjà
-    if [ ! -f "$DEFAULT_IMAGES_DIR/placeholder.png" ]; then
-        log "Création de l'image placeholder par défaut..."
+    # Créer le favicon par défaut s'il n'existe pas
+    if [ ! -f "/var/www/public/favicon.ico" ] && [ ! -f "$DEFAULT_IMAGES_DIR/favicon.ico" ]; then
+        log "Création du favicon par défaut..."
         
-        # Créer une image SVG placeholder simple
-        cat > "$DEFAULT_IMAGES_DIR/placeholder.svg" << EOL
-<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
- <rect width="500" height="500" fill="#f5f5f5"/>
- <text x="50%" y="50%" font-family="Arial" font-size="24" fill="#999" text-anchor="middle">Image non disponible</text>
+        # Créer un favicon SVG simple (noir)
+        cat > "$DEFAULT_IMAGES_DIR/favicon.svg" << EOL
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" fill="#000000"/>
 </svg>
 EOL
         
-        # Dupliquer pour différents types
-        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/product.svg"
-        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/category.svg"
-        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/user.svg"
-        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/banner.svg"
-        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/logo.svg"
-        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/thumbnail.svg"
+        # Copier comme favicon.ico à la racine
+        cp "$DEFAULT_IMAGES_DIR/favicon.svg" "$DEFAULT_IMAGES_DIR/favicon.ico"
+        cp "$DEFAULT_IMAGES_DIR/favicon.ico" "/var/www/public/favicon.ico"
     fi
+    
+    # Générer des images par défaut noires pour différents types
+    log "Création des images noires par défaut..."
+    
+    # Image placeholder noire
+    cat > "$DEFAULT_IMAGES_DIR/placeholder.svg" << EOL
+<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" fill="#000000"/>
+  <text x="50%" y="50%" font-family="Arial" font-size="24" fill="#ffffff" text-anchor="middle">Image non disponible</text>
+</svg>
+EOL
+    
+    # Images spécifiques par type
+    for type in product category user banner logo thumbnail; do
+        cat > "$DEFAULT_IMAGES_DIR/${type}.svg" << EOL
+<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" fill="#000000"/>
+  <text x="50%" y="50%" font-family="Arial" font-size="24" fill="#ffffff" text-anchor="middle">${type}</text>
+</svg>
+EOL
+    done
     
     # Définir les permissions
     chown -R www-data:www-data "$DEFAULT_IMAGES_DIR"
     chmod -R 755 "$DEFAULT_IMAGES_DIR"
+    chown -R www-data:www-data "/var/www/public/favicon.ico"
     
     log "Images par défaut configurées"
 }
