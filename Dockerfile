@@ -1,5 +1,5 @@
 # Utilisons une image officielle PHP avec FPM comme base
-FROM php:8.2-fpm-alpine
+FROM php:8.2-fpm-alpine AS php
 
 # Labels for identification
 LABEL maintainer="Guillaume Lecomte"
@@ -18,7 +18,6 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
 ENV PHP_OPCACHE_SAVE_COMMENTS=1
 ENV VITE_MANIFEST_PATH=/var/www/public/build/manifest.json
 ENV NGINX_PORT=${PORT}
-ENV DISABLE_FUNCTIONS="proc_open"
 
 # Installation des dépendances système
 RUN apk add --no-cache \
@@ -47,7 +46,9 @@ RUN apk add --no-cache \
 RUN usermod -u ${UID} www-data && \
     groupmod -g ${GID} www-data && \
     # Enable needed PHP functions
-    echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/docker-php-memory.ini
+    echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/docker-php-memory.ini && \
+    # Enable proc_open for Vite
+    echo "disable_functions = " > /usr/local/etc/php/conf.d/docker-php-enable-functions.ini
 
 # Installation et configuration de PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
@@ -92,39 +93,33 @@ COPY composer.json composer.lock ./
 # Installation des dépendances PHP sans scripts
 RUN php -d memory_limit=-1 /usr/bin/composer install --no-scripts --no-autoloader --ignore-platform-reqs
 
-# Copy pre-built Vite assets
-COPY public/build /var/www/public/build
-
 # Copie de l'ensemble du code source de l'application
 COPY . .
 
-# Finalize Composer installation
-RUN php -d memory_limit=-1 /usr/bin/composer dump-autoload --optimize || true
+# Install Node.js
+RUN apk add --no-cache nodejs npm
 
-# Ensure Vite manifest has the proper format with 'src' field
-RUN if [ ! -f "public/build/manifest.json" ] || ! grep -q "\"src\":" public/build/manifest.json 2>/dev/null; then \
-    echo "Creating proper Vite manifest with src field"; \
-    mkdir -p public/build/assets; \
-    echo '{ \
-        "resources/css/app.css": { \
-            "file": "assets/app.css", \
-            "src": "resources/css/app.css", \
-            "isEntry": true \
-        }, \
-        "resources/js/app.jsx": { \
-            "file": "assets/app.js", \
-            "src": "resources/js/app.jsx", \
-            "isEntry": true \
-        } \
-    }' > public/build/manifest.json; \
-    # Create fallback assets if needed
-    if [ ! -s public/build/assets/app.css ]; then \
-        echo "/* Fallback CSS */" > public/build/assets/app.css; \
-    fi; \
-    if [ ! -s public/build/assets/app.js ]; then \
-        echo "/* Fallback JS */" > public/build/assets/app.js; \
-    fi; \
-fi
+# Fix permissions for npm
+RUN mkdir -p /.npm && chown -R www-data:www-data /.npm
+
+# Install Node.js dependencies and build Vite assets
+RUN set -e && \
+    mkdir -p public/build && \
+    chown -R www-data:www-data node_modules public/build && \
+    npm ci --no-audit --no-fund && \
+    npm run build
+
+# Patch the Laravel Vite.php class to handle missing src field
+RUN set -e && \
+    VITE_PHP_PATH="/var/www/vendor/laravel/framework/src/Illuminate/Foundation/Vite.php" && \
+    if [ -f "$VITE_PHP_PATH" ]; then \
+        echo "Patching Vite.php to handle missing 'src' field..." && \
+        cp "$VITE_PHP_PATH" "$VITE_PHP_PATH.backup" && \
+        sed -i 's/$path = $chunk\['\''src'\''\];/if (isset($chunk['\''src'\''])) { $path = $chunk['\''src'\'']; } else { $path = $file; }/g' "$VITE_PHP_PATH"; \
+    fi
+
+# Finalize Composer installation
+RUN php -d memory_limit=-1 /usr/bin/composer dump-autoload --optimize
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www && \

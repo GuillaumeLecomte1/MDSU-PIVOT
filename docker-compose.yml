@@ -25,7 +25,6 @@ services:
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-password}
       - PHP_MEMORY_LIMIT=512M  # Increase memory limit
-      - VITE_SSR=false  # Disable SSR for Vite
     volumes:
       - ./storage/app/public:/var/www/storage/app/public
       - ./storage/logs:/var/www/storage/logs

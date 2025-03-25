@@ -6,6 +6,7 @@ cd /var/www
 
 # Show current PHP configuration
 echo "🔍 PHP memory limit: $(php -r 'echo ini_get("memory_limit");')"
+echo "🔍 Disabled functions: $(php -r 'echo ini_get("disable_functions");')"
 
 # Create a static 500 error page
 echo "📄 Creating static 500 error page"
@@ -50,48 +51,12 @@ else
     echo "✅ .env file found"
 fi
 
-# Patch the Laravel Vite class to fix the "src" field issue
-echo "🔧 Patching Laravel Vite class to handle missing 'src' field..."
-VITE_PHP_PATH="/var/www/vendor/laravel/framework/src/Illuminate/Foundation/Vite.php"
-
-if [ -f "$VITE_PHP_PATH" ]; then
-    # Backup first
-    cp "$VITE_PHP_PATH" "$VITE_PHP_PATH.backup"
-    
-    # Apply the patch directly
-    SEARCH='$path = $chunk['\''src'\''];'
-    REPLACE='if (isset($chunk['\''src'\''])) { $path = $chunk['\''src'\'']; } else { $path = $file; }'
-    
-    # Use sed to replace the line
-    sed -i "s/$SEARCH/$REPLACE/" "$VITE_PHP_PATH"
-    echo "✅ Applied patch to Vite.php"
-else
-    echo "⚠️ Could not find Laravel Vite.php at $VITE_PHP_PATH"
-fi
-
-# Verify Vite assets
+# Verify that Vite build was successful
 echo "🔍 Verifying Vite assets..."
 if [ ! -f public/build/manifest.json ]; then
-    echo "⚠️ Missing manifest.json, creating fallback..."
-    mkdir -p public/build/assets
-    
-    # Create a basic manifest with src fields
-    echo '{
-    "resources/css/app.css": {
-        "file": "assets/app.css",
-        "src": "resources/css/app.css",
-        "isEntry": true
-    },
-    "resources/js/app.jsx": {
-        "file": "assets/app.js",
-        "src": "resources/js/app.jsx",
-        "isEntry": true
-    }
-}' > public/build/manifest.json
-    
-    # Create empty assets if needed
-    touch public/build/assets/app.css
-    touch public/build/assets/app.js
+    echo "❌ ERROR: Vite assets not found. This should have been built during Docker image creation."
+    echo "⚠️ Please make sure you have built the Docker image with the correct configuration."
+    exit 1
 fi
 
 # Create storage link if it doesn't exist

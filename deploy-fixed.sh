@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Deploying fixed Laravel application with Inertia.js and React..."
+echo "🚀 Deploying Laravel application with Inertia.js and React..."
 
 # Ensure we have necessary directories
 mkdir -p storage/app/public
@@ -26,11 +26,6 @@ if [ -d "vendor/nunomaduro/larastan" ] && [ -d "vendor/larastan/larastan" ]; the
     echo "Consider removing nunomaduro/larastan from composer.json, it's deprecated"
 fi
 
-# Pre-build Vite assets to avoid issues in Docker
-echo "🔨 Pre-building Vite assets locally..."
-chmod +x prebuild-assets.sh
-./prebuild-assets.sh
-
 # Stop running containers
 echo "🛑 Stopping running containers..."
 docker-compose down || true
@@ -41,6 +36,7 @@ docker rmi $(docker images -q laravel_app) 2>/dev/null || true
 
 # Build the Docker image with proper debugging
 echo "🐳 Building Docker image..."
+echo "🔄 This will include Node.js and build Vite assets inside the Docker image..."
 docker-compose build --no-cache app
 
 # Start the container
@@ -59,8 +55,8 @@ echo ""
 echo "1. Verify the Vite assets are working by checking:"
 echo "   docker-compose exec app ls -la /var/www/public/build"
 echo ""
-echo "2. Manually fix the Vite.php file if needed:"
-echo "   docker-compose exec app sh -c 'sed -i \"s/\\\$path = \\\$chunk[\\\'\\\''src\\\'\\\''];/if (isset(\\\$chunk[\\\'\\\''src\\\'\\\''])) { \\\$path = \\\$chunk[\\\'\\\''src\\\'\\\'\']; } else { \\\$path = \\\$file; }/\" /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Vite.php'"
+echo "2. Check the Vite.php patch:"
+echo "   docker-compose exec app cat /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Vite.php | grep 'isset(\$chunk'"
 echo ""
 echo "3. Manually clear the Laravel caches:"
 echo "   docker-compose exec app php -d memory_limit=-1 artisan optimize:clear"
