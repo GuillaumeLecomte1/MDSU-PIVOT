@@ -8,13 +8,16 @@ services:
       args:
         - NODE_VERSION=20
         - PORT=4004
+        - UID=1000
+        - GID=1000
     container_name: laravel_app
     restart: unless-stopped
     ports:
       - "4004:4004"
     environment:
       - APP_ENV=production
-      - APP_DEBUG=false  # Set to false for production
+      - APP_DEBUG=true  # Set to true temporarily for debugging
+      - COMPOSER_ALLOW_SUPERUSER=1
       - DB_CONNECTION=mysql
       - DB_HOST=${DB_HOST:-localhost}  # Your existing MySQL server
       - DB_PORT=${DB_PORT:-3306}
@@ -47,6 +50,8 @@ services:
       resources:
         limits:
           memory: 2G  # Set memory limit for the container
+    cap_add:
+      - SYS_PTRACE  # Required for proc_open
 
 networks:
   web:

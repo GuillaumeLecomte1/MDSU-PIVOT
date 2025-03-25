@@ -31,6 +31,7 @@ RUN apk add --no-cache \
     git \
     curl \
     bash \
+    shadow \
     mysql-client \
     # PHP extensions dependencies
     libpng-dev \
@@ -44,8 +45,15 @@ RUN apk add --no-cache \
     nodejs \
     npm
 
-# Enable proc_open for Composer
-RUN echo "proc_open enabled for Composer"
+# Fix php-fpm user and enable proc_open
+RUN usermod -u ${UID} www-data && \
+    groupmod -g ${GID} www-data && \
+    # Enable proc_open for Composer and Laravel
+    echo "Building PHP with proc_open enabled" && \
+    # Create a custom php.ini that enables proc_open
+    echo "allow_url_fopen = On" > /usr/local/etc/php/conf.d/docker-php-enable-proc.ini && \
+    echo "proc_open.enable = On" >> /usr/local/etc/php/conf.d/docker-php-enable-proc.ini && \
+    echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/docker-php-enable-proc.ini
 
 # Installation et configuration de PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
@@ -82,7 +90,8 @@ COPY docker/supervisord.conf /etc/supervisord.conf
 
 # Préparation du dossier de l'application
 WORKDIR /var/www
-RUN chown -R www-data:www-data /var/www
+RUN mkdir -p /var/www && \
+    chown -R www-data:www-data /var/www
 
 # Copy package.json and vite.config.js first
 COPY package.json package-lock.json vite.config.js ./
@@ -98,12 +107,19 @@ RUN npm ci --no-audit --no-fund
 # Copie des fichiers nécessaires pour Composer
 COPY composer.json composer.lock ./
 
+# Create required directories first
+RUN mkdir -p bootstrap/cache storage/framework/{sessions,views,cache} && \
+    chmod -R 775 storage bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache
+
 # Installation des dépendances PHP sans scripts
-RUN composer install --no-scripts --no-autoloader --ignore-platform-reqs && \
-    mkdir -p bootstrap/cache storage/framework/{sessions,views,cache}
+RUN php -d memory_limit=-1 /usr/bin/composer install --no-scripts --no-autoloader --ignore-platform-reqs
 
 # Copie de l'ensemble du code source de l'application
 COPY . .
+
+# Finalize Composer installation 
+RUN php -d memory_limit=-1 /usr/bin/composer dump-autoload --optimize || true
 
 # Modify the build script to use installed global cross-env
 RUN sed -i 's/"build": "cross-env/"build": "\/usr\/local\/bin\/cross-env/' package.json || true
@@ -137,10 +153,8 @@ RUN if [ ! -f "public/build/manifest.json" ] || ! grep -q "\"src\":" public/buil
     fi; \
 fi
 
-# Finalisation de l'installation Composer et optimisations
-RUN composer dump-autoload --optimize && \
-    php artisan package:discover && \
-    chown -R www-data:www-data /var/www && \
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www && \
     find storage bootstrap/cache -type d -exec chmod 775 {} \; && \
     find storage bootstrap/cache -type f -exec chmod 664 {} \;
 

@@ -4,6 +4,10 @@ set -e
 echo "🚀 Starting Laravel application with Inertia.js and React..."
 cd /var/www
 
+# Show current PHP configuration
+echo "🔍 PHP proc_open availability: $(php -r 'echo function_exists("proc_open") ? "Enabled" : "Disabled";')"
+echo "🔍 PHP memory limit: $(php -r 'echo ini_get("memory_limit");')"
+
 # Create a static 500 error page
 echo "📄 Creating static 500 error page"
 cat > public/500.html << 'EOF'
@@ -42,10 +46,14 @@ if [ ! -f .env ]; then
     
     # Generate application key if needed
     echo "🔑 Generating application key"
-    php artisan key:generate --force
+    php -d memory_limit=-1 artisan key:generate --force
 else
     echo "✅ .env file found"
 fi
+
+# Run package discovery safely
+echo "📦 Running package discovery..."
+php -d memory_limit=-1 -d allow_url_fopen=On -d proc_open.enable=On artisan package:discover || echo "⚠️ Package discovery failed, continuing..."
 
 # Patch the Laravel Vite class to fix the "src" field issue
 echo "🔧 Patching Laravel Vite class to handle missing 'src' field..."
@@ -116,33 +124,35 @@ done
 # Create storage link if it doesn't exist
 if [ ! -L public/storage ]; then
     echo "🔗 Creating storage symbolic link"
-    php artisan storage:link --force
+    php -d memory_limit=-1 artisan storage:link --force
 else
     echo "✅ Storage link found"
 fi
 
 # Clear all caches first
 echo "🧹 Clearing caches..."
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-php artisan cache:clear
+php -d memory_limit=-1 artisan config:clear
+php -d memory_limit=-1 artisan route:clear
+php -d memory_limit=-1 artisan view:clear
+php -d memory_limit=-1 artisan cache:clear
 
 # Run database migrations (with error handling)
 echo "🗄️ Running database migrations"
-php artisan migrate --force || echo "⚠️ Migration failed, continuing..."
+php -d memory_limit=-1 artisan migrate --force || echo "⚠️ Migration failed, continuing..."
 
 # Apply Production Optimizations
 echo "⚡ Optimizing application for production"
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan optimize
+php -d memory_limit=-1 artisan config:cache
+php -d memory_limit=-1 artisan route:cache
+php -d memory_limit=-1 artisan view:cache
+php -d memory_limit=-1 artisan optimize
 
-# Check the PHP memory limit
-echo "🔍 Current PHP memory limit: $(php -r 'echo ini_get("memory_limit");')"
-echo "🔍 Increasing PHP memory limit for Vite processing"
-php -d memory_limit=1024M -r 'echo "Memory limit increased to: " . ini_get("memory_limit") . "\n";'
+# Check for and fix duplicate Larastan packages
+if [ -d "vendor/nunomaduro/larastan" ] && [ -d "vendor/larastan/larastan" ]; then
+    echo "⚠️ Found duplicate Larastan packages, fixing..."
+    rm -rf vendor/nunomaduro/larastan
+    echo "✅ Removed nunomaduro/larastan (deprecated)"
+fi
 
 # Set permissions
 echo "🔒 Setting permissions"
