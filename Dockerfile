@@ -4,30 +4,15 @@ LABEL maintainer="Pivot Marketplace <contact@pivot.fr>"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Installation des dépendances système
+# 1. Installation des dépendances système et extensions PHP en une seule étape
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    git \
-    curl \
-    nginx \
-    supervisor \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libicu-dev \
-    libzip-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# 2. Installation des extensions PHP
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    libpng-dev libonig-dev libxml2-dev zip unzip git curl nginx supervisor \
+    libfreetype6-dev libjpeg62-turbo-dev libicu-dev libzip-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mbstring exif pcntl bcmath zip intl \
-    && docker-php-ext-enable opcache
-
-# 3. Configuration de Opcache pour de meilleures performances
-RUN { \
+    && docker-php-ext-enable opcache \
+    && { \
     echo 'opcache.memory_consumption=128'; \
     echo 'opcache.interned_strings_buffer=8'; \
     echo 'opcache.max_accelerated_files=4000'; \
@@ -36,15 +21,13 @@ RUN { \
     echo 'opcache.enable_cli=1'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
-# 4. Installation de nodejs
+# 2. Installation de nodejs et Composer
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm
-
-# 5. Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 6. Copier les configurations
+# 3. Copier les configurations et scripts
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
 COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.conf
@@ -55,53 +38,45 @@ RUN chmod +x /usr/local/bin/setup-images.sh \
     && chmod +x /usr/local/bin/check-components.sh \
     && chmod +x /usr/local/bin/optimize-build.sh
 
-# 7. Préparation du répertoire de travail
+# 4. Préparation du répertoire de travail
 WORKDIR /var/www
 RUN mkdir -p /var/www/public/imagesAccueil \
     && mkdir -p /var/log/laravel \
     && chown -R www-data:www-data /var/www
 
-# 8. Copier les fichiers de dépendances et installation
-COPY composer.json composer.lock ./
-COPY package.json package-lock.json ./
-
-# 9. Installation des dépendances
+# 5. Copier et installer les dépendances en une seule étape
+COPY composer.json composer.lock package.json package-lock.json ./
 RUN composer install --no-scripts --no-autoloader --quiet \
     && npm ci --quiet --no-audit
 
-# 10. Copier le fichier Welcome.jsx pour sauvegarde
+# 6. Copier le code source et finaliser l'installation
 COPY --chown=www-data:www-data resources/js/Pages/Welcome.jsx resources/js/Pages/Welcome.jsx.original
-
-# 11. Copier le code source
 COPY --chown=www-data:www-data . .
+RUN composer dump-autoload --optimize --quiet
 
-# 12. Finalisation de l'installation des dépendances
-RUN composer dump-autoload --optimize --quiet 
-
-# 13. Préparation des liens symboliques et des images
+# 7. Préparation des répertoires et liens symboliques
 RUN rm -rf storage/logs && ln -sf /var/log/laravel storage/logs \
     && mkdir -p storage/app/public/imagesAccueil \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data /var/www \
     && php artisan storage:link || true \
-    && /usr/local/bin/setup-images.sh \
-    && /usr/local/bin/check-components.sh \
-    && /usr/local/bin/optimize-build.sh
+    && /usr/local/bin/setup-images.sh
 
-# 13b. Vérification et correction des problèmes d'export connus
-RUN grep -q "export function isAbsoluteUrl" /var/www/resources/js/Utils/ImageHelper.js || \
+# 8. Vérifier les composants et optimiser la construction
+RUN /usr/local/bin/check-components.sh \
+    && /usr/local/bin/optimize-build.sh \
+    && grep -q "export function isAbsoluteUrl" /var/www/resources/js/Utils/ImageHelper.js || \
     echo "export function isAbsoluteUrl(url) { if (!url) return false; return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//'); }" >> /var/www/resources/js/Utils/ImageHelper.js
 
-# 14. Optimisation Laravel et compilation des assets
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && npm run build || echo "Asset build failed, but continuing"
+# 9. Optimisation Laravel en une seule étape (éviter les bootstraps multiples)
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
 
-# 15. Nettoyage
-RUN rm -rf /tmp/npm-cache \
+# 10. Compilation des assets et nettoyage
+RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build || echo "Asset build failed, but continuing" \
+    && rm -rf /tmp/npm-cache \
     && rm -rf node_modules
 
-# 16. Configuration des ports et démarrage
 EXPOSE 80
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
