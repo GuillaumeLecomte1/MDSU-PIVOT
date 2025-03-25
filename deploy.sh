@@ -1,71 +1,44 @@
 #!/bin/bash
 set -e
 
-# Variables de couleur
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+echo "🚀 Deploying Laravel application with Inertia.js and React..."
 
-echo -e "${GREEN}=== Script de déploiement de l'application PIVOT ===${NC}"
-
-# Vérifier si .env existe, sinon le créer à partir de .env.example
+# Ensure .env exists
 if [ ! -f .env ]; then
-    echo -e "${YELLOW}Fichier .env non trouvé, création à partir de .env.example...${NC}"
-    cp .env.example .env
-    echo -e "${GREEN}✓ Fichier .env créé${NC}"
-    
-    # Générer une clé d'application
-    echo -e "${YELLOW}Génération d'une clé d'application...${NC}"
-    APP_KEY=$(openssl rand -base64 32)
-    sed -i "s|APP_KEY=.*|APP_KEY=base64:$APP_KEY|g" .env
-    echo -e "${GREEN}✓ Clé d'application générée${NC}"
+    echo "❌ Missing .env file! Please create one first."
+    exit 1
 fi
 
-# Créer le dossier pour les assets de secours
-echo -e "${YELLOW}Préparation des assets de secours...${NC}"
-mkdir -p public/build/assets
-cp fallback-assets/placeholder-css.css public/build/assets/ || true
-cp fallback-assets/placeholder-js.js public/build/assets/ || true
-cp placeholder-manifest.json public/build/manifest.json || true
-echo -e "${GREEN}✓ Assets de secours préparés${NC}"
+# Build frontend assets locally to avoid memory issues on the server
+echo "📦 Building frontend assets..."
+npm ci
+npm run build
 
-# Construire l'image Docker avec cache et gestion d'erreur
-echo -e "${YELLOW}Construction de l'image Docker...${NC}"
-if docker-compose build --no-cache app; then
-    echo -e "${GREEN}✓ Image Docker construite avec succès${NC}"
-else
-    echo -e "${RED}⚠️ Erreur lors de la construction de l'image Docker${NC}"
-    echo -e "${YELLOW}Tentative de construction avec assets de secours...${NC}"
-    
-    # Modifier le Dockerfile pour utiliser les assets de secours
-    sed -i 's/RUN NODE_ENV=production npm run build.*/RUN echo "Utilisation des assets de secours" || true/' Dockerfile
-    
-    if docker-compose build app; then
-        echo -e "${YELLOW}✓ Image construite avec assets de secours${NC}"
-    else
-        echo -e "${RED}✗ Échec de la construction de l'image${NC}"
-        exit 1
-    fi
+# Make sure the build was successful
+if [ ! -f "public/build/manifest.json" ]; then
+    echo "❌ Vite build failed! Please check your frontend code."
+    exit 1
 fi
 
-# Arrêter les conteneurs existants
-echo -e "${YELLOW}Arrêt des conteneurs existants...${NC}"
-docker-compose down || true
-echo -e "${GREEN}✓ Conteneurs arrêtés${NC}"
+# Prepare directories
+echo "📁 Preparing directories..."
+mkdir -p storage/app/public
+mkdir -p storage/logs
+mkdir -p storage/framework/{sessions,views,cache}
+chmod -R 775 storage bootstrap/cache
 
-# Démarrer les nouveaux conteneurs
-echo -e "${YELLOW}Démarrage des nouveaux conteneurs...${NC}"
-docker-compose up -d
-echo -e "${GREEN}✓ Conteneurs démarrés${NC}"
+# Build Docker image
+echo "🐳 Building Docker image..."
+docker build -t marketplace:latest .
 
-# Vérifier l'état des conteneurs
-echo -e "${YELLOW}Vérification de l'état des conteneurs...${NC}"
-docker-compose ps
-echo -e "${GREEN}✓ Vérification terminée${NC}"
+# Save Docker image
+echo "💾 Saving Docker image to file..."
+docker save marketplace:latest | gzip > marketplace-image.tar.gz
 
-# Afficher les logs
-echo -e "${YELLOW}Logs de l'application:${NC}"
-docker-compose logs --tail=50 app
+# Deploy to VPS using dokploy (adjust as needed)
+echo "🚀 Deploying to VPS using dokploy..."
+dokploy up
 
-echo -e "${GREEN}=== Déploiement terminé avec succès ===${NC}" 
+echo "✅ Deployment completed successfully!"
+echo "🌐 Your application should be available at http://pivot.guillaume-lcte.fr"
+echo "   If you encounter any issues, check the logs with: docker logs laravel_app" 

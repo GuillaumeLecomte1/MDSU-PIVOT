@@ -1,65 +1,67 @@
-# Système et IDE
+# Version control
 .git
 .github
 .gitignore
+.gitattributes
+
+# Node.js
+node_modules
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Laravel
+/vendor
+.env
+.env.*
+!.env.example
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+*.log
+phpunit.xml
+
+# IDE files
 .idea
 .vscode
+*.sublime-project
+*.sublime-workspace
 .DS_Store
-
-# Dépendances
-/node_modules
-/vendor
-
-# Fichiers de build
-/public/build
-/public/hot
-/public/storage
-
-# Environnement
-.env*
-!.env.example
-
-# Logs et caches
-/storage/logs/*
-/storage/app/*
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/bootstrap/cache/*
-
-# Tests
-/tests
-/phpunit.xml
-
-# Documentation
-/README.md
-/CHANGELOG.md
-/LICENSE.md
-/docker-compose*.yml
-/documentation
-
-# Divers
-*.log
-*.dump
-*.sql
-*.zip
-*.tar.gz
-
-# Configuration
-.editorconfig
-.styleci.yml
-
-# Documentation et tests
-/docs
-*.md
-phpunit.result.cache
-phpstan.neon
-
-# Divers
 *.swp
 *.swo
-*.swn
-Thumbs.db
-/.phpstorm.meta.php
-/_ide_helper.php
-/_ide_helper_models.php 
+
+# Build and cache directories
+public/hot
+public/storage
+storage/*.key
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+
+# Docker specific
+.dockerignore
+docker-compose*.yml
+dockerfiles/
+Dockerfile*
+
+# Frontend build artifacts
+/.vite
+/.vitepress
+
+# Tests and documentation
+/tests
+/doc
+/docs
+documentation/
+phpstan.neon
+phpunit.xml.dist
+README.md
+LICENSE
+*.md
+
+# Other
+.vagrant
+*.cache
+*.sqlite 

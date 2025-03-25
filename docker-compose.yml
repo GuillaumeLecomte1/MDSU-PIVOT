@@ -1,64 +1,44 @@
-version: '3'
+version: '3.8'
 
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pivot-app
+      args:
+        - NODE_VERSION=20
+        - PORT=4004
+    container_name: laravel_app
     restart: unless-stopped
+    ports:
+      - "4004:4004"
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_KEY=${APP_KEY}
       - DB_CONNECTION=mysql
-      - DB_HOST=mysql
-      - DB_PORT=3306
+      - DB_HOST=${DB_HOST:-localhost}  # Your existing MySQL server
+      - DB_PORT=${DB_PORT:-3306}
       - DB_DATABASE=${DB_DATABASE:-laravel}
-      - DB_USERNAME=${DB_USERNAME:-laravel}
-      - DB_PASSWORD=${DB_PASSWORD:-laravel}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
     volumes:
-      # Volumes persistants pour les données générées par l'application
-      - app-storage:/var/www/storage
-      # Utiliser ce volume pour persister le .env en production
-      - ./.env:/var/www/.env:ro
+      - ./storage/app/public:/var/www/storage/app/public
+      - ./storage/logs:/var/www/storage/logs
     networks:
-      - traefik-network
-      - app-network
+      - web
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pivot.rule=Host(`pivot.guillaume-lcte.fr`)"
       - "traefik.http.routers.pivot.entrypoints=web,websecure"
       - "traefik.http.routers.pivot.tls.certresolver=letsencrypt"
       - "traefik.http.services.pivot.loadbalancer.server.port=4004"
-    depends_on:
-      - mysql
-
-  mysql:
-    image: mysql:8.0
-    container_name: pivot-mysql
-    restart: unless-stopped
-    environment:
-      - MYSQL_DATABASE=${DB_DATABASE:-laravel}
-      - MYSQL_USER=${DB_USERNAME:-laravel}
-      - MYSQL_PASSWORD=${DB_PASSWORD:-laravel}
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-root_password}
-    volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - app-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "curl", "-f", "http://localhost:4004"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 networks:
-  traefik-network:
-    external: true
-  app-network:
-    driver: bridge
-
-volumes:
-  app-storage:
-  mysql-data: 
+  web:
+    external: true  # Assuming you already have a network named 'web' created for Traefik 

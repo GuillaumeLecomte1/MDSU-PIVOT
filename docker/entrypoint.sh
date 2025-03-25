@@ -1,17 +1,16 @@
 #!/bin/sh
 set -e
 
-echo "🚀 Démarrage de l'application MDSU-PIVOT..."
-
+echo "🚀 Starting Laravel application with Inertia.js and React..."
 cd /var/www
 
-# Création d'une page d'erreur 500 statique
-echo "📄 Création de la page d'erreur 500 statique"
+# Create a static 500 error page
+echo "📄 Creating static 500 error page"
 cat > public/500.html << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Service temporairement indisponible</title>
+    <title>Service Temporarily Unavailable</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -27,48 +26,46 @@ cat > public/500.html << 'EOF'
 </head>
 <body>
     <div class="container">
-        <h1>Service temporairement indisponible</h1>
-        <p>Le service est momentanément indisponible. Nous travaillons activement pour résoudre ce problème.</p>
-        <p>Veuillez réessayer dans quelques instants.</p>
-        <a href="/" class="btn">Retour à l'accueil</a>
+        <h1>Service Temporarily Unavailable</h1>
+        <p>The service is temporarily unavailable. We are working to resolve this issue.</p>
+        <p>Please try again in a few moments.</p>
+        <a href="/" class="btn">Return to Homepage</a>
     </div>
 </body>
 </html>
 EOF
 
-# Vérifier si le fichier .env existe, sinon copier .env.example
+# Check if .env file exists, otherwise copy .env.example
 if [ ! -f .env ]; then
-    echo "📝 Création du fichier .env à partir de .env.example"
+    echo "📝 Creating .env file from .env.example"
     cp .env.example .env
     
-    # Générer une clé d'application si nécessaire
-    echo "🔑 Génération de la clé d'application"
-    php artisan key:generate --force || true
+    # Generate application key if needed
+    echo "🔑 Generating application key"
+    php artisan key:generate --force
 else
-    echo "✅ Fichier .env trouvé"
+    echo "✅ .env file found"
 fi
 
-# Vérifier et corriger le manifeste Vite
-echo "🔍 Vérification du manifeste Vite et des assets frontend..."
-if [ ! -f public/build/manifest.json ] || [ $(cat public/build/manifest.json | grep -c "src") -eq 0 ]; then
-    echo "⚠️ Manifeste Vite incomplet ou invalide, création d'un manifeste complet"
+# Ensure Vite manifest and assets are properly set up
+echo "🔍 Checking Vite manifest and frontend assets..."
+if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; then
+    echo "⚠️ Vite manifest missing or invalid, creating fallback manifest"
     mkdir -p public/build/assets
+    
+    # Create simplified manifest that doesn't rely on 'src' or 'isEntry' properties
     cat > public/build/manifest.json << 'EOF'
 {
     "resources/css/app.css": {
-        "file": "assets/app.css",
-        "src": "resources/css/app.css",
-        "isEntry": true
+        "file": "assets/app.css"
     },
     "resources/js/app.jsx": {
-        "file": "assets/app.js",
-        "src": "resources/js/app.jsx",
-        "isEntry": true
+        "file": "assets/app.js"
     }
 }
 EOF
     
-    # Créer des fichiers CSS et JS de secours si nécessaires
+    # Create fallback CSS and JS files if needed
     if [ ! -s public/build/assets/app.css ]; then
         echo "/* Fallback CSS */" > public/build/assets/app.css
     fi
@@ -77,83 +74,66 @@ EOF
         echo "/* Fallback JS */" > public/build/assets/app.js
     fi
     
-    # Modification directe du template blade pour éviter des erreurs avec la directive @vite
-    sed -i 's/@vite(\[.*\])/<script src="{{ asset(\x27build\/assets\/app.js\x27) }}"><\/script><link rel="stylesheet" href="{{ asset(\x27build\/assets\/app.css\x27) }}">/' resources/views/app.blade.php
-else
-    echo "✅ Manifeste Vite valide trouvé"
-fi
-
-# Créer le lien symbolique pour le stockage s'il n'existe pas
-if [ ! -L public/storage ]; then
-    echo "🔗 Création du lien symbolique pour le stockage"
-    php artisan storage:link --force || true
-else
-    echo "✅ Lien symbolique storage trouvé"
-fi
-
-# Attendre que la base de données MySQL soit disponible
-if [ "$DB_CONNECTION" = "mysql" ]; then
-    echo "⏳ Attente de la disponibilité de la base de données MySQL..."
-    
-    ATTEMPTS=0
-    MAX_ATTEMPTS=10
-    
-    while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-        if mysql -h ${DB_HOST:-mysql} -u ${DB_USERNAME:-laravel} -p${DB_PASSWORD:-laravel} -e "SELECT 1" >/dev/null 2>&1; then
-            echo "✅ Base de données MySQL disponible"
-            break
-        fi
-        
-        ATTEMPTS=$((ATTEMPTS + 1))
-        echo "⏳ Tentative $ATTEMPTS/$MAX_ATTEMPTS : Attente de MySQL..."
-        sleep 2
-        
-        if [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; then
-            echo "❌ Impossible de se connecter à MySQL après $MAX_ATTEMPTS tentatives"
-            echo "⚠️ Continuation sans attendre MySQL..."
+    # Modify Blade template to prevent Vite errors
+    blade_files=$(find resources/views -type f -name "*.blade.php")
+    for file in $blade_files; do
+        # Check if the file contains @vite directive
+        if grep -q "@vite" "$file"; then
+            echo "⚠️ Modifying Vite directive in $file"
+            sed -i 's/@vite(\[[^]]*\])/<script src="{{ asset('\''build\/assets\/app.js'\'') }}"><\/script><link rel="stylesheet" href="{{ asset('\''build\/assets\/app.css'\'') }}">/' "$file"
         fi
     done
-fi
-
-# Nettoyer tous les caches d'abord
-echo "🧹 Nettoyage des caches..."
-php artisan config:clear || true
-php artisan route:clear || true
-php artisan view:clear || true
-php artisan cache:clear || true
-
-# Migrations de base de données (avec gestion des erreurs)
-echo "🗄️ Exécution des migrations de base de données"
-php artisan migrate --force || echo "⚠️ Échec des migrations, continuation..."
-
-# Optimisations avec gestion d'erreur
-echo "⚡ Optimisation de l'application pour la production"
-php artisan config:cache || true
-php artisan route:cache || true
-php artisan view:cache || true
-php artisan optimize || true
-
-# Définir les permissions
-echo "🔒 Définition des permissions"
-find storage bootstrap/cache -type d -exec chmod 775 {} \; || true
-find storage bootstrap/cache -type f -exec chmod 664 {} \; || true
-chown -R www-data:www-data storage bootstrap/cache || true
-
-# Vérifier une dernière fois que les vues compilées sont correctes
-echo "🔍 Vérification finale des vues compilées..."
-if grep -q "Vite" storage/framework/views/*.php 2>/dev/null; then
-    echo "⚠️ Références Vite trouvées dans les vues compilées, nettoyage..."
-    php artisan view:clear || true
-    
-    # Remplacer directement la directive @vite dans toutes les vues
-    find resources/views -type f -name "*.blade.php" -exec sed -i 's/@vite(\[.*\])/<script src="{{ asset(\x27build\/assets\/app.js\x27) }}"><\/script><link rel="stylesheet" href="{{ asset(\x27build\/assets\/app.css\x27) }}">/' {} \;
-    
-    # Reconstruire le cache des vues
-    php artisan view:cache || true
 else
-    echo "✅ Pas de références problématiques à Vite dans les vues compilées"
+    echo "✅ Valid Vite manifest found"
 fi
 
-# Démarrer supervisor pour gérer les processus
-echo "🚦 Démarrage des services (nginx, php-fpm, queue)"
+# Create storage link if it doesn't exist
+if [ ! -L public/storage ]; then
+    echo "🔗 Creating storage symbolic link"
+    php artisan storage:link --force
+else
+    echo "✅ Storage link found"
+fi
+
+# MySQL availability check is now handled in docker-compose, no need to wait here
+
+# Clear all caches first
+echo "🧹 Clearing caches..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan cache:clear
+
+# Run database migrations (with error handling)
+echo "🗄️ Running database migrations"
+php artisan migrate --force || echo "⚠️ Migration failed, continuing..."
+
+# Apply Production Optimizations
+echo "⚡ Optimizing application for production"
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan optimize
+
+# Verify the compiled views don't contain problematic Vite references
+echo "🔍 Final check of compiled views..."
+if grep -q "vite(" storage/framework/views/*.php 2>/dev/null; then
+    echo "⚠️ Vite references found in compiled views, clearing views cache..."
+    php artisan view:clear
+    
+    # Replace the @vite directive in blade files
+    find resources/views -type f -name "*.blade.php" -exec sed -i 's/@vite(\[[^]]*\])/<script src="{{ asset('\''build\/assets\/app.js'\'') }}"><\/script><link rel="stylesheet" href="{{ asset('\''build\/assets\/app.css'\'') }}">/' {} \;
+    
+    # Rebuild view cache
+    php artisan view:cache
+fi
+
+# Set permissions
+echo "🔒 Setting permissions"
+find storage bootstrap/cache -type d -exec chmod 775 {} \;
+find storage bootstrap/cache -type f -exec chmod 664 {} \;
+chown -R www-data:www-data storage bootstrap/cache
+
+# Start supervisor to manage processes
+echo "🚦 Starting services (nginx, php-fpm, queue)"
 exec supervisord -c /etc/supervisord.conf
