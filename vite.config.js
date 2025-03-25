@@ -21,22 +21,28 @@ export default defineConfig({
         }
     },
     build: {
-        manifest: true,
-        outDir: 'public/build',
+        chunkSizeWarningLimit: 1000,
+        minify: false,
+        sourcemap: false,
         rollupOptions: {
             output: {
-                manualChunks(id) {
+                manualChunks: (id) => {
                     if (id.includes('node_modules')) {
-                        return 'vendor';
+                        const modules = ['react', 'react-dom', '@headlessui', '@heroicons', 'axios'];
+                        const chunk = modules.find(m => id.includes(m));
+                        return chunk ? `vendor-${chunk}` : 'vendor';
                     }
                 }
-            },
+            }
         },
     },
     server: {
         hmr: {
             host: 'localhost',
         },
+    },
+    define: {
+        'process.env.NODE_OPTIONS': '"--max-old-space-size=4096"'
     },
     base: process.env.APP_ENV === 'production' ? '/build/' : '',
 });
