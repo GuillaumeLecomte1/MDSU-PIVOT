@@ -5,21 +5,60 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: pivot-app
     restart: unless-stopped
-    ports:
-      - "${APP_PORT:-80}:80"
-    volumes:
-      - ./storage:/var/www/storage
     environment:
-      - APP_ENV=${APP_ENV:-production}
-      - APP_DEBUG=${APP_DEBUG:-false}
-      - APP_URL=${APP_URL:-http://localhost}
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY}
       - DB_CONNECTION=mysql
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT:-3306}
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-laravel}
+      - DB_USERNAME=${DB_USERNAME:-laravel}
+      - DB_PASSWORD=${DB_PASSWORD:-laravel}
+    volumes:
+      # Volumes persistants pour les données générées par l'application
+      - app-storage:/var/www/storage
+      # Utiliser ce volume pour persister le .env en production
+      - ./.env:/var/www/.env:ro
+    networks:
+      - traefik-network
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pivot.rule=Host(`pivot.guillaume-lcte.fr`)"
+      - "traefik.http.routers.pivot.entrypoints=web,websecure"
+      - "traefik.http.routers.pivot.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pivot.loadbalancer.server.port=4004"
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: pivot-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE:-laravel}
+      - MYSQL_USER=${DB_USERNAME:-laravel}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-laravel}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-root_password}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  traefik-network:
+    external: true
+  app-network:
+    driver: bridge
 
 volumes:
-  app-data: 
+  app-storage:
+  mysql-data: 

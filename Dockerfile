@@ -3,19 +3,31 @@ FROM node:20-alpine AS frontend
 # Répertoire de travail pour le frontend
 WORKDIR /var/www
 
+# Augmenter la mémoire disponible pour Node
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Installer les dépendances nécessaires pour compiler les assets
+RUN apk add --no-cache python3 make g++ curl
+
 # Copier les fichiers de dépendances pour installer les packages npm
 COPY package*.json ./
 COPY vite.config.js ./
 
 # Installer les dépendances
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 
 # Copier les sources du frontend
 COPY resources/ resources/
 COPY public/ public/
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
 
-# Compilation des assets
-RUN npm run build
+# Compilation des assets avec timeout plus long et debug
+RUN echo "🚀 Démarrage de la compilation des assets..."
+RUN NODE_ENV=production npm run build || (echo "❌ ERREUR BUILD VITE" && cat ~/.npm/_logs/*-debug.log && exit 1)
+RUN echo "✅ Compilation des assets terminée avec succès"
+RUN ls -la public/build || echo "❌ Répertoire public/build non trouvé!"
+RUN cat public/build/manifest.json || echo "❌ Fichier manifest.json non trouvé!"
 
 # Image PHP pour l'application Laravel
 FROM php:8.2-fpm-alpine AS backend
@@ -63,8 +75,14 @@ RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev
 # Copier le code de l'application
 COPY . .
 
+# S'assurer que le répertoire build existe
+RUN mkdir -p ./public/build
+
 # Copier les assets compilés depuis l'étape frontend
 COPY --from=frontend /var/www/public/build/ ./public/build/
+
+# Vérifier le contenu du répertoire
+RUN ls -la ./public/build && cat ./public/build/manifest.json || echo "⚠️ Problème avec les assets compilés"
 
 # Finaliser l'installation de Composer
 RUN composer dump-autoload --optimize
@@ -78,20 +96,6 @@ RUN mkdir -p storage/framework/{sessions,views,cache} && \
 # Créer le script d'entrée
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-
-# Créer le script entrypoint s'il n'existe pas
-RUN if [ ! -f /entrypoint.sh ]; then \
-    echo '#!/bin/sh' > /entrypoint.sh && \
-    echo 'set -e' >> /entrypoint.sh && \
-    echo 'cd /var/www' >> /entrypoint.sh && \
-    echo 'php artisan storage:link --force' >> /entrypoint.sh && \
-    echo 'php artisan config:cache' >> /entrypoint.sh && \
-    echo 'php artisan route:cache' >> /entrypoint.sh && \
-    echo 'php artisan view:cache' >> /entrypoint.sh && \
-    echo 'php artisan optimize' >> /entrypoint.sh && \
-    echo 'supervisord -c /etc/supervisord.conf' >> /entrypoint.sh && \
-    chmod +x /entrypoint.sh; \
-    fi
 
 # Configuration Traefik pour le routage
 LABEL traefik.enable=true \

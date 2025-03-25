@@ -27,13 +27,9 @@ export default defineConfig({
         outDir: 'public/build',
         assetsDir: '',
         manifest: true,
-        minify: 'terser',
-        terserOptions: {
-            compress: {
-                drop_console: true,
-                drop_debugger: true,
-            },
-        },
+        minify: false,
+        sourcemap: false,
+        terserOptions: undefined,
         rollupOptions: {
             output: {
                 manualChunks: {
