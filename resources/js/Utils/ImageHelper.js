@@ -5,7 +5,7 @@
 import { usePage } from '@inertiajs/react';
 
 // Constante pour l'image par défaut
-const DEFAULT_IMAGE = '/images/placeholder.jpg';
+const DEFAULT_IMAGE = '/images/default/placeholder.png';
 
 /**
  * Détermine si une URL est absolue (commence par http:// ou https://)
@@ -18,16 +18,16 @@ export function isAbsoluteUrl(url) {
 }
 
 /**
- * Images par défaut pour différentes catégories (en format SVG pour meilleure compatibilité)
+ * Images par défaut pour différentes catégories (en format PNG)
  */
 const DEFAULT_IMAGES = {
-    product: '/images/default/product.svg',
-    category: '/images/default/category.svg',
-    user: '/images/default/user.svg',
-    banner: '/images/default/banner.svg',
-    logo: '/images/default/logo.svg',
-    thumbnail: '/images/default/thumbnail.svg',
-    fallback: '/images/default/placeholder.svg',
+    product: '/images/default/product.png',
+    category: '/images/default/category.png',
+    user: '/images/default/user.png',
+    banner: '/images/default/banner.png',
+    logo: '/images/default/logo.png',
+    thumbnail: '/images/default/thumbnail.png',
+    fallback: '/images/default/placeholder.png',
 };
 
 /**
@@ -102,7 +102,7 @@ export function getStorageImageUrl(path, type = 'fallback') {
 }
 
 /**
- * Vérifier de manière préventive si une image existe
+ * Vérifie de manière préventive si une image existe
  * @param {string} url - URL de l'image à vérifier
  * @returns {Promise<boolean>} - Promise qui résout à true si l'image existe
  */
@@ -122,7 +122,6 @@ export function checkImageExists(url) {
  */
 export function handleImageError(event, type = 'fallback') {
     const img = event.target;
-    console.warn(`Image non trouvée: ${img.src}`);
     
     // Éviter les boucles infinies en vérifiant si l'image est déjà une image par défaut
     if (img.src.includes('/images/default/')) {
@@ -155,6 +154,22 @@ export function Image({ src, alt, className, type = 'fallback', size = null, ...
     );
 }
 
+/**
+ * Précharge toutes les images par défaut pour garantir qu'elles sont disponibles
+ * quand elles sont nécessaires
+ */
+export function preloadDefaultImages() {
+    Object.values(DEFAULT_IMAGES).forEach(url => {
+        const img = new Image();
+        img.src = url;
+    });
+}
+
+// Précharger toutes les images par défaut au chargement de ce module
+if (typeof window !== 'undefined') {
+    preloadDefaultImages();
+}
+
 // Export par défaut pour compatibilité avec le code existant
 export default {
     getImageUrl,
@@ -164,4 +179,5 @@ export default {
     Image,
     DEFAULT_IMAGES,
     checkImageExists,
+    preloadDefaultImages,
 }; 

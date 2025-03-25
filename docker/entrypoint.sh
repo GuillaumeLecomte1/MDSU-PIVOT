@@ -128,47 +128,52 @@ setup_default_images() {
     DEFAULT_IMAGES_DIR="/var/www/public/images/default"
     mkdir -p $DEFAULT_IMAGES_DIR
     
-    # Créer le favicon par défaut s'il n'existe pas
-    if [ ! -f "/var/www/public/favicon.ico" ] && [ ! -f "$DEFAULT_IMAGES_DIR/favicon.ico" ]; then
-        log "Création du favicon par défaut..."
+    # Vérifier si imagemagick est disponible
+    if command -v convert >/dev/null 2>&1; then
+        # Créer le favicon par défaut s'il n'existe pas
+        if [ ! -f "/var/www/public/favicon.ico" ]; then
+            log "Création du favicon par défaut..."
+            
+            # Créer un favicon en PNG noir (avec imagemagick)
+            convert -size 16x16 xc:black $DEFAULT_IMAGES_DIR/favicon.png
+            
+            # Copier comme favicon.ico à la racine
+            cp $DEFAULT_IMAGES_DIR/favicon.png /var/www/public/favicon.ico
+            chmod 644 /var/www/public/favicon.ico
+        fi
         
-        # Créer un favicon SVG simple (noir)
-        cat > "$DEFAULT_IMAGES_DIR/favicon.svg" << EOL
-<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" fill="#000000"/>
-</svg>
-EOL
+        # Générer des images par défaut noires pour différents types
+        log "Création des images noires par défaut..."
         
-        # Copier comme favicon.ico à la racine
-        cp "$DEFAULT_IMAGES_DIR/favicon.svg" "$DEFAULT_IMAGES_DIR/favicon.ico"
-        cp "$DEFAULT_IMAGES_DIR/favicon.ico" "/var/www/public/favicon.ico"
+        # Image placeholder noire
+        convert -size 500x500 xc:black -fill white -gravity center -pointsize 24 -annotate 0 "Image non disponible" $DEFAULT_IMAGES_DIR/placeholder.png
+        
+        # Images spécifiques par type
+        for type in product category user banner logo thumbnail; do
+            convert -size 500x500 xc:black -fill white -gravity center -pointsize 24 -annotate 0 "$type" $DEFAULT_IMAGES_DIR/$type.png
+        done
+    else
+        log "ImageMagick non disponible, création d'images par défaut simples..."
+        
+        # Créer un fichier favicon.ico simple (16x16 pixels noirs)
+        echo -e '\x00\x00\x01\x00\x01\x00\x10\x10\x00\x00\x01\x00\x18\x00h\x03\x00\x00\x16\x00\x00\x00(\x00\x00\x00\x10\x00\x00\x00 \x00\x00\x00\x01\x00\x18\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' > $DEFAULT_IMAGES_DIR/favicon.ico
+        cp $DEFAULT_IMAGES_DIR/favicon.ico /var/www/public/favicon.ico
+        
+        # Créer un fichier PNG simple pour les placeholders
+        touch $DEFAULT_IMAGES_DIR/placeholder.png
+        touch $DEFAULT_IMAGES_DIR/product.png
+        touch $DEFAULT_IMAGES_DIR/category.png
+        touch $DEFAULT_IMAGES_DIR/user.png
+        touch $DEFAULT_IMAGES_DIR/banner.png
+        touch $DEFAULT_IMAGES_DIR/logo.png
+        touch $DEFAULT_IMAGES_DIR/thumbnail.png
     fi
-    
-    # Générer des images par défaut noires pour différents types
-    log "Création des images noires par défaut..."
-    
-    # Image placeholder noire
-    cat > "$DEFAULT_IMAGES_DIR/placeholder.svg" << EOL
-<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
-  <rect width="500" height="500" fill="#000000"/>
-  <text x="50%" y="50%" font-family="Arial" font-size="24" fill="#ffffff" text-anchor="middle">Image non disponible</text>
-</svg>
-EOL
-    
-    # Images spécifiques par type
-    for type in product category user banner logo thumbnail; do
-        cat > "$DEFAULT_IMAGES_DIR/${type}.svg" << EOL
-<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
-  <rect width="500" height="500" fill="#000000"/>
-  <text x="50%" y="50%" font-family="Arial" font-size="24" fill="#ffffff" text-anchor="middle">${type}</text>
-</svg>
-EOL
-    done
     
     # Définir les permissions
     chown -R www-data:www-data "$DEFAULT_IMAGES_DIR"
     chmod -R 755 "$DEFAULT_IMAGES_DIR"
-    chown -R www-data:www-data "/var/www/public/favicon.ico"
+    chmod 644 /var/www/public/favicon.ico
+    chown www-data:www-data /var/www/public/favicon.ico
     
     log "Images par défaut configurées"
 }
