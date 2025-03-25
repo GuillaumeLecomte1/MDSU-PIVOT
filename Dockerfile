@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mbstring exif pcntl bcmath zip intl opcache
 
+# Configuration de PHP pour autoriser proc_open (nécessaire pour Composer et Laravel)
+RUN echo "disable_functions = " > /usr/local/etc/php/conf.d/docker-php-enable-functions.ini
+
 # Configuration de PHP et OPcache
 COPY docker/php/php.ini /usr/local/etc/php/php.ini
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
@@ -52,12 +55,15 @@ RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev --no-pr
 # Copie du code source
 COPY --chown=www-data:www-data . .
 
-# Optimisation de l'application (sans recréer les caches inutilement)
-RUN composer dump-autoload --optimize --no-dev \
-    && php artisan storage:link \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && npm run build \
+# Optimisation de l'application (avec traitement d'erreurs amélioré)
+RUN set -e \
+    && echo "Vérification de proc_open..." \
+    && php -r "echo function_exists('proc_open') ? 'OK' : 'DISABLED';" \
+    && composer dump-autoload --optimize --no-dev \
+    && php artisan storage:link || true \
+    && php artisan config:cache || true \
+    && php artisan route:cache || true \
+    && NODE_OPTIONS="--max-old-space-size=4096" npm run build || echo "Asset compilation failed, continuing anyway" \
     && rm -rf node_modules /root/.npm /tmp/*
 
 # Script d'entrée

@@ -6,6 +6,19 @@ log() {
     echo "[$(date +%Y-%m-%d\ %H:%M:%S)] $1"
 }
 
+# Vérifier si proc_open est disponible
+check_proc_open() {
+    log "Vérification de la disponibilité de proc_open..."
+    if php -r "echo function_exists('proc_open') ? 'OK' : 'DISABLED';" | grep -q "DISABLED"; then
+        log "ERREUR: proc_open est désactivé, ce qui est requis pour Laravel"
+        log "Activation de proc_open..."
+        echo "disable_functions = " > /usr/local/etc/php/conf.d/docker-php-enable-functions.ini
+        log "proc_open a été activé"
+    else
+        log "proc_open est disponible"
+    fi
+}
+
 # Fonction pour vérifier la connexion à la base de données (optimisée)
 wait_for_db() {
     log "Vérification de la connexion à la base de données..."
@@ -54,7 +67,7 @@ run_migrations() {
     fi
     
     # Vérifier si des migrations sont en attente
-    if php artisan migrate:status | grep -q "down"; then
+    if php artisan migrate:status 2>/dev/null | grep -q "down"; then
         log "Migrations trouvées, exécution..."
         php artisan migrate --force
         log "Migrations terminées"
@@ -74,6 +87,9 @@ ensure_storage_link() {
 # Fonction principale
 main() {
     log "Démarrage de l'application..."
+    
+    # Vérifier proc_open
+    check_proc_open
     
     # Configurer les permissions
     setup_permissions
