@@ -42,10 +42,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 2G  # Set memory limit for the container
 
 networks:
   web:

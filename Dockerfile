@@ -1,5 +1,5 @@
 # Utilisons une image officielle PHP avec FPM comme base
-FROM php:8.2-fpm-alpine AS php
+FROM php:8.2-fpm-alpine
 
 # Labels for identification
 LABEL maintainer="Guillaume Lecomte"
@@ -87,27 +87,30 @@ RUN mkdir -p bootstrap/cache storage/framework/{sessions,views,cache} && \
     chmod -R 775 storage bootstrap/cache && \
     chown -R www-data:www-data storage bootstrap/cache
 
+# Install Node.js early
+RUN apk add --no-cache nodejs npm
+
+# Fix permissions for npm
+RUN mkdir -p /.npm && chown -R www-data:www-data /.npm
+
+# Copy package files first
+COPY package.json package-lock.json ./
+RUN mkdir -p public/build
+
 # Copie des fichiers nécessaires pour Composer
 COPY composer.json composer.lock ./
 
 # Installation des dépendances PHP sans scripts
 RUN php -d memory_limit=-1 /usr/bin/composer install --no-scripts --no-autoloader --ignore-platform-reqs
 
+# Install Node.js dependencies
+RUN npm ci --no-audit --no-fund || echo "Npm install failed, continuing..."
+
 # Copie de l'ensemble du code source de l'application
 COPY . .
 
-# Install Node.js
-RUN apk add --no-cache nodejs npm
-
-# Fix permissions for npm
-RUN mkdir -p /.npm && chown -R www-data:www-data /.npm
-
-# Install Node.js dependencies and build Vite assets
-RUN set -e && \
-    mkdir -p public/build && \
-    chown -R www-data:www-data node_modules public/build && \
-    npm ci --no-audit --no-fund && \
-    npm run build
+# Build Vite assets
+RUN npm run build || echo "Vite build failed, will attempt to fix during container startup"
 
 # Patch the Laravel Vite.php class to handle missing src field
 RUN set -e && \

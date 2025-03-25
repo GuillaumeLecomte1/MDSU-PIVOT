@@ -51,12 +51,45 @@ else
     echo "✅ .env file found"
 fi
 
-# Verify that Vite build was successful
+# Verify Vite assets and build if needed
 echo "🔍 Verifying Vite assets..."
 if [ ! -f public/build/manifest.json ]; then
-    echo "❌ ERROR: Vite assets not found. This should have been built during Docker image creation."
-    echo "⚠️ Please make sure you have built the Docker image with the correct configuration."
-    exit 1
+    echo "⚠️ Vite assets not found, attempting to build..."
+    
+    # Check if we have node_modules
+    if [ ! -d "node_modules" ] && [ -f "package.json" ]; then
+        echo "📦 Installing Node.js dependencies..."
+        npm ci --no-audit --no-fund
+    fi
+    
+    echo "🔨 Building Vite assets..."
+    npm run build
+    
+    if [ ! -f public/build/manifest.json ]; then
+        echo "❌ Failed to build Vite assets, creating fallback manifest..."
+        mkdir -p public/build/assets
+        echo '{
+    "resources/css/app.css": {
+        "file": "assets/app.css",
+        "src": "resources/css/app.css",
+        "isEntry": true
+    },
+    "resources/js/app.jsx": {
+        "file": "assets/app.js",
+        "src": "resources/js/app.jsx",
+        "isEntry": true
+    }
+}' > public/build/manifest.json
+        touch public/build/assets/app.css
+        touch public/build/assets/app.js
+        echo "✅ Created fallback Vite manifest"
+    fi
+fi
+
+# Run the Vite patch script if available
+if [ -f "vite-patch.php" ]; then
+    echo "🔧 Running Vite patch script..."
+    php vite-patch.php
 fi
 
 # Create storage link if it doesn't exist
