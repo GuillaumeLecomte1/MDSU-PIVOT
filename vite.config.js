@@ -23,8 +23,24 @@ export default defineConfig({
         port: 5173,
     },
     build: {
-        chunkSizeWarningLimit: 1600,
+        chunkSizeWarningLimit: 2000,
         outDir: 'public/build',
+        assetsDir: '',
         manifest: true,
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+            },
+        },
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['react', 'react-dom'],
+                    inertia: ['@inertiajs/react'],
+                },
+            },
+        },
     },
 });
