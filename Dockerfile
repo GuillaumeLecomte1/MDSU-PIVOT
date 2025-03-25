@@ -48,7 +48,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
 COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/setup-images.sh /usr/local/bin/setup-images.sh
-RUN chmod +x /usr/local/bin/setup-images.sh
+COPY docker/check-components.sh /usr/local/bin/check-components.sh
+RUN chmod +x /usr/local/bin/setup-images.sh \
+    && chmod +x /usr/local/bin/check-components.sh
 
 # 7. Préparation du répertoire de travail
 WORKDIR /var/www
@@ -79,7 +81,12 @@ RUN rm -rf storage/logs && ln -sf /var/log/laravel storage/logs \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data /var/www \
     && php artisan storage:link || true \
-    && /usr/local/bin/setup-images.sh
+    && /usr/local/bin/setup-images.sh \
+    && /usr/local/bin/check-components.sh
+
+# 13b. Vérification et correction des problèmes d'export connus
+RUN grep -q "export function isAbsoluteUrl" /var/www/resources/js/Utils/ImageHelper.js || \
+    echo "export function isAbsoluteUrl(url) { if (!url) return false; return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//'); }" >> /var/www/resources/js/Utils/ImageHelper.js
 
 # 14. Optimisation Laravel et compilation des assets
 RUN php artisan config:cache \

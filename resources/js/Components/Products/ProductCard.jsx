@@ -1,7 +1,13 @@
 import { Link, router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { getImageUrl, handleImageError, isAbsoluteUrl } from '@/Utils/ImageHelper';
+import { getImageUrl, handleImageError } from '@/Utils/ImageHelper';
+
+// Fonction locale pour éviter les problèmes d'importation
+const isAbsoluteUrl = (url) => {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
+};
 
 export default function ProductCard({ product, showEditButton = false, editRoute = null, inFavoritesPage = false }) {
     const { auth } = usePage().props;
