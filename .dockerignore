@@ -1,51 +1,57 @@
-# Système et configuration
+# Système et IDE
 .git
 .github
 .gitignore
-.gitattributes
-.dockerignore
-Dockerfile
-docker-compose.yml
-docker-compose.yaml
-.env*
-!.env.example
-.editorconfig
-.styleci.yml
+.idea
+.vscode
+.DS_Store
 
 # Dépendances
 /node_modules
 /vendor
-/public/hot
-/public/build
-/public/storage
-/.phpunit.cache
-/.vscode
-/.idea
-/.cursor
 
-# Stockage et fichiers temporaires
-/storage/app/*
-!/storage/app/public
-/storage/app/public/*
-/storage/framework/cache/*
-!/storage/framework/cache/.gitkeep
-/storage/framework/sessions/*
-!/storage/framework/sessions/.gitkeep
-/storage/framework/views/*
-!/storage/framework/views/.gitkeep
+# Fichiers de build
+/public/build
+/public/hot
+/public/storage
+
+# Environnement
+.env*
+!.env.example
+
+# Logs et caches
 /storage/logs/*
-!/storage/logs/.gitkeep
+/storage/app/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
 /bootstrap/cache/*
-!/bootstrap/cache/.gitkeep
+
+# Tests
+/tests
+/phpunit.xml
+
+# Documentation
+/README.md
+/CHANGELOG.md
+/LICENSE.md
+/docker-compose*.yml
+/documentation
+
+# Divers
+*.log
+*.dump
+*.sql
+*.zip
+*.tar.gz
+
+# Configuration
+.editorconfig
+.styleci.yml
 
 # Documentation et tests
 /docs
-/documentation
-/tests
-README.md
 *.md
-*.log
-phpunit.xml
 phpunit.result.cache
 phpstan.neon
 
@@ -53,7 +59,6 @@ phpstan.neon
 *.swp
 *.swo
 *.swn
-.DS_Store
 Thumbs.db
 /.phpstorm.meta.php
 /_ide_helper.php
