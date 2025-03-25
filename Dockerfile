@@ -110,38 +110,24 @@ RUN find /var/www/public -type f -exec chmod 644 {} \;
 RUN chown -R www-data:www-data /var/www/public
 
 # Configure Nginx
-COPY docker/nginx.conf /etc/nginx/sites-available/default
+COPY docker/nginx/default.conf /etc/nginx/sites-available/default
 RUN sed -i "s/listen 80/listen ${PORT}/g" /etc/nginx/sites-available/default
 
 # Configure PHP-FPM
-COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Configure Supervisor
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Créer un fichier supervisord.conf de base si nécessaire
+RUN mkdir -p /etc/supervisor/conf.d
+RUN echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=/usr/sbin/nginx -g 'daemon off;'\nautostart=true\nautorestart=true\npriority=10\n\n[program:php-fpm]\ncommand=/usr/local/sbin/php-fpm -F\nautostart=true\nautorestart=true\npriority=5" > /etc/supervisor/conf.d/supervisord.conf
 
-# Copy and make the check script executable
-COPY docker/check-vite-manifest.sh /var/www/docker/check-vite-manifest.sh
-RUN chmod +x /var/www/docker/check-vite-manifest.sh
-
-# Copy the PHP fix script
-COPY docker/fix-vite-issues.php /var/www/docker/fix-vite-issues.php
-
-# Copy the health check script
-COPY docker/healthcheck.sh /var/www/docker/healthcheck.sh
-RUN chmod +x /var/www/docker/healthcheck.sh
-
-# Copy the static files fix script
-COPY docker/fix-static-files.sh /var/www/docker/fix-static-files.sh
-RUN chmod +x /var/www/docker/fix-static-files.sh
-
-# Run the PHP fix script
-RUN cd /var/www && php docker/fix-vite-issues.php
-
-# Run the static files fix script
-RUN /var/www/docker/fix-static-files.sh
+# Copy and make the entrypoint script executable
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Expose port
 EXPOSE ${PORT}
 
-# Start services
+# Start services with entrypoint script
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
