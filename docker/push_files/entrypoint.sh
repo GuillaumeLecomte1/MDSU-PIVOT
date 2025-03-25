@@ -15,14 +15,60 @@ cat > public/500.html << 'EOF'
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8f9fa; }
-        .container { text-align: center; max-width: 600px; padding: 20px; }
-        h1 { font-size: 2.5em; margin-bottom: 16px; color: #e53935; }
-        p { font-size: 1.1em; margin-bottom: 24px; }
-        a { color: #3490dc; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .btn { display: inline-block; background: #3490dc; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; transition: background 0.3s; }
-        .btn:hover { background: #2779bd; text-decoration: none; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            color: #333; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background-color: #f8f9fa; 
+        }
+        .container { 
+            text-align: center; 
+            max-width: 600px; 
+            padding: 20px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        h1 { 
+            font-size: 2.5em; 
+            margin-bottom: 16px; 
+            color: #e53935; 
+        }
+        p { 
+            font-size: 1.1em; 
+            margin-bottom: 24px; 
+        }
+        a { 
+            color: #3490dc; 
+            text-decoration: none; 
+        }
+        a:hover { 
+            text-decoration: underline; 
+        }
+        .btn { 
+            display: inline-block; 
+            background: #3490dc; 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            transition: background 0.3s; 
+        }
+        .btn:hover { 
+            background: #2779bd; 
+            text-decoration: none; 
+        }
+        .error-code {
+            color: #999;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -31,6 +77,7 @@ cat > public/500.html << 'EOF'
         <p>Le service est momentanément indisponible. Nous travaillons activement pour résoudre ce problème.</p>
         <p>Veuillez réessayer dans quelques instants.</p>
         <a href="/" class="btn">Retour à l'accueil</a>
+        <div class="error-code">Erreur 500</div>
     </div>
 </body>
 </html>
@@ -156,4 +203,4 @@ fi
 
 # Démarrer supervisor pour gérer les processus
 echo "🚦 Démarrage des services (nginx, php-fpm, queue)"
-exec supervisord -c /etc/supervisord.conf
+exec supervisord -c /etc/supervisord.conf 
