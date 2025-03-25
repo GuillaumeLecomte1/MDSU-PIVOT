@@ -44,8 +44,9 @@ WORKDIR /var/www
 RUN mkdir -p /var/www/public \
     && mkdir -p /var/log/laravel \
     && mkdir -p /var/www/storage/framework/{sessions,views,cache} \
-    && chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage
+    && mkdir -p /var/www/storage/app/public/products \
+    && chmod -R 755 /var/www/storage \
+    && chown -R www-data:www-data /var/www
 
 # Copie et installation des dépendances
 COPY composer.json composer.lock package.json package-lock.json ./
@@ -55,16 +56,26 @@ RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev --no-pr
 # Copie du code source
 COPY --chown=www-data:www-data . .
 
+# Création explicite du lien symbolique storage
+RUN rm -f /var/www/public/storage \
+    && ln -sf /var/www/storage/app/public /var/www/public/storage \
+    && chown -h www-data:www-data /var/www/public/storage
+
 # Optimisation de l'application (avec traitement d'erreurs amélioré)
 RUN set -e \
     && echo "Vérification de proc_open..." \
     && php -r "echo function_exists('proc_open') ? 'OK' : 'DISABLED';" \
     && composer dump-autoload --optimize --no-dev \
-    && php artisan storage:link || true \
     && php artisan config:cache || true \
     && php artisan route:cache || true \
     && NODE_OPTIONS="--max-old-space-size=4096" npm run build || echo "Asset compilation failed, continuing anyway" \
     && rm -rf node_modules /root/.npm /tmp/*
+
+# Vérification finale des dossiers et permissions
+RUN mkdir -p /var/www/storage/app/public/products \
+    && chmod -R 775 /var/www/storage \
+    && chmod -R 775 /var/www/bootstrap/cache \
+    && chown -R www-data:www-data /var/www
 
 # Script d'entrée
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh

@@ -50,10 +50,40 @@ wait_for_db() {
 # Fonction pour configurer les permissions (simplifiée)
 setup_permissions() {
     log "Configuration des permissions..."
+    mkdir -p /var/www/storage/app/public
+    mkdir -p /var/www/storage/app/public/products
+    mkdir -p /var/www/storage/framework/{sessions,views,cache}
+    mkdir -p /var/www/storage/logs
     chown -R www-data:www-data /var/www/storage
     chmod -R 775 /var/www/storage
     chown -R www-data:www-data /var/www/bootstrap/cache
     chmod -R 775 /var/www/bootstrap/cache
+    chown -R www-data:www-data /var/www/public
+    log "Permissions configurées"
+}
+
+# Fonction pour gérer le storage link
+setup_storage_link() {
+    log "Configuration du lien symbolique storage..."
+    
+    # Supprimer le lien symbolique s'il existe déjà
+    if [ -L /var/www/public/storage ]; then
+        log "Suppression du lien symbolique existant..."
+        rm -f /var/www/public/storage
+    fi
+    
+    # Créer le lien symbolique
+    log "Création du lien symbolique..."
+    ln -sf /var/www/storage/app/public /var/www/public/storage
+    
+    # Vérifier que le lien a été créé correctement
+    if [ -L /var/www/public/storage ]; then
+        log "Lien symbolique créé avec succès"
+    else
+        log "ERREUR: Échec de la création du lien symbolique"
+        # Essai avec la commande Laravel
+        php artisan storage:link --force
+    fi
 }
 
 # Fonction pour exécuter les migrations uniquement si nécessaire
@@ -76,12 +106,67 @@ run_migrations() {
     fi
 }
 
-# Fonction pour vérifier ou générer le lien symbolique de stockage
-ensure_storage_link() {
-    if [ ! -L /var/www/public/storage ]; then
-        log "Création du lien symbolique pour le stockage..."
-        php artisan storage:link
+# Créer des dossiers produits vides si nécessaire
+setup_product_folders() {
+    log "Configuration des dossiers produits..."
+    
+    # Créer les dossiers nécessaires
+    mkdir -p /var/www/storage/app/public/products
+    
+    # Définir les permissions
+    chown -R www-data:www-data /var/www/storage/app/public
+    chmod -R 775 /var/www/storage/app/public
+    
+    log "Dossiers produits configurés"
+}
+
+# Fonction pour créer des images par défaut
+setup_default_images() {
+    log "Configuration des images par défaut..."
+    
+    # Créer le dossier pour les images par défaut
+    DEFAULT_IMAGES_DIR="/var/www/public/images/default"
+    mkdir -p $DEFAULT_IMAGES_DIR
+    
+    # Générer une image SVG placeholder de base si elle n'existe pas déjà
+    if [ ! -f "$DEFAULT_IMAGES_DIR/placeholder.png" ]; then
+        log "Création de l'image placeholder par défaut..."
+        
+        # Créer une image SVG placeholder simple
+        cat > "$DEFAULT_IMAGES_DIR/placeholder.svg" << EOL
+<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+ <rect width="500" height="500" fill="#f5f5f5"/>
+ <text x="50%" y="50%" font-family="Arial" font-size="24" fill="#999" text-anchor="middle">Image non disponible</text>
+</svg>
+EOL
+        
+        # Dupliquer pour différents types
+        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/product.svg"
+        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/category.svg"
+        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/user.svg"
+        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/banner.svg"
+        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/logo.svg"
+        cp "$DEFAULT_IMAGES_DIR/placeholder.svg" "$DEFAULT_IMAGES_DIR/thumbnail.svg"
     fi
+    
+    # Définir les permissions
+    chown -R www-data:www-data "$DEFAULT_IMAGES_DIR"
+    chmod -R 755 "$DEFAULT_IMAGES_DIR"
+    
+    log "Images par défaut configurées"
+}
+
+# Fonction pour corriger le Vite Dev Server
+fix_vite_config() {
+    log "Correction de la configuration Vite..."
+    
+    # Désactiver le serveur de développement Vite en production
+    if [ -f /var/www/.env ]; then
+        log "Suppression de VITE_DEV_SERVER_URL de .env..."
+        sed -i '/VITE_DEV_SERVER_URL/d' /var/www/.env
+    fi
+    
+    log "Configuration Vite corrigée"
 }
 
 # Fonction principale
@@ -94,8 +179,17 @@ main() {
     # Configurer les permissions
     setup_permissions
     
-    # S'assurer que le lien symbolique existe
-    ensure_storage_link
+    # Configurer le lien symbolique storage
+    setup_storage_link
+    
+    # Configurer les dossiers produits
+    setup_product_folders
+    
+    # Configurer les images par défaut
+    setup_default_images
+    
+    # Corriger la configuration Vite
+    fix_vite_config
     
     # Vérifier la connexion à la base de données (non bloquant)
     wait_for_db
@@ -103,7 +197,14 @@ main() {
     # Exécuter les migrations si nécessaire
     run_migrations
     
-    # Démarrage de l'application (sans recréer les caches)
+    # Vider le cache de config et de vue
+    php artisan config:clear
+    php artisan view:clear
+    
+    # Optimisation Laravel
+    php artisan optimize
+    
+    # Démarrage de l'application
     log "Lancement des services..."
     exec "$@"
 }

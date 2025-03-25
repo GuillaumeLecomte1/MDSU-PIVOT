@@ -8,9 +8,9 @@ import { usePage } from '@inertiajs/react';
 const DEFAULT_IMAGE = '/images/placeholder.jpg';
 
 /**
- * Vérifie si une URL est absolue
- * @param {string} url - URL à vérifier
- * @returns {boolean} - True si l'URL est absolue
+ * Détermine si une URL est absolue (commence par http:// ou https://)
+ * @param {string} url L'URL à vérifier
+ * @returns {boolean} True si l'URL est absolue, false sinon
  */
 export function isAbsoluteUrl(url) {
     if (!url) return false;
@@ -18,34 +18,67 @@ export function isAbsoluteUrl(url) {
 }
 
 /**
- * Obtient l'URL correcte pour une image
- * @param {string} path - Chemin de l'image
- * @returns {string} - URL complète de l'image
+ * Images par défaut pour différentes catégories
  */
-export function getImageUrl(path) {
-    // Si le chemin est vide, retourner l'image par défaut
-    if (!path) return DEFAULT_IMAGE;
-    
-    // Si c'est déjà une URL absolue, la retourner telle quelle
-    if (isAbsoluteUrl(path)) return path;
-    
-    // Supprimer le slash initial si présent
-    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    
-    try {
-        // Essayer d'obtenir l'URL de base depuis les props Inertia
-        const { asset_url } = usePage().props;
-        if (asset_url) {
-            // Éviter les doubles slashes
-            const baseUrl = asset_url.endsWith('/') ? asset_url.slice(0, -1) : asset_url;
-            return `${baseUrl}/${cleanPath}`;
+const DEFAULT_IMAGES = {
+    product: '/images/default/product.png',
+    category: '/images/default/category.png',
+    user: '/images/default/user.png',
+    banner: '/images/default/banner.png',
+    logo: '/images/default/logo.png',
+    thumbnail: '/images/default/thumbnail.png',
+    fallback: '/images/default/placeholder.png',
+};
+
+/**
+ * Crée les répertoires pour les images par défaut au démarrage
+ */
+export function ensureDefaultImages() {
+    // Créer les répertoires si nécessaires
+    const defaultImagesDir = '/var/www/public/images/default';
+    const fs = require('fs');
+    if (!fs.existsSync(defaultImagesDir)) {
+        try {
+            fs.mkdirSync(defaultImagesDir, { recursive: true });
+            console.log('Répertoire des images par défaut créé');
+        } catch (error) {
+            console.error('Erreur lors de la création du répertoire des images par défaut:', error);
         }
-    } catch (error) {
-        console.log('Could not get asset_url from Inertia props, using relative path');
     }
+}
+
+/**
+ * Génère une URL d'image avec la gestion des erreurs et fallbacks
+ * @param {string} path Chemin de l'image
+ * @param {string} type Type d'image (product, category, user, etc.)
+ * @param {string} size Taille de l'image (thumbnail, medium, large)
+ * @returns {string} URL de l'image
+ */
+export function getImageUrl(path, type = 'fallback', size = null) {
+    // Si le chemin est vide ou null, retourner l'image par défaut
+    if (!path) {
+        return DEFAULT_IMAGES[type] || DEFAULT_IMAGES.fallback;
+    }
+
+    // Si l'URL est déjà absolue, la retourner telle quelle
+    if (isAbsoluteUrl(path)) {
+        return path;
+    }
+
+    // Traiter les chemins relatifs
+    let basePath = '';
     
-    // Fallback à une URL relative
-    return `/${cleanPath}`;
+    // Gérer les différents types d'images
+    if (path.startsWith('/')) {
+        // Chemin absolu par rapport à la racine publique
+        return path;
+    } else if (path.startsWith('storage/')) {
+        // Chemin relatif au dossier storage (déjà dans le format correct)
+        return `/${path}`;
+    } else {
+        // Autres chemins - ajouter le préfixe storage/
+        return `/storage/${type}s/${path}`;
+    }
 }
 
 /**
@@ -71,19 +104,51 @@ export function getStorageImageUrl(path) {
 }
 
 /**
- * Gestionnaire d'erreur pour les images
- * Remplace l'image par un placeholder en cas d'erreur
+ * Gestionnaire d'erreur pour les images qui ne peuvent pas être chargées
+ * @param {Event} event Événement d'erreur
+ * @param {string} type Type d'image (product, category, user, etc.)
  */
-export const handleImageError = (e) => {
-    console.warn(`Image non trouvée: ${e.target.src}`);
-    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KIDxnPgogIDx0aXRsZT5MYXllciAxPC90aXRsZT4KICA8cmVjdCBpZD0ic3ZnXzEiIGhlaWdodD0iNTAwIiB3aWR0aD0iNTAwIiB5PSIwIiB4PSIwIiBzdHJva2Utd2lkdGg9IjAiIHN0cm9rZT0iIzAwMCIgZmlsbD0iI2YwZjBmMCIvPgogIDxsaW5lIHN0cm9rZS1saW5lY2FwPSJ1bmRlZmluZWQiIHN0cm9rZS1saW5lam9pbj0idW5kZWZpbmVkIiBpZD0ic3ZnXzIiIHkyPSI1MDAiIHgyPSI1MDAiIHkxPSIwIiB4MT0iMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2U9IiNjY2NjY2MiIGZpbGw9Im5vbmUiLz4KICA8bGluZSBzdHJva2UtbGluZWNhcD0idW5kZWZpbmVkIiBzdHJva2UtbGluZWpvaW49InVuZGVmaW5lZCIgaWQ9InN2Z18zIiB5Mj0iNTAwIiB4Mj0iMCIgeTE9IjAiIHgxPSI1MDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlPSIjY2NjY2NjIiBmaWxsPSJub25lIi8+CiAgPHRleHQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgdGV4dC1hbmNob3I9InN0YXJ0IiBmb250LWZhbWlseT0iSGVsdmV0aWNhLCBBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgaWQ9InN2Z180IiB5PSIyNTAiIHg9IjE1MCIgc3Ryb2tlLXdpZHRoPSIwIiBzdHJva2U9IiMwMDAiIGZpbGw9IiM5OTk5OTkiPkltYWdlIG5vbiB0cm91dsOpZTwvdGV4dD4KIDwvZz4KPC9zdmc+';
-    e.target.onerror = null; // Évite les boucles infinies
-};
+export function handleImageError(event, type = 'fallback') {
+    const img = event.target;
+    console.warn(`Image non trouvée: ${img.src}`);
+    
+    // Éviter les boucles infinies en vérifiant si l'image est déjà une image par défaut
+    if (img.src.includes('/images/default/')) {
+        return;
+    }
+    
+    // Remplacer par l'image par défaut appropriée
+    img.src = DEFAULT_IMAGES[type] || DEFAULT_IMAGES.fallback;
+    
+    // Ajouter une classe pour le styling CSS
+    img.classList.add('fallback-image');
+}
+
+/**
+ * Crée un composant image avec gestion d'erreur
+ * @param {Object} props Propriétés de l'image
+ * @returns {JSX.Element} Élément JSX pour l'image
+ */
+export function Image({ src, alt, className, type = 'fallback', size = null, ...props }) {
+    const imageSrc = getImageUrl(src, type, size);
+    
+    return (
+        <img
+            src={imageSrc}
+            alt={alt || 'Image'}
+            className={`image-component ${className || ''}`}
+            onError={(e) => handleImageError(e, type)}
+            {...props}
+        />
+    );
+}
 
 // Export par défaut pour compatibilité avec le code existant
 export default {
     getImageUrl,
     getStorageImageUrl,
     handleImageError,
-    isAbsoluteUrl
+    isAbsoluteUrl,
+    Image,
+    DEFAULT_IMAGES,
 }; 
