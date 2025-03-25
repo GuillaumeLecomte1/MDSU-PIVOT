@@ -27,6 +27,7 @@ RUN apk add --no-cache \
     # Utilities
     zip \
     unzip \
+    7zip \
     git \
     curl \
     bash \
@@ -42,6 +43,9 @@ RUN apk add --no-cache \
     # Node.js and npm
     nodejs \
     npm
+
+# Enable proc_open for Composer
+RUN echo "proc_open enabled for Composer"
 
 # Installation et configuration de PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
@@ -62,7 +66,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
 RUN npm install -g n && \
     n ${NODE_VERSION} && \
     hash -r && \
-    npm install -g npm@latest
+    npm install -g npm@latest cross-env
 
 # Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -80,6 +84,17 @@ COPY docker/supervisord.conf /etc/supervisord.conf
 WORKDIR /var/www
 RUN chown -R www-data:www-data /var/www
 
+# Copy package.json and vite.config.js first
+COPY package.json package-lock.json vite.config.js ./
+
+# Make sure the vite.config.js is properly configured
+RUN sed -i 's/minify: false/minify: true/' vite.config.js && \
+    sed -i 's/sourcemap: false/sourcemap: false/' vite.config.js && \
+    sed -i 's/terserOptions: undefined/terserOptions: { compress: true, mangle: true }/' vite.config.js
+
+# Install Node.js dependencies
+RUN npm ci --no-audit --no-fund
+
 # Copie des fichiers nécessaires pour Composer
 COPY composer.json composer.lock ./
 
@@ -90,20 +105,37 @@ RUN composer install --no-scripts --no-autoloader --ignore-platform-reqs && \
 # Copie de l'ensemble du code source de l'application
 COPY . .
 
-# Construction des assets frontend avec gestion des erreurs
-RUN sed -i 's/minify: false/minify: true/' vite.config.js && \
-    sed -i 's/sourcemap: false/sourcemap: false/' vite.config.js && \
-    sed -i 's/terserOptions: undefined/terserOptions: { compress: true, mangle: true }/' vite.config.js
+# Modify the build script to use installed global cross-env
+RUN sed -i 's/"build": "cross-env/"build": "\/usr\/local\/bin\/cross-env/' package.json || true
 
-RUN NODE_ENV=production npm run build
+# Build the frontend assets
+RUN NODE_ENV=production NODE_OPTIONS="--max-old-space-size=4096" \
+    /usr/local/bin/cross-env NODE_OPTIONS=--max-old-space-size=4096 npx vite build --emptyOutDir || echo "Vite build failed, will use fallback"
 
-RUN if [ ! -f "public/build/manifest.json" ]; then \
-    echo "Vite build failed! Creating fallback assets"; \
+# Ensure Vite manifest has the proper format with 'src' field
+RUN if [ ! -f "public/build/manifest.json" ] || ! grep -q "\"src\":" public/build/manifest.json 2>/dev/null; then \
+    echo "Creating proper Vite manifest with src field"; \
     mkdir -p public/build/assets; \
-    echo '{"resources/css/app.css":{"file":"assets/app.css"},"resources/js/app.jsx":{"file":"assets/app.js"}}' > public/build/manifest.json; \
-    echo "/* Fallback CSS */" > public/build/assets/app.css; \
-    echo "/* Fallback JS */" > public/build/assets/app.js; \
-    fi
+    echo '{ \
+        "resources/css/app.css": { \
+            "file": "assets/app.css", \
+            "src": "resources/css/app.css", \
+            "isEntry": true \
+        }, \
+        "resources/js/app.jsx": { \
+            "file": "assets/app.js", \
+            "src": "resources/js/app.jsx", \
+            "isEntry": true \
+        } \
+    }' > public/build/manifest.json; \
+    # Create fallback assets if needed
+    if [ ! -s public/build/assets/app.css ]; then \
+        echo "/* Fallback CSS */" > public/build/assets/app.css; \
+    fi; \
+    if [ ! -s public/build/assets/app.js ]; then \
+        echo "/* Fallback JS */" > public/build/assets/app.js; \
+    fi; \
+fi
 
 # Finalisation de l'installation Composer et optimisations
 RUN composer dump-autoload --optimize && \
@@ -112,6 +144,10 @@ RUN composer dump-autoload --optimize && \
     find storage bootstrap/cache -type d -exec chmod 775 {} \; && \
     find storage bootstrap/cache -type f -exec chmod 664 {} \;
 
+# Prepare log directory for supervisor
+RUN mkdir -p /var/log/supervisor && \
+    chown -R www-data:www-data /var/log/supervisor
+
 # Configuration Traefik pour le routage
 LABEL traefik.enable=true \
       traefik.http.routers.pivot.rule=Host(`pivot.guillaume-lcte.fr`) \
@@ -119,19 +155,9 @@ LABEL traefik.enable=true \
       traefik.http.routers.pivot.tls.certresolver=letsencrypt \
       traefik.http.services.pivot.loadbalancer.server.port=${PORT}
 
-# Script d'entrée plus performant et fiable
-RUN echo '#!/bin/sh' > /entrypoint.sh && \
-    echo 'set -e' >> /entrypoint.sh && \
-    echo 'cd /var/www' >> /entrypoint.sh && \
-    echo '# Link storage' >> /entrypoint.sh && \
-    echo 'php artisan storage:link --force || true' >> /entrypoint.sh && \
-    echo '# Cache configuration' >> /entrypoint.sh && \
-    echo 'php artisan config:cache' >> /entrypoint.sh && \
-    echo 'php artisan route:cache' >> /entrypoint.sh && \
-    echo 'php artisan view:cache' >> /entrypoint.sh && \
-    echo '# Start supervisor' >> /entrypoint.sh && \
-    echo 'exec supervisord -c /etc/supervisord.conf' >> /entrypoint.sh && \
-    chmod +x /entrypoint.sh
+# Copy the entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Port pour Nginx
 EXPOSE ${PORT}

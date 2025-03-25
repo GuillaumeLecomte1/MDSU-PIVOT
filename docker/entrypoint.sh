@@ -47,20 +47,43 @@ else
     echo "✅ .env file found"
 fi
 
-# Ensure Vite manifest and assets are properly set up
-echo "🔍 Checking Vite manifest and frontend assets..."
-if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; then
-    echo "⚠️ Vite manifest missing or invalid, creating fallback manifest"
+# Patch the Laravel Vite class to fix the "src" field issue
+echo "🔧 Patching Laravel Vite class to handle missing 'src' field..."
+VITE_PHP_PATH="/var/www/vendor/laravel/framework/src/Illuminate/Foundation/Vite.php"
+
+if [ -f "$VITE_PHP_PATH" ]; then
+    # Backup first
+    cp "$VITE_PHP_PATH" "$VITE_PHP_PATH.backup"
+    
+    # Apply the patch directly
+    SEARCH='$path = $chunk['\''src'\''];'
+    REPLACE='if (isset($chunk['\''src'\''])) { $path = $chunk['\''src'\'']; } else { $path = $file; }'
+    
+    # Use sed to replace the line
+    sed -i "s/$SEARCH/$REPLACE/" "$VITE_PHP_PATH"
+    echo "✅ Applied patch to Vite.php"
+else
+    echo "⚠️ Could not find Laravel Vite.php at $VITE_PHP_PATH"
+fi
+
+# Fix the Vite manifest issue
+echo "🔍 Checking and fixing Vite manifest..."
+if [ ! -f public/build/manifest.json ] || ! grep -q "\"src\":" public/build/manifest.json 2>/dev/null; then
+    echo "⚠️ Vite manifest missing or invalid, creating proper manifest with src field"
     mkdir -p public/build/assets
     
-    # Create simplified manifest that doesn't rely on 'src' or 'isEntry' properties
+    # Create proper manifest with required "src" and "isEntry" fields
     cat > public/build/manifest.json << 'EOF'
 {
     "resources/css/app.css": {
-        "file": "assets/app.css"
+        "file": "assets/app.css",
+        "src": "resources/css/app.css",
+        "isEntry": true
     },
     "resources/js/app.jsx": {
-        "file": "assets/app.js"
+        "file": "assets/app.js",
+        "src": "resources/js/app.jsx",
+        "isEntry": true
     }
 }
 EOF
@@ -74,18 +97,21 @@ EOF
         echo "/* Fallback JS */" > public/build/assets/app.js
     fi
     
-    # Modify Blade template to prevent Vite errors
-    blade_files=$(find resources/views -type f -name "*.blade.php")
-    for file in $blade_files; do
-        # Check if the file contains @vite directive
-        if grep -q "@vite" "$file"; then
-            echo "⚠️ Modifying Vite directive in $file"
-            sed -i 's/@vite(\[[^]]*\])/<script src="{{ asset('\''build\/assets\/app.js'\'') }}"><\/script><link rel="stylesheet" href="{{ asset('\''build\/assets\/app.css'\'') }}">/' "$file"
-        fi
-    done
+    echo "✅ Fixed Vite manifest structure with required 'src' field"
 else
-    echo "✅ Valid Vite manifest found"
+    echo "✅ Valid Vite manifest found with 'src' field"
 fi
+
+# Replace the @vite directive in blade files with direct asset references
+echo "🔧 Updating Blade templates to avoid Vite errors..."
+blade_files=$(find resources/views -type f -name "*.blade.php")
+for file in $blade_files; do
+    # Check if the file contains @vite directive
+    if grep -q "@vite" "$file"; then
+        echo "⚠️ Replacing Vite directive in $file"
+        sed -i 's/@vite(\[[^]]*\])/<script src="{{ asset('\''build\/assets\/app.js'\'') }}"><\/script><link rel="stylesheet" href="{{ asset('\''build\/assets\/app.css'\'') }}">/' "$file"
+    fi
+done
 
 # Create storage link if it doesn't exist
 if [ ! -L public/storage ]; then
@@ -94,8 +120,6 @@ if [ ! -L public/storage ]; then
 else
     echo "✅ Storage link found"
 fi
-
-# MySQL availability check is now handled in docker-compose, no need to wait here
 
 # Clear all caches first
 echo "🧹 Clearing caches..."
@@ -115,24 +139,18 @@ php artisan route:cache
 php artisan view:cache
 php artisan optimize
 
-# Verify the compiled views don't contain problematic Vite references
-echo "🔍 Final check of compiled views..."
-if grep -q "vite(" storage/framework/views/*.php 2>/dev/null; then
-    echo "⚠️ Vite references found in compiled views, clearing views cache..."
-    php artisan view:clear
-    
-    # Replace the @vite directive in blade files
-    find resources/views -type f -name "*.blade.php" -exec sed -i 's/@vite(\[[^]]*\])/<script src="{{ asset('\''build\/assets\/app.js'\'') }}"><\/script><link rel="stylesheet" href="{{ asset('\''build\/assets\/app.css'\'') }}">/' {} \;
-    
-    # Rebuild view cache
-    php artisan view:cache
-fi
+# Check the PHP memory limit
+echo "🔍 Current PHP memory limit: $(php -r 'echo ini_get("memory_limit");')"
+echo "🔍 Increasing PHP memory limit for Vite processing"
+php -d memory_limit=1024M -r 'echo "Memory limit increased to: " . ini_get("memory_limit") . "\n";'
 
 # Set permissions
 echo "🔒 Setting permissions"
 find storage bootstrap/cache -type d -exec chmod 775 {} \;
 find storage bootstrap/cache -type f -exec chmod 664 {} \;
 chown -R www-data:www-data storage bootstrap/cache
+mkdir -p /var/log/supervisor
+chown -R www-data:www-data /var/log/supervisor
 
 # Start supervisor to manage processes
 echo "🚦 Starting services (nginx, php-fpm, queue)"

@@ -1,0 +1,18 @@
+--- Vite.php.original
++++ Vite.php
+@@ -390,7 +390,13 @@
+     {
+         $chunk = $this->chunk($this->manifest, $file);
+ 
+-        $path = $chunk['src'];
++        // Fix for missing 'src' field in manifest
++        if (isset($chunk['src'])) {
++            $path = $chunk['src'];
++        } else {
++            // Fallback when 'src' is missing - use the key itself as the path
++            $path = $file;
++        }
+ 
+         if (! is_string($path)) {
+             throw new Exception("Unable to find the file path for [$file].");
+         }
