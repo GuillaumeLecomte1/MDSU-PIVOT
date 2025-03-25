@@ -1,42 +1,60 @@
-# Fichiers système
+# Système et configuration
 .git
 .github
 .gitignore
 .gitattributes
-.env.example
-.env.local
-.editorconfig
 .dockerignore
 Dockerfile
 docker-compose.yml
 docker-compose.yaml
+.env*
+!.env.example
+.editorconfig
+.styleci.yml
 
 # Dépendances
 /node_modules
 /vendor
-
-# Stockage
-/storage/app/*
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/storage/logs/*
-
-# Cache
+/public/hot
+/public/build
+/public/storage
 /.phpunit.cache
-bootstrap/cache/*
+/.vscode
+/.idea
+/.cursor
 
-# Fichiers spécifiques
+# Stockage et fichiers temporaires
+/storage/app/*
+!/storage/app/public
+/storage/app/public/*
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+
+# Documentation et tests
+/docs
+/documentation
+/tests
 README.md
 *.md
 *.log
 phpunit.xml
-.styleci.yml
-.cursor
-.vscode
+phpunit.result.cache
+phpstan.neon
 
 # Divers
-npm-debug.log
-yarn-error.log
 *.swp
-*.swo 
+*.swo
+*.swn
+.DS_Store
+Thumbs.db
+/.phpstorm.meta.php
+/_ide_helper.php
+/_ide_helper_models.php 
