@@ -1,23 +1,19 @@
-FROM php:8.2-fpm AS php-base
+FROM php:8.2-fpm-alpine AS php-base
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and PHP extensions in a single layer
+RUN apk add --no-cache \
     git \
     curl \
     libpng-dev \
-    libonig-dev \
-    libxml2-dev \
     libzip-dev \
     zip \
     unzip \
     nginx \
-    supervisor
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    supervisor \
+    oniguruma-dev \
+    libxml2-dev \
+    # Install PHP extensions
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -26,10 +22,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # Node.js build stage
-FROM node:18 AS node-build
+FROM node:18-alpine AS node-build
 WORKDIR /var/www
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --quiet
 COPY . .
 
 # Ensure we're in production mode for the build
@@ -41,7 +37,6 @@ RUN echo "Building Vite assets..." && \
     echo "Build completed. Checking manifest..." && \
     if [ -f "public/build/.vite/manifest.json" ]; then \
         echo "✅ Manifest found at public/build/.vite/manifest.json"; \
-        cat public/build/.vite/manifest.json | head -n 10; \
         mkdir -p public/build; \
         cp public/build/.vite/manifest.json public/build/manifest.json; \
         echo "✅ Copied manifest to public/build/manifest.json"; \
@@ -61,69 +56,47 @@ COPY . /var/www/
 # Copy the build directory from node-build
 COPY --from=node-build /var/www/public/build /var/www/public/build
 
-# Verify the manifest is copied
-RUN if [ -f "public/build/manifest.json" ]; then \
-        echo "✅ Manifest found at public/build/manifest.json in php-build stage"; \
-    else \
-        echo "❌ Manifest NOT found at public/build/manifest.json in php-build stage"; \
-        if [ -f "public/build/.vite/manifest.json" ]; then \
-            echo "✅ Found manifest at public/build/.vite/manifest.json, copying..."; \
-            cp public/build/.vite/manifest.json public/build/manifest.json; \
-        else \
-            find public -type f | grep -i manifest; \
-            exit 1; \
-        fi \
-    fi
-
-# Install PHP dependencies
-RUN composer install --optimize-autoloader --no-dev
-
-# Set permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-RUN chown -R www-data:www-data /var/www/public/build
-RUN chown -R www-data:www-data /var/www/public
+# Install PHP dependencies and set permissions in a single layer
+RUN composer install --optimize-autoloader --no-dev && \
+    chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache && \
+    chown -R www-data:www-data /var/www/public
 
 # Final stage
 FROM php-base
 ARG PORT=4004
+ENV PORT=${PORT}
 
 # Copy application code
 COPY --from=php-build --chown=www-data:www-data /var/www /var/www
 
-# Verify the manifest exists in the final stage
-RUN if [ -f "/var/www/public/build/manifest.json" ]; then \
-        echo "✅ Manifest found at /var/www/public/build/manifest.json in final stage"; \
-    else \
-        echo "❌ Manifest NOT found at /var/www/public/build/manifest.json in final stage"; \
-        if [ -f "/var/www/public/build/.vite/manifest.json" ]; then \
-            echo "✅ Found manifest at /var/www/public/build/.vite/manifest.json, copying..."; \
-            cp /var/www/public/build/.vite/manifest.json /var/www/public/build/manifest.json; \
-        else \
-            find /var/www/public -type f | grep -i manifest; \
-            exit 1; \
-        fi \
-    fi
+# Set proper permissions and configure files in a single layer
+RUN find /var/www/public -type d -exec chmod 755 {} \; && \
+    find /var/www/public -type f -exec chmod 644 {} \; && \
+    chown -R www-data:www-data /var/www/public && \
+    mkdir -p /etc/supervisor/conf.d && \
+    mkdir -p /var/www/docker/scripts
 
-# Set proper permissions for all public files
-RUN find /var/www/public -type d -exec chmod 755 {} \;
-RUN find /var/www/public -type f -exec chmod 644 {} \;
-RUN chown -R www-data:www-data /var/www/public
+# Create nginx config
+RUN mkdir -p /run/nginx
+COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+RUN sed -i "s/listen 80/listen ${PORT}/g" /etc/nginx/http.d/default.conf
 
-# Configure Nginx
-COPY docker/nginx/default.conf /etc/nginx/sites-available/default
-RUN sed -i "s/listen 80/listen ${PORT}/g" /etc/nginx/sites-available/default
-
-# Configure PHP-FPM
+# Create PHP-FPM config
 COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
-# Configure Supervisor
-# Créer un fichier supervisord.conf de base si nécessaire
-RUN mkdir -p /etc/supervisor/conf.d
-RUN echo "[supervisord]\nnodaemon=true\n\n[program:nginx]\ncommand=/usr/sbin/nginx -g 'daemon off;'\nautostart=true\nautorestart=true\npriority=10\n\n[program:php-fpm]\ncommand=/usr/local/sbin/php-fpm -F\nautostart=true\nautorestart=true\npriority=5" > /etc/supervisor/conf.d/supervisord.conf
+# Create required scripts
+RUN echo '#!/bin/sh\nif [ -f "/var/www/public/index.php" ] && [ -f "/usr/local/etc/php-fpm.d/www.conf" ]; then\n  exit 0\nelse\n  exit 1\nfi' > /var/www/docker/scripts/healthcheck.sh && \
+    chmod +x /var/www/docker/scripts/healthcheck.sh
 
-# Copy and make the entrypoint script executable
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Create supervisor config
+RUN echo '[supervisord]\nnodaemon=true\nuser=root\nloglevel=info\nlogfile=/var/log/supervisord.log\n\n[program:nginx]\ncommand=/usr/sbin/nginx -g "daemon off;"\nautostart=true\nautorestart=true\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0\n\n[program:php-fpm]\ncommand=/usr/local/sbin/php-fpm -F\nautostart=true\nautorestart=true\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0' > /etc/supervisor/conf.d/supervisord.conf
+
+# Create entrypoint script
+RUN echo '#!/bin/sh\nset -e\n\n# Create storage directories\nmkdir -p /var/www/storage/app/public\nmkdir -p /var/www/storage/framework/sessions\nmkdir -p /var/www/storage/framework/views\nmkdir -p /var/www/storage/framework/cache\nmkdir -p /var/www/storage/logs\n\n# Ensure correct permissions\nchown -R www-data:www-data /var/www/storage\nchown -R www-data:www-data /var/www/bootstrap/cache\n\n# Create storage link if not exists\nif [ ! -L /var/www/public/storage ]; then\n  ln -sf /var/www/storage/app/public /var/www/public/storage\nfi\n\n# Optimize Laravel\nphp /var/www/artisan config:cache\nphp /var/www/artisan route:cache\nphp /var/www/artisan view:cache\n\n# Start services\nexec "$@"' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD /var/www/docker/scripts/healthcheck.sh
 
 # Expose port
 EXPOSE ${PORT}
