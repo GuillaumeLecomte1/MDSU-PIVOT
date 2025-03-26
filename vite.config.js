@@ -31,14 +31,33 @@ export default defineConfig({
             external: [],
             output: {
                 manualChunks: {
-                    vendor: ['lodash', 'axios']
+                    vendor: ['lodash', 'axios'],
+                    markdown: ['react-markdown', 'react-syntax-highlighter', 'remark-gfm'],
+                    react: ['react', 'react-dom']
                 }
             }
         },
         chunkSizeWarningLimit: 1000,
+        commonjsOptions: {
+            include: [/node_modules/],
+            transformMixedEsModules: true
+        }
     },
     optimizeDeps: {
         force: true,
-        include: ['lodash', 'axios']
+        include: [
+            'lodash',
+            'axios',
+            'react-markdown',
+            'react-syntax-highlighter',
+            'remark-gfm',
+            'react',
+            'react-dom'
+        ],
+        exclude: ['@inertiajs/react']
     },
+    esbuild: {
+        jsxInject: `import React from 'react'`,
+        jsxDev: false
+    }
 });

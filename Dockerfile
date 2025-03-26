@@ -68,9 +68,9 @@ RUN php -d memory_limit=-1 /usr/bin/composer install --no-scripts --no-autoloade
 # Copie de l'ensemble du code source
 COPY . .
 
-# Installation des dépendances Node.js
+# Installation des dépendances Node.js avec un fallback pour les dépendances markdown
 RUN npm install --no-audit --no-fund && \
-    npm install lodash --save
+    npm install lodash react-markdown react-syntax-highlighter remark-gfm --save
 
 # Construction des assets avec Vite avec une limite de mémoire augmentée
 RUN NODE_OPTIONS=--max-old-space-size=4096 \

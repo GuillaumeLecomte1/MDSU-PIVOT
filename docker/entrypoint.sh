@@ -54,9 +54,20 @@ fi
 
 # Check and install missing npm dependencies
 echo "📦 Checking Node.js dependencies..."
-if ! npm list lodash >/dev/null 2>&1; then
-    echo "⚠️ Lodash not found, installing..."
-    npm install lodash --save
+MISSING_DEPS=""
+
+# Check for required dependencies
+for DEP in lodash react-markdown react-syntax-highlighter remark-gfm react react-dom @inertiajs/react axios; do
+    if ! npm list $DEP >/dev/null 2>&1; then
+        echo "⚠️ $DEP not found, will be installed..."
+        MISSING_DEPS="$MISSING_DEPS $DEP"
+    fi
+done
+
+# Install missing dependencies if any
+if [ ! -z "$MISSING_DEPS" ]; then
+    echo "📦 Installing missing dependencies: $MISSING_DEPS"
+    npm install $MISSING_DEPS --save --legacy-peer-deps
 fi
 
 # Verify Vite assets and build if needed
@@ -72,14 +83,11 @@ if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; t
     
     # Install dependencies with npm install
     echo "📦 Installing Node.js dependencies..."
-    npm install --no-audit --no-fund
+    npm install --no-audit --no-fund --legacy-peer-deps
     
     echo "🔨 Building Vite assets with increased timeout..."
-    NODE_OPTIONS=--max-old-space-size=4096 npm run build
-    
-    # Double-check if build successful
-    if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; then
-        echo "⚠️ Vite build may have issues, creating fallback manifest..."
+    NODE_OPTIONS=--max-old-space-size=4096 npm run build || {
+        echo "⚠️ Vite build failed, creating fallback assets..."
         mkdir -p public/build/assets
         echo '{
     "resources/css/app.css": {
@@ -98,9 +106,7 @@ if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; t
         [ -f public/build/assets/app.css ] || echo "/* Fallback CSS */" > public/build/assets/app.css
         [ -f public/build/assets/app.js ] || echo "/* Fallback JS - Built by Docker */" > public/build/assets/app.js
         echo "✅ Created fallback Vite manifest and assets"
-    else
-        echo "✅ Vite build successful"
-    fi
+    }
 else
     echo "✅ Vite assets found"
 fi
