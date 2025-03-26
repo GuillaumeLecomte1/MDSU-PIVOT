@@ -7,6 +7,7 @@ cd /var/www
 # Show current PHP configuration
 echo "🔍 PHP memory limit: $(php -r 'echo ini_get("memory_limit");')"
 echo "🔍 Disabled functions: $(php -r 'echo ini_get("disable_functions");')"
+echo "🔍 Node memory limit: $NODE_OPTIONS"
 
 # Create a static 500 error page
 echo "📄 Creating static 500 error page"
@@ -53,20 +54,21 @@ fi
 
 # Verify Vite assets and build if needed
 echo "🔍 Verifying Vite assets..."
-if [ ! -f public/build/manifest.json ]; then
-    echo "⚠️ Vite assets not found, attempting to build..."
+if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; then
+    echo "⚠️ Vite assets not found or empty manifest, attempting to build..."
     
-    # Check if we have node_modules
+    # Check if node_modules exists, if not, install dependencies
     if [ ! -d "node_modules" ] && [ -f "package.json" ]; then
         echo "📦 Installing Node.js dependencies..."
-        npm ci --no-audit --no-fund
+        npm ci --no-audit --no-fund || npm install --no-audit --no-fund
     fi
     
     echo "🔨 Building Vite assets..."
-    npm run build
+    NODE_OPTIONS=--max-old-space-size=4096 npm run build
     
-    if [ ! -f public/build/manifest.json ]; then
-        echo "❌ Failed to build Vite assets, creating fallback manifest..."
+    # Double-check if build successful
+    if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; then
+        echo "⚠️ Vite build may have issues, creating fallback manifest..."
         mkdir -p public/build/assets
         echo '{
     "resources/css/app.css": {
@@ -80,10 +82,16 @@ if [ ! -f public/build/manifest.json ]; then
         "isEntry": true
     }
 }' > public/build/manifest.json
-        touch public/build/assets/app.css
-        touch public/build/assets/app.js
-        echo "✅ Created fallback Vite manifest"
+        
+        # Create empty assets if they don't exist
+        [ -f public/build/assets/app.css ] || echo "/* Fallback CSS */" > public/build/assets/app.css
+        [ -f public/build/assets/app.js ] || echo "/* Fallback JS */" > public/build/assets/app.js
+        echo "✅ Created fallback Vite manifest and assets"
+    else
+        echo "✅ Vite build successful"
     fi
+else
+    echo "✅ Vite assets found"
 fi
 
 # Run the Vite patch script if available

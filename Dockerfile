@@ -18,6 +18,7 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
 ENV PHP_OPCACHE_SAVE_COMMENTS=1
 ENV VITE_MANIFEST_PATH=/var/www/public/build/manifest.json
 ENV NGINX_PORT=${PORT}
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Installation des dépendances système
 RUN apk add --no-cache \
@@ -103,14 +104,15 @@ COPY composer.json composer.lock ./
 # Installation des dépendances PHP sans scripts
 RUN php -d memory_limit=-1 /usr/bin/composer install --no-scripts --no-autoloader --ignore-platform-reqs
 
-# Install Node.js dependencies
-RUN npm ci --no-audit --no-fund || echo "Npm install failed, continuing..."
-
 # Copie de l'ensemble du code source de l'application
 COPY . .
 
-# Build Vite assets
-RUN npm run build || echo "Vite build failed, will attempt to fix during container startup"
+# Install dependencies (npm ci is better for CI environments)
+RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+# Build Vite assets with increased memory limits and timeout
+RUN NODE_OPTIONS=--max-old-space-size=4096 \
+    npm run build || echo "Vite build may have failed, will attempt to fix during startup"
 
 # Patch the Laravel Vite.php class to handle missing src field
 RUN set -e && \
@@ -120,6 +122,12 @@ RUN set -e && \
         cp "$VITE_PHP_PATH" "$VITE_PHP_PATH.backup" && \
         sed -i 's/$path = $chunk\['\''src'\''\];/if (isset($chunk['\''src'\''])) { $path = $chunk['\''src'\'']; } else { $path = $file; }/g' "$VITE_PHP_PATH"; \
     fi
+
+# Fix Larastan issue early
+RUN if [ -d "vendor/nunomaduro/larastan" ] && [ -d "vendor/larastan/larastan" ]; then \
+    echo "Removing duplicate Larastan package..." && \
+    rm -rf vendor/nunomaduro/larastan; \
+fi
 
 # Finalize Composer installation
 RUN php -d memory_limit=-1 /usr/bin/composer dump-autoload --optimize

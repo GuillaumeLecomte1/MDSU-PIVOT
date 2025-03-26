@@ -24,7 +24,8 @@ services:
       - DB_DATABASE=${DB_DATABASE:-laravel}
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-password}
-      - PHP_MEMORY_LIMIT=512M  # Increase memory limit
+      - PHP_MEMORY_LIMIT=512M  # PHP memory limit
+      - NODE_OPTIONS=--max-old-space-size=4096  # Node.js memory limit
     volumes:
       - ./storage/app/public:/var/www/storage/app/public
       - ./storage/logs:/var/www/storage/logs
@@ -42,6 +43,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 6G  # Increase memory limit for Node.js build
+        reservations:
+          memory: 2G  # Reserve minimum memory
 
 networks:
   web:
