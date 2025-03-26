@@ -16,16 +16,17 @@ services:
       - "4004:4004"
     environment:
       - APP_ENV=production
-      - APP_DEBUG=true  # Set to true temporarily for debugging
+      - APP_DEBUG=true  # Temporairement à true pour le debug
       - COMPOSER_ALLOW_SUPERUSER=1
       - DB_CONNECTION=mysql
-      - DB_HOST=${DB_HOST:-localhost}  # Your existing MySQL server
+      - DB_HOST=${DB_HOST:-localhost}
       - DB_PORT=${DB_PORT:-3306}
       - DB_DATABASE=${DB_DATABASE:-laravel}
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-password}
-      - PHP_MEMORY_LIMIT=512M  # PHP memory limit
-      - NODE_OPTIONS=--max-old-space-size=4096  # Node.js memory limit
+      - PHP_MEMORY_LIMIT=512M
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - DISABLE_JIT=true  # Désactive explicitement JIT pour OPCache
     volumes:
       - ./storage/app/public:/var/www/storage/app/public
       - ./storage/logs:/var/www/storage/logs
@@ -46,10 +47,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6G  # Increase memory limit for Node.js build
+          memory: 6G
         reservations:
-          memory: 2G  # Reserve minimum memory
+          memory: 2G
 
 networks:
   web:
-    external: true  # Assuming you already have a network named 'web' created for Traefik 
+    external: true  # Assume un réseau 'web' existant pour Traefik 

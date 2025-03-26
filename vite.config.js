@@ -12,18 +12,15 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@': '/resources/js',
-        },
+            '@': '/resources'
+        }
     },
     server: {
-        hmr: {
-            host: '127.0.0.1',
-        },
-        host: '127.0.0.1',
-        port: 5173,
+        hmr: { overlay: true },
+        host: true
     },
     build: {
-        chunkSizeWarningLimit: 2000,
+        timeout: 120000,
         outDir: 'public/build',
         assetsDir: '',
         manifest: true,
@@ -31,12 +28,17 @@ export default defineConfig({
         sourcemap: false,
         terserOptions: undefined,
         rollupOptions: {
+            external: [],
             output: {
                 manualChunks: {
-                    vendor: ['react', 'react-dom'],
-                    inertia: ['@inertiajs/react'],
-                },
-            },
+                    vendor: ['lodash', 'axios']
+                }
+            }
         },
+        chunkSizeWarningLimit: 1000,
+    },
+    optimizeDeps: {
+        force: true,
+        include: ['lodash', 'axios']
     },
 });

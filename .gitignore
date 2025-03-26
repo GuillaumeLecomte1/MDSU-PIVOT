@@ -22,3 +22,9 @@ yarn-error.log
 /.zed
 Etat des lieux.txt
 .vercel
+
+# Ignore fallback files
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store

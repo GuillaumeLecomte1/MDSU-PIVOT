@@ -52,18 +52,29 @@ else
     echo "✅ .env file found"
 fi
 
+# Check and install missing npm dependencies
+echo "📦 Checking Node.js dependencies..."
+if ! npm list lodash >/dev/null 2>&1; then
+    echo "⚠️ Lodash not found, installing..."
+    npm install lodash --save
+fi
+
 # Verify Vite assets and build if needed
 echo "🔍 Verifying Vite assets..."
 if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; then
     echo "⚠️ Vite assets not found or empty manifest, attempting to build..."
     
-    # Check if node_modules exists, if not, install dependencies
-    if [ ! -d "node_modules" ] && [ -f "package.json" ]; then
-        echo "📦 Installing Node.js dependencies..."
-        npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+    # Make sure package.json and package-lock.json are in sync
+    if [ -f package-lock.json ]; then
+        echo "📦 Updating package-lock.json to match package.json..."
+        rm -f package-lock.json
     fi
     
-    echo "🔨 Building Vite assets..."
+    # Install dependencies with npm install
+    echo "📦 Installing Node.js dependencies..."
+    npm install --no-audit --no-fund
+    
+    echo "🔨 Building Vite assets with increased timeout..."
     NODE_OPTIONS=--max-old-space-size=4096 npm run build
     
     # Double-check if build successful
@@ -85,7 +96,7 @@ if [ ! -f public/build/manifest.json ] || [ ! -s public/build/manifest.json ]; t
         
         # Create empty assets if they don't exist
         [ -f public/build/assets/app.css ] || echo "/* Fallback CSS */" > public/build/assets/app.css
-        [ -f public/build/assets/app.js ] || echo "/* Fallback JS */" > public/build/assets/app.js
+        [ -f public/build/assets/app.js ] || echo "/* Fallback JS - Built by Docker */" > public/build/assets/app.js
         echo "✅ Created fallback Vite manifest and assets"
     else
         echo "✅ Vite build successful"
