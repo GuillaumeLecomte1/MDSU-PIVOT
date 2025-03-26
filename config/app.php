@@ -145,4 +145,6 @@ return [
         // 'Example' => App\Facades\Example::class,
         'Image' => Intervention\Image\Facades\Image::class,
     ])->toArray(),
+
+    'asset_url' => env('ASSET_URL', 'https://pivot.guillaume-lcte.fr'),
 ];

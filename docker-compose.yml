@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pivot-app
+    restart: unless-stopped
+    ports:
+      - "4004:4004"
+    environment:
+      - APP_ENV=production
+      - APP_KEY=${APP_KEY}
+      - APP_URL=https://pivot.guillaume-lcte.fr
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./storage:/var/www/html/storage
+    depends_on:
+      - db
+    networks:
+      - pivot_network
+
+  db:
+    image: mysql:8.0
+    container_name: pivot-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+    volumes:
+      - pivot_db_data:/var/lib/mysql
+    networks:
+      - pivot_network
+
+networks:
+  pivot_network:
+    driver: bridge
+
+volumes:
+  pivot_db_data: 
