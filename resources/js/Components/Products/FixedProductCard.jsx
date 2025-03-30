@@ -1,7 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { handleImageError } from '@/Utils/ImageHelper';
 
 // Array of fixed product image colors
 const productColors = [
@@ -12,6 +11,11 @@ const productColors = [
     '#073B4C', // Dark Blue
     '#9381FF'  // Purple
 ];
+
+// Fonction simple pour gérer les erreurs d'images
+const handleImageError = (e) => {
+    e.target.src = '/storage/default/placeholder.png';
+};
 
 export default function FixedProductCard({ product, index = 0, showEditButton = false, editRoute = null, inFavoritesPage = false }) {
     const { auth } = usePage().props;

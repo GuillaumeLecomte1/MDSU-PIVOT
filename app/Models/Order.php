@@ -19,6 +19,7 @@ class Order extends Model
         'status',
         'total',
         'completed_at',
+        'payment_intent_id',
     ];
 
     protected $casts = [

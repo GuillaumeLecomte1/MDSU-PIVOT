@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->decimal('total', 10, 2);
             $table->string('status');
-            $table->string('payment_intent_id')->unique();
+            $table->string('payment_intent_id')->nullable()->unique();
             $table->timestamps();
         });
 

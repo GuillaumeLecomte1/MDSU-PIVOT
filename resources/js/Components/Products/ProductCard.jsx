@@ -1,13 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { getImageUrl, handleImageError } from '@/Utils/ImageHelper';
-
-// Fonction locale pour éviter les problèmes d'importation
-const isAbsoluteUrl = (url) => {
-    if (!url) return false;
-    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
-};
 
 export default function ProductCard({ product, showEditButton = false, editRoute = null, inFavoritesPage = false }) {
     const { auth } = usePage().props;
@@ -48,26 +41,10 @@ export default function ProductCard({ product, showEditButton = false, editRoute
         });
     };
 
-    /**
-     * Obtient l'URL de l'image du produit
-     * @param {string} url - URL de l'image
-     * @returns {string} - URL complète de l'image
-     */
-    const getProductImageUrl = (url) => {
-        // Si l'URL est vide, utiliser l'image par défaut
-        if (!url) return '/images/placeholder.jpg';
-        
-        // Si c'est une URL absolue, la retourner telle quelle
-        if (isAbsoluteUrl(url)) return url;
-        
-        // Sinon, utiliser notre utilitaire pour obtenir l'URL complète
-        return getImageUrl(url);
-    };
-
     // Déterminer l'image principale
     const mainImage = product.images && product.images.length > 0 
-        ? getProductImageUrl(product.images[0].url)
-        : '/images/placeholder.jpg';
+        ? `/storage/${product.images[0].url}`
+        : '/storage/default/product.png';
 
     return (
         <Link
@@ -80,7 +57,7 @@ export default function ProductCard({ product, showEditButton = false, editRoute
                         src={mainImage}
                         alt={product.name}
                         className="w-full h-48 object-cover rounded-t-lg"
-                        onError={handleImageError}
+                        onError={(e) => e.target.src = '/storage/default/product.png'}
                     />
                     {auth.user && (
                         <button

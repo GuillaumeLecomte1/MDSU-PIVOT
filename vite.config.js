@@ -11,19 +11,22 @@ export default defineConfig({
                 'resources/js/app.jsx',
             ],
             refresh: true,
+            publicDirectory: 'public',
         }),
         react(),
     ],
     resolve: {
         alias: {
             '@': '/resources/js',
-            '/imagesAccueil': '/public/imagesAccueil',
+            '~': '/resources',
+            '@assets': '/resources/assets',
         }
     },
     build: {
         chunkSizeWarningLimit: 1000,
         minify: false,
         sourcemap: false,
+        assetsDir: 'assets',
         rollupOptions: {
             output: {
                 manualChunks: (id) => {
@@ -32,7 +35,14 @@ export default defineConfig({
                         const chunk = modules.find(m => id.includes(m));
                         return chunk ? `vendor-${chunk}` : 'vendor';
                     }
-                }
+                },
+                assetFileNames: (assetInfo) => {
+                    let extType = assetInfo.name.split('.').at(1);
+                    if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+                        extType = 'img';
+                    }
+                    return `assets/[name]-[hash][extname]`;
+                },
             }
         },
     },

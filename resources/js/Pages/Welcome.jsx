@@ -5,16 +5,18 @@ import CategoryCard from '@/Components/CategoryCard';
 import BlogCard from '@/Components/BlogCard';
 import FixedProductCard from '@/Components/Products/FixedProductCard';
 
-// Direct image imports - Chemin compatible avec tous les environnements
-import CardAccueil from '/imagesAccueil/imageAccueil1.png';
-import CalqueLogo from '/imagesAccueil/Calque_1.svg';
-import DernierArrivage from '/imagesAccueil/dernierArrivage.png';
-import APropos from '/imagesAccueil/aPropos.png';
-import Blog1 from '/imagesAccueil/blog1.png';
-import Blog2 from '/imagesAccueil/blog2.png';
+// Définir les chemins des images
+const imageAccueil1 = '/storage/imagesAccueil/imageAccueil1.png';
+const calque1 = '/storage/imagesAccueil/Calque_1.svg';
+const dernierArrivage = '/storage/imagesAccueil/dernierArrivage.png';
+const aPropos = '/storage/imagesAccueil/aPropos.png';
+const blog1 = '/storage/imagesAccueil/blog1.png';
+const blog2 = '/storage/imagesAccueil/blog2.png';
 
-// Import error handler from ImageHelper
-import { handleImageError } from '@/Utils/ImageHelper';
+// Fonction simple pour gérer les erreurs d'images
+const handleImageError = (e) => {
+    e.target.src = '/storage/default/placeholder.png';
+};
 
 export default function Welcome({ latestProducts, popularProducts, categories }) {
     return (
@@ -70,7 +72,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             </div>
                             <div className="relative">
                                 <img
-                                    src={CardAccueil}
+                                    src={imageAccueil1}
                                     alt="Hero"
                                     className="rounded-lg shadow-lg w-full h-[540px] object-cover"
                                     onError={handleImageError}
@@ -102,7 +104,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                             <div key={i} className="w-32 h-32 flex items-center justify-center">
                                 <div className="text-4xl font-bold text-gray-200">
                                     <img 
-                                        src={CalqueLogo} 
+                                        src={calque1} 
                                         alt="Logo" 
                                         className="w-24 h-24 fill-gray-400"
                                         onError={handleImageError}
@@ -230,7 +232,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         <div className="col-span-6 relative">
                             <div className="h-full rounded-lg overflow-hidden relative">
                                 <img 
-                                    src={DernierArrivage} 
+                                    src={dernierArrivage} 
                                     alt="Pluie de couleurs" 
                                     className="w-full h-full object-cover"
                                     onError={handleImageError}
@@ -261,7 +263,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         {/* Left side with image and stats */}
                         <div className="col-span-5 relative">
                             <img
-                                src={APropos}
+                                src={aPropos}
                                 alt="Qui sommes-nous"
                                 className="w-full h-[600px] object-cover rounded-lg"
                                 onError={handleImageError}
@@ -324,7 +326,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         {/* First main article */}
                         <div>
                             <img
-                                src={Blog1}
+                                src={blog1}
                                 alt="Comment meubler son intérieur"
                                 className="w-full aspect-[4/3] object-cover rounded-lg mb-6"
                                 onError={handleImageError}
@@ -344,7 +346,7 @@ export default function Welcome({ latestProducts, popularProducts, categories })
                         {/* Second main article */}
                         <div>
                             <img
-                                src={Blog2}
+                                src={blog2}
                                 alt="Focus ressourcerie"
                                 className="w-full aspect-[4/3] object-cover rounded-lg mb-6"
                                 onError={handleImageError}
